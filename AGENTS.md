@@ -22,7 +22,7 @@ Do not treat TanStack Query cache as long-term persistence.
 
 Before planning or executing non-trivial changes, read:
 - `docs/agents/README.md`
-- `docs/agents/codex-workflow.md`
+- the workflow doc for your agent type (see `docs/agents/README.md` for which one)
 - the nearest relevant skill files in `docs/skills/`
 
 If the task changes agent guidance or skill docs, also read `docs/agents/skill-authoring-contract.md`.
