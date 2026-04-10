@@ -9,7 +9,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground [a]:hover:bg-primary/80',
+        default: 'bg-primary text-primary-foreground hover:bg-primary/80',
         outline:
           'border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
         secondary:
@@ -46,6 +46,7 @@ function Button({
   variant = 'default',
   size = 'default',
   asChild = false,
+  type,
   ...props
 }: React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
@@ -58,6 +59,7 @@ function Button({
       data-slot="button"
       data-size={size}
       data-variant={variant}
+      type={asChild ? undefined : (type ?? 'button')}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />
