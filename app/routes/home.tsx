@@ -1,12 +1,15 @@
-import { Welcome } from '../welcome/welcome';
+import { HomePage } from '../../frontend/pages/home/ui/home-page';
 
 export function meta() {
   return [
-    { title: 'New React Router App' },
-    { name: 'description', content: 'Welcome to React Router!' },
+    { title: 'Weatherpane' },
+    {
+      name: 'description',
+      content: 'Weatherpane app shell placeholder home route.',
+    },
   ];
 }
 
 export default function Home() {
-  return <Welcome />;
+  return <HomePage />;
 }
