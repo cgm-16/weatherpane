@@ -1,2 +1,4 @@
 allowBuilds:
   esbuild: true
+  msw: true
+  storybook-addon-remix-react-router: true
