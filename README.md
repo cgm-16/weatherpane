@@ -1,87 +1,51 @@
-# Welcome to React Router!
+# Weatherpane
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Weatherpane는 대한민국 지역을 대상으로 하는 React + TypeScript + Tailwind 날씨 앱이다.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+현재 베이스라인은 다음 원칙으로 구성되어 있다.
 
-## Features
+- 저장소 `app/`은 React Router 프레임워크 진입점과 라우트 어댑터만 담당한다.
+- 실제 앱 코드는 `frontend/` 아래의 Feature-Sliced Design 레이어에 배치한다.
+- 전역 provider와 글로벌 스타일은 `frontend/app`에 둔다.
+- 테스트 하니스는 Vitest와 Playwright를 사용한다.
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## 시작하기
 
-## Getting Started
-
-### Installation
-
-Install the dependencies:
+### 설치
 
 ```bash
-npm install
+pnpm install --frozen-lockfile
 ```
 
-### Development
-
-Start the development server with HMR:
+### 개발 서버
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+기본 개발 서버는 `http://localhost:5173`에서 실행된다.
 
-## Building for Production
-
-Create a production build:
+## 기본 스크립트
 
 ```bash
-npm run build
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:unit
+pnpm test:e2e
+pnpm build
+pnpm preview
 ```
 
-## Deployment
+## 디렉터리 구조
 
-### Docker Deployment
-
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
+```text
+app/                 React Router 프레임워크 진입점과 라우트 모듈
+frontend/app/        provider, 글로벌 스타일, 앱 런타임 구성
+frontend/pages/      페이지 단위 UI
+frontend/widgets/    위젯 레이어
+frontend/features/   기능 레이어
+frontend/entities/   도메인 엔티티 레이어
+frontend/shared/     공용 UI/유틸리티
+tests/               Vitest 및 Playwright smoke 테스트
 ```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.

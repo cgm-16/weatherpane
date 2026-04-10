@@ -15,7 +15,7 @@ Read before coding:
 - docs/skills/github-flow-and-release.md
 
 Goal:
-Bootstrap a working Vite + React + TypeScript + Tailwind + React Router + TanStack Query application with Feature-Sliced Design directories and a real test harness.
+Bootstrap a working Vite + React + TypeScript + Tailwind + React Router + TanStack Query application with a thin framework routing shell, Feature-Sliced Design directories under `frontend/`, and a real test harness.
 
 Requirements:
 - Use Vite with React + TypeScript.
@@ -26,15 +26,16 @@ Requirements:
   - /favorites
   - /location/:resolvedLocationId
 - Add TanStack Query provider in the app shell.
+- Keep repo `app/` focused on framework routing entrypoints and route modules.
 - Create FSD directory structure:
-  - src/app
-  - src/pages
-  - src/widgets
-  - src/features
-  - src/entities
-  - src/shared
+  - frontend/app
+  - frontend/pages
+  - frontend/widgets
+  - frontend/features
+  - frontend/entities
+  - frontend/shared
 - Add placeholder pages/components so the app runs and routes render.
-- Add Vitest + React Testing Library setup.
+- Add Vitest setup.
 - Add Playwright setup with a placeholder smoke test.
 - Add npm scripts for:
   - dev
@@ -48,7 +49,7 @@ Requirements:
 - Keep UI minimal; this task is about reliable structure, not product polish.
 
 Testing:
-- Add at least one RTL smoke test proving the router renders the expected page content for `/`.
+- Add at least one Vitest smoke test proving the router renders the expected page content for `/`.
 - Add at least one Playwright test proving the app boots and the Home placeholder renders.
 - Ensure lint/typecheck/test/build all pass.
 
