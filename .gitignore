@@ -8,6 +8,7 @@
 
 # Local Files
 *.local.*
+.worktrees/
 
 # Playwright
 node_modules/
