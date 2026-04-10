@@ -1,0 +1,19 @@
+# Global defaults
+*                           @your-org/frontend
+/.github/                   @your-org/frontend @your-org/devops
+/docs/                      @your-org/frontend
+
+# App areas
+/src/app/                   @your-org/frontend
+/src/pages/                 @your-org/frontend
+/src/widgets/               @your-org/frontend
+/src/features/search/       @your-org/frontend
+/src/features/favorites/    @your-org/frontend
+/src/entities/weather/      @your-org/frontend
+/src/shared/api/            @your-org/frontend
+/src/shared/lib/storage/    @your-org/frontend
+/src/shared/ui/             @your-org/frontend
+
+# Testing and CI
+/tests/                     @your-org/frontend @your-org/qa
+/playwright/                @your-org/frontend @your-org/qa

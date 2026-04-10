@@ -1,0 +1,60 @@
+name: validate / agent-guardrails
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch naming convention
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          echo "Branch: $BRANCH_NAME"
+          if [[ ! "$BRANCH_NAME" =~ ^(feat|fix|docs|ci|chore|hotfix|refactor|test)/[0-9]+-[a-z0-9-]+-[a-z0-9-]+$ ]]; then
+            echo "Invalid branch name. Expected: type/issue-area-slug"
+            exit 1
+          fi
+
+      - name: Check PR body contains linked issue
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          echo "$PR_BODY" | grep -Eq 'Closes #[0-9]+' || (echo "PR body must contain 'Closes #<issue>'" && exit 1)
+
+      - name: Check changed UI/spec-sensitive files have docs touch
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number, per_page: 100 }
+            );
+            const changed = files.map(f => f.filename);
+            const touchesSensitive = changed.some(f =>
+              f.startsWith('src/pages/') ||
+              f.startsWith('src/widgets/') ||
+              f.startsWith('src/features/') ||
+              f.startsWith('src/entities/') ||
+              f === 'AGENTS.md'
+            );
+            const touchesDocs = changed.some(f =>
+              f.startsWith('docs/') ||
+              f.endsWith('.md')
+            );
+            if (touchesSensitive && !touchesDocs) {
+              core.setFailed('Spec-sensitive changes should update docs or markdown guidance in the same PR.');
+            }
+
+      - name: Warn if UI changes appear without screenshot language
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if echo "$PR_BODY" | grep -Eiq 'screenshot|video|trace'; then
+            echo "Found screenshot/video/trace mention."
+          else
+            echo "Warning: No screenshot/video/trace mention found in PR body."
+          fi

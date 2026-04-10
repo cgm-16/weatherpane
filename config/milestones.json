@@ -1,0 +1,34 @@
+[
+  {
+    "title": "M0 - Repo Bootstrap & Guardrails",
+    "description": "Repository setup, governance, CI, templates, guardrails"
+  },
+  {
+    "title": "M1 - Foundation & App Shell",
+    "description": "Vite, app shell, theme, layout, routing foundation"
+  },
+  {
+    "title": "M2 - Weather Data + Search Core",
+    "description": "Weather provider abstraction, search catalog, resolution, detail flow"
+  },
+  {
+    "title": "M3 - Favorites + Persistence",
+    "description": "Favorites, recents, active location, storage, reorder, nickname editing"
+  },
+  {
+    "title": "M4 - Sketch Assets + Visual Polish",
+    "description": "Asset manifest, sketch loader, safe fallbacks, glassmorphism polish"
+  },
+  {
+    "title": "M5 - QA + Deployment + Submission",
+    "description": "Testing, QA, deployment, README, submission readiness"
+  },
+  {
+    "title": "v0.1.0 - MVP Submission",
+    "description": "Submission milestone"
+  },
+  {
+    "title": "v0.1.x - Post-submission fixes",
+    "description": "Post-submission fixes and cleanup"
+  }
+]

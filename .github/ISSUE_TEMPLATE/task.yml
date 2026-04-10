@@ -1,0 +1,88 @@
+name: Task
+description: Implementation task tied to the agreed spec
+title: "[Task] "
+labels: ["type:feature", "status:needs-triage"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - app-shell
+        - weather
+        - search
+        - favorites
+        - routing
+        - storage
+        - assets
+        - theme
+        - a11y
+        - testing
+        - ci
+        - docs
+    validations:
+      required: true
+
+  - type: input
+    id: goal
+    attributes:
+      label: Goal
+      placeholder: Implement search result selection -> detail route transition
+    validations:
+      required: true
+
+  - type: textarea
+    id: background
+    attributes:
+      label: Spec background
+      placeholder: Reference the relevant agreed behavior or section of the spec
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: In scope
+      placeholder: |
+        - route transition
+        - active location update
+        - recent locations insertion
+    validations:
+      required: true
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      placeholder: |
+        - redesign of search page
+        - provider changes
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - Selecting a valid result navigates to /location/:id
+        - Active location changes only after successful resolution
+        - Unsupported result does not replace active location
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies / blockers
+      placeholder: Other issues, API work, assets, specs
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - p0
+        - p1
+        - p2
+        - p3
+    validations:
+      required: true

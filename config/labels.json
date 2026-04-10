@@ -1,0 +1,177 @@
+[
+  {
+    "name": "type:feature",
+    "color": "1D76DB",
+    "description": "Feature work"
+  },
+  {
+    "name": "type:bug",
+    "color": "D73A4A",
+    "description": "Bug report or fix"
+  },
+  {
+    "name": "type:docs",
+    "color": "0E8A16",
+    "description": "Documentation work"
+  },
+  {
+    "name": "type:ci",
+    "color": "5319E7",
+    "description": "CI/CD work"
+  },
+  {
+    "name": "type:chore",
+    "color": "BFDADC",
+    "description": "Maintenance work"
+  },
+  {
+    "name": "type:refactor",
+    "color": "FBCA04",
+    "description": "Refactoring work"
+  },
+  {
+    "name": "type:test",
+    "color": "C2E0C6",
+    "description": "Testing work"
+  },
+  {
+    "name": "status:needs-triage",
+    "color": "B60205",
+    "description": "Needs triage"
+  },
+  {
+    "name": "status:ready",
+    "color": "0E8A16",
+    "description": "Ready to work"
+  },
+  {
+    "name": "status:in-progress",
+    "color": "FBCA04",
+    "description": "Currently being worked"
+  },
+  {
+    "name": "status:blocked",
+    "color": "D93F0B",
+    "description": "Blocked by something else"
+  },
+  {
+    "name": "status:review",
+    "color": "5319E7",
+    "description": "In review"
+  },
+  {
+    "name": "status:qa",
+    "color": "1D76DB",
+    "description": "In QA"
+  },
+  {
+    "name": "status:released",
+    "color": "C5DEF5",
+    "description": "Released"
+  },
+  {
+    "name": "priority:p0",
+    "color": "B60205",
+    "description": "Highest priority"
+  },
+  {
+    "name": "priority:p1",
+    "color": "D93F0B",
+    "description": "High priority"
+  },
+  {
+    "name": "priority:p2",
+    "color": "FBCA04",
+    "description": "Normal priority"
+  },
+  {
+    "name": "priority:p3",
+    "color": "0E8A16",
+    "description": "Low priority"
+  },
+  {
+    "name": "area:app-shell",
+    "color": "0052CC",
+    "description": "App shell"
+  },
+  {
+    "name": "area:weather",
+    "color": "0E8A16",
+    "description": "Weather domain"
+  },
+  {
+    "name": "area:search",
+    "color": "5319E7",
+    "description": "Search feature"
+  },
+  {
+    "name": "area:favorites",
+    "color": "B60205",
+    "description": "Favorites feature"
+  },
+  {
+    "name": "area:routing",
+    "color": "1D76DB",
+    "description": "Routing"
+  },
+  {
+    "name": "area:storage",
+    "color": "FBCA04",
+    "description": "Persistence and storage"
+  },
+  {
+    "name": "area:assets",
+    "color": "C5DEF5",
+    "description": "Sketch assets and manifest"
+  },
+  {
+    "name": "area:theme",
+    "color": "BFDADC",
+    "description": "Theme and styling"
+  },
+  {
+    "name": "area:a11y",
+    "color": "D4C5F9",
+    "description": "Accessibility"
+  },
+  {
+    "name": "area:testing",
+    "color": "C2E0C6",
+    "description": "Testing"
+  },
+  {
+    "name": "area:ci",
+    "color": "5319E7",
+    "description": "CI"
+  },
+  {
+    "name": "area:docs",
+    "color": "0E8A16",
+    "description": "Documentation"
+  },
+  {
+    "name": "kind:breaking",
+    "color": "B60205",
+    "description": "Breaking change"
+  },
+  {
+    "name": "kind:tech-debt",
+    "color": "FBCA04",
+    "description": "Technical debt"
+  },
+  {
+    "name": "kind:good-first-issue",
+    "color": "7057FF",
+    "description": "Good first issue"
+  },
+  {
+    "name": "kind:help-wanted",
+    "color": "008672",
+    "description": "Help wanted"
+  },
+  {
+    "name": "kind:spec-gap",
+    "color": "D4C5F9",
+    "description": "Spec clarification needed"
+  }
+]

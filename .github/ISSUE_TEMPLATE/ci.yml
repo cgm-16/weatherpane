@@ -1,0 +1,39 @@
+name: CI
+description: CI pipeline, workflow, or check changes
+title: "[CI] "
+labels: ["type:ci", "status:needs-triage"]
+body:
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      placeholder: Add Playwright smoke job and screenshot artifact upload
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Current state
+    validations:
+      required: true
+
+  - type: textarea
+    id: target
+    attributes:
+      label: Target state
+    validations:
+      required: true
+
+  - type: textarea
+    id: workflows
+    attributes:
+      label: Affected workflows / checks
+      placeholder: ci.yml, agent-guardrails.yml, preview deploy, etc.
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+    validations:
+      required: true
