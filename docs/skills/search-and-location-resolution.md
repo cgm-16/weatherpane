@@ -83,4 +83,5 @@
 
 ## Portability note
 
-Other agents can reuse the same invariants, but the command examples and repository references are written for Codex in Weatherpane.
+Codex: use `rg` for codebase searches and shell commands for file reading.
+Claude Code: use the `Grep` tool for content searches, `Glob` for file pattern searches, and `Read` for file reading. The invariants and execution checklist logic are identical.
