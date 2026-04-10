@@ -20,7 +20,12 @@ Do not treat TanStack Query cache as long-term persistence.
 
 ## Required reading before changes
 
-Read the nearest relevant skill files in `docs/skills/` before planning code changes.
+Before planning or executing non-trivial changes, read:
+- `docs/agents/README.md`
+- `docs/agents/codex-workflow.md`
+- the nearest relevant skill files in `docs/skills/`
+
+If the task changes agent guidance or skill docs, also read `docs/agents/skill-authoring-contract.md`.
 
 Minimum required skills by area:
 - search work -> `docs/skills/search-and-location-resolution.md`
@@ -95,9 +100,9 @@ When uncertain:
 
 ## Documentation Guidelines
 
-- Skill files (`SKILL.md`) and prompt plan files are instructions optimized for Codex - write them in English for clarity
+- Skill files (`SKILL.md`), `docs/skills/*`, and prompt plan files are instructions optimized for Codex - write them in English for clarity
 - All other written artifacts must be in Korean: PR titles/descriptions, commit messages, code comments, documentation files, and issue descriptions
-- Exceptions: `AGENTS.md` and `docs/agents/*` must be written in English. Files under `docs/legacy/*` may remain in their original language.
+- Exceptions: `AGENTS.md`, `docs/agents/*`, and `docs/skills/*` must be written in English. Files under `docs/legacy/*` may remain in their original language.
 - `docs/` and its subfolders (except `docs/legacy/`) MUST be kept current with the codebase; do not leave outdated content after related changes.
 - `docs/legacy/` contains archived historical documents that may be outdated by design.
 - `docs/agents/` contains prompt plans and LLM-facing operational documents, and these files should be written in English.
