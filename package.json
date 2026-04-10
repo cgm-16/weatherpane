@@ -5,11 +5,14 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
+    "preview": "react-router-serve ./build/server/index.js",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "prepare": "husky",
-    "test": "vitest",
-    "lint": "eslint",
+    "test": "pnpm test:unit",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "lint": "eslint .",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
