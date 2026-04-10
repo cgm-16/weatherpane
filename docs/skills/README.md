@@ -14,6 +14,7 @@ Read [docs/agents/codex-workflow.md](../agents/codex-workflow.md) first, then re
 - [asset-manifest-contract.md](./asset-manifest-contract.md)
 - [testing-and-mocks.md](./testing-and-mocks.md)
 - [github-flow-and-release.md](./github-flow-and-release.md)
+- [task-to-pr-automation.md](./task-to-pr-automation.md)
 
 ## Usage rule
 
