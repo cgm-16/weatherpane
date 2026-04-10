@@ -4,7 +4,7 @@ Use this file when creating or rewriting files in [docs/skills](../skills/README
 
 ## Goal
 
-Each skill file should help Codex execute real work in Weatherpane without having to infer the repository workflow from scattered rules.
+Each skill file should help any agent execute real work in Weatherpane without having to infer the repository workflow from scattered rules.
 
 ## What a skill file must do
 
@@ -14,7 +14,7 @@ Each skill file should help Codex execute real work in Weatherpane without havin
 - convert those rules into an execution checklist
 - define how to verify the work
 - define when to stop and ask Ori instead of guessing
-- add a short portability note for non-Codex agents
+- add a portability note naming the other supported agent and its tool equivalents
 
 ## Required structure
 
@@ -40,12 +40,14 @@ Use short bullets. If the action is command-based, show the command exactly. If 
 
 ## Writing rules
 
-- Write for Codex first.
+- Write for the primary agent of the task; add a portability note for the other agent.
 - Keep skill docs in English.
 - Use repository terms exactly as they appear in specs and AGENTS.
 - Prefer stable commands already used in this repo.
 - If a command is conditional, state the condition instead of listing every possible variant.
 - If verification depends on repo state, say how to report the gap instead of implying success.
+- Codex skills use shell commands (`rg`, `cat`, `pnpm`, `git`). Claude Code skills use tool names (`Grep`, `Read`, `Bash` for pnpm/git commands).
+- Portability notes must name the alternative agent and state the tool substitution concretely — not just "other agents can reuse this."
 
 ## Do not do these things
 
@@ -84,9 +86,14 @@ Use short bullets. If the action is command-based, show the command exactly. If 
 - Ambiguity or blocker
 
 ## Portability note
-- Short note for non-Codex agents
+- Codex: shell command or tool reference
+- Claude Code: equivalent tool name (e.g., `Grep` instead of `rg`, `Read` instead of `cat`, `Bash` for pnpm/git)
 ```
 
 ## Portability note
 
-This contract is Codex-first. Other agents can reuse it, but they should swap command or tool language instead of changing the section structure.
+This contract applies to both Codex and Claude Code. The section structure is the same for both. Command examples in Execution checklists should use:
+- Codex: shell commands (`rg`, `cat`, `pnpm`, `git`)
+- Claude Code: tool names (`Grep`, `Read`, `Bash` for pnpm/git commands)
+
+When authoring a new skill, choose one primary agent style for the Execution checklist and add a portability note for the other.
