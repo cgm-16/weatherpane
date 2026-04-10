@@ -12,9 +12,6 @@ set -euo pipefail
 #   export GH_REPO="owner/repo"
 
 REPO_ARG=()
-if [[ -n "${GH_REPO:-}" ]]; then
-  REPO_ARG=(--repo "$GH_REPO")
-fi
 
 resolve_repo() {
   if [[ -n "${GH_REPO:-}" ]]; then
@@ -25,6 +22,7 @@ resolve_repo() {
 }
 
 REPO="$(resolve_repo)"
+REPO_ARG=(--repo "$REPO")
 
 echo "Creating labels..."
 jq -c '.[]' config/labels.json | while read -r label; do
