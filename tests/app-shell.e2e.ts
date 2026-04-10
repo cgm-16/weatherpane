@@ -8,4 +8,5 @@ test('boots the home placeholder shell', async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByText('Home placeholder')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Search' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Favorites' })).toBeVisible();
 });

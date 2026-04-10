@@ -14,7 +14,7 @@ describe('home route', () => {
 
     expect(markup).toContain('Weatherpane');
     expect(markup).toContain('Home placeholder');
-    expect(markup).toContain('/search');
-    expect(markup).toContain('/favorites');
+    expect(markup).toContain('href="/search"');
+    expect(markup).toContain('href="/favorites"');
   });
 });

@@ -11,6 +11,7 @@
     "prepare": "husky",
     "test": "pnpm test:unit",
     "test:unit": "vitest run",
+    "test:storybook": "vitest run --config .storybook/vitest.config.ts",
     "test:e2e": "playwright test",
     "lint": "eslint .",
     "storybook": "storybook dev -p 6006",
