@@ -86,4 +86,5 @@ Required smoke coverage when these flows are touched:
 
 ## Portability note
 
-Other agents can follow the same verification policy, but the command examples assume direct access to pnpm, Vitest, and Playwright in this repository.
+Codex: run `pnpm`, `vitest`, and `playwright` commands directly in the shell.
+Claude Code: run the same commands via the `Bash` tool. Apply `superpowers:verification-before-completion` skill before claiming any check passed. Apply `superpowers:test-driven-development` skill before writing implementation code.

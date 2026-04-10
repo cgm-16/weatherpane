@@ -79,4 +79,5 @@
 
 ## Portability note
 
-Non-Codex agents can reuse this workflow, but they should swap in their own GitHub tooling while preserving the same issue, branch, and PR requirements.
+Codex: run `git` and `gh` commands directly in the shell.
+Claude Code: run `git` and `gh` commands via the `Bash` tool. Use `superpowers:using-git-worktrees` skill for worktree creation. Use `superpowers:finishing-a-development-branch` skill for PR preparation. The issue, branch, and PR requirements are identical.
