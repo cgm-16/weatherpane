@@ -83,9 +83,11 @@ This ordering minimizes late-stage rewrites.
 ## 2. Chunking pass
 
 ### Chunk A — foundation and deterministic interfaces
+
 Goal: create the app shell, test stack, config parsing, provider abstraction, and normalized storage/domain contracts.
 
 Includes:
+
 - repo bootstrap
 - providers and router
 - mock/demo mode skeleton
@@ -93,9 +95,11 @@ Includes:
 - catalog preprocessing
 
 ### Chunk B — search and location resolution
+
 Goal: make local search fully deterministic before weather UI complexity grows.
 
 Includes:
+
 - search normalization/ranking
 - `/search?q=` URL state
 - keyboard navigation
@@ -103,9 +107,11 @@ Includes:
 - unsupported route token handling
 
 ### Chunk C — weather domain and active location flows
+
 Goal: normalize weather/AQI models and bootstrap active/current location behavior.
 
 Includes:
+
 - normalized weather provider
 - query hooks and policies
 - current location service
@@ -113,18 +119,22 @@ Includes:
 - snapshot validity rules
 
 ### Chunk D — product screens and core flows
+
 Goal: deliver the main user-visible product surface.
 
 Includes:
+
 - Home compact dashboard
 - Detail expanded dashboard
 - search selection -> detail wiring
 - recents and popular sections
 
 ### Chunk E — favorites and management workflows
+
 Goal: implement saved-location behavior safely and accessibly.
 
 Includes:
+
 - add/remove/undo/max-cap
 - favorites page read mode
 - background refresh queue
@@ -132,9 +142,11 @@ Includes:
 - drag handle + up/down fallback
 
 ### Chunk F — visual system and resilience
+
 Goal: add theme, sketch assets, offline/config behavior, and final testing/docs.
 
 Includes:
+
 - theme system
 - glass/responsive polish
 - sketch asset manifest/loader
@@ -181,7 +193,7 @@ Read before coding:
 - docs/skills/github-flow-and-release.md
 
 Goal:
-Bootstrap a working Vite + React + TypeScript + Tailwind + React Router + TanStack Query application with Feature-Sliced Design directories and a real test harness.
+Bootstrap a working Vite + React + TypeScript + Tailwind + React Router + TanStack Query application with a thin framework routing shell, Feature-Sliced Design directories under `frontend/`, and a real test harness.
 
 Requirements:
 - Use Vite with React + TypeScript.
@@ -192,15 +204,16 @@ Requirements:
   - /favorites
   - /location/:resolvedLocationId
 - Add TanStack Query provider in the app shell.
+- Keep repo `app/` focused on framework routing entrypoints and route modules.
 - Create FSD directory structure:
-  - src/app
-  - src/pages
-  - src/widgets
-  - src/features
-  - src/entities
-  - src/shared
+  - frontend/app
+  - frontend/pages
+  - frontend/widgets
+  - frontend/features
+  - frontend/entities
+  - frontend/shared
 - Add placeholder pages/components so the app runs and routes render.
-- Add Vitest + React Testing Library setup.
+- Add Vitest setup.
 - Add Playwright setup with a placeholder smoke test.
 - Add npm scripts for:
   - dev
@@ -214,7 +227,7 @@ Requirements:
 - Keep UI minimal; this task is about reliable structure, not product polish.
 
 Testing:
-- Add at least one RTL smoke test proving the router renders the expected page content for `/`.
+- Add at least one Vitest smoke test proving the router renders the expected page content for `/`.
 - Add at least one Playwright test proving the app boots and the Home placeholder renders.
 - Ensure lint/typecheck/test/build all pass.
 
