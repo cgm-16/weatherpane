@@ -1,0 +1,118 @@
+/* frontend/app/styles/tokens.css
+ * 디자인 토큰 정의: Haet-Ssal(밝은 모드) 기본값, Dal-Bit Night(어두운 모드) 오버라이드
+ * Stitch 디자인 시스템에서 생성됨. shadcn 명명 규칙을 따른다.
+ */
+
+@theme {
+  /* ── 타이포그래피 ──────────────────────────────────────────────── */
+
+  /* 헤드라인/디스플레이: Plus Jakarta Sans (두 모드 공통) */
+  --font-display: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", sans-serif;
+  /* 본문/레이블: 밝은 모드 Be Vietnam Pro, 어두운 모드에서 오버라이드 */
+  --font-body: "Be Vietnam Pro", sans-serif;
+
+  /* ── 테두리 반경 ────────────────────────────────────────────────── */
+
+  --radius-sm: 0.5rem;    /* 8px — 버튼 */
+  --radius-md: 1.5rem;    /* 24px — 카드 */
+  --radius-lg: 2rem;      /* 32px — 모달 */
+  --radius-full: 9999px;  /* 알약형 — 칩, 태그 */
+
+  /* ── 그림자: 세 겹 앰비언트 시스템 ─────────────────────────────── */
+
+  /* 밝은 모드 기본값; on_surface(#1b1c1c) 기반 색조 적용 */
+  --shadow-float:
+    0px 2px 4px rgba(27, 28, 28, 0.04),
+    0px 4px 12px rgba(27, 28, 28, 0.04),
+    0px 10px 24px rgba(27, 28, 28, 0.04);
+
+  /* ── 색상 토큰 (기본값: Haet-Ssal 밝은 모드) ─────────────────── */
+
+  /* 배경 및 표면 */
+  --color-background: #fcf9f8;
+  --color-foreground: #1b1c1c;
+
+  /* 카드 — surface_container_lowest (#ffffff) */
+  --color-card: #ffffff;
+  --color-card-foreground: #1b1c1c;
+
+  /* 팝오버 — surface_container_lowest (#ffffff) */
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1b1c1c;
+
+  /* 주요 색상 — Rausch Red */
+  --color-primary: #ba0036;
+  --color-primary-foreground: #ffffff;
+
+  /* 보조 색상 */
+  --color-secondary: #5e5e5e;
+  --color-secondary-foreground: #ffffff;
+
+  /* 강조 — surface_container_high */
+  --color-accent: #eae7e7;
+  --color-accent-foreground: #1b1c1c;
+
+  /* 음소거 — surface_container */
+  --color-muted: #f0eded;
+  --color-muted-foreground: #5c3f41;
+
+  /* 오류 상태 */
+  --color-destructive: #ba1a1a;
+  --color-destructive-foreground: #ffffff;
+
+  /* 경계선 및 입력 */
+  --color-border: #e5bdbe;   /* outline_variant */
+  --color-input: #f6f3f2;    /* surface_container_low */
+  --color-ring: #ba0036;     /* primary */
+}
+
+/* ── Dal-Bit Night 어두운 모드 오버라이드 ──────────────────────── */
+/* .dark 클래스가 <html>에 적용될 때 활성화됨 */
+
+.dark {
+  /* 배경 및 표면 */
+  --color-background: #131313;
+  --color-foreground: #e5e2e1;
+
+  /* 카드 — surface_container_low */
+  --color-card: #1c1b1b;
+  --color-card-foreground: #e5e2e1;
+
+  /* 팝오버 — surface_container */
+  --color-popover: #20201f;
+  --color-popover-foreground: #e5e2e1;
+
+  /* 주요 색상 — 밝은 Rausch Red (어두운 배경용) */
+  --color-primary: #ffb2b6;
+  --color-primary-foreground: #68001a;
+
+  /* 보조 색상 */
+  --color-secondary: #ffb2b6;
+  --color-secondary-foreground: #67001a;
+
+  /* 강조 — surface_container_high */
+  --color-accent: #2a2a2a;
+  --color-accent-foreground: #e5e2e1;
+
+  /* 음소거 — surface_container */
+  --color-muted: #20201f;
+  --color-muted-foreground: #e5bdbe;
+
+  /* 오류 상태 */
+  --color-destructive: #ffb4ab;
+  --color-destructive-foreground: #690005;
+
+  /* 경계선 및 입력 */
+  --color-border: #5c3f41;   /* outline_variant */
+  --color-input: #1c1b1b;    /* surface_container_low */
+  --color-ring: #ffb2b6;     /* primary */
+
+  /* Dal-Bit Night: 본문도 Plus Jakarta Sans로 통일 */
+  --font-body: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", sans-serif;
+
+  /* 어두운 모드 그림자: primary(#ffb2b6) 기반 색조 */
+  --shadow-float:
+    0px 2px 4px rgba(255, 178, 182, 0.04),
+    0px 4px 12px rgba(255, 178, 182, 0.04),
+    0px 10px 24px rgba(255, 178, 182, 0.04);
+}
