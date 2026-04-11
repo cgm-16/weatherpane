@@ -4,7 +4,7 @@ import type { ProviderMode } from '~/shared/lib/env-config';
 
 export interface WeatherProvider {
   readonly mode: ProviderMode;
-  // Weather data methods will be added in T08+ tasks
+  // 날씨 데이터 메서드는 T08+ 작업에서 추가됩니다.
 }
 
 export const WeatherProviderContext = createContext<WeatherProvider | null>(
