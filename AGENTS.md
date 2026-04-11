@@ -36,6 +36,7 @@ Minimum required skills by area:
 - asset work -> `docs/skills/asset-manifest-contract.md`
 - testing/CI work -> `docs/skills/testing-and-mocks.md`
 - workflow/release work -> `docs/skills/github-flow-and-release.md`
+- design/theming work -> `docs/skills/design-tokens.md`
 
 ## Architecture rules
 
