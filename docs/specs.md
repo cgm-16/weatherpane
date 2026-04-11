@@ -346,12 +346,11 @@ export interface Settings {
     "locationId": "loc_3f2c1a8b",
     "fetchedAt": "2026-04-10T08:12:31+09:00",
     "observedAt": "2026-04-10T08:00:00+09:00",
-    "tempC": 13.4,
+    "temperatureC": 13.4,
     "conditionCode": "CLOUDY",
     "conditionText": "흐림",
     "todayMinC": 9.0,
     "todayMaxC": 17.0,
-    "sketchKey": "CLOUDY_DAY",
     "source": { "provider": "ACME_WEATHER", "modelVersion": "2026.03" }
   }
 }
