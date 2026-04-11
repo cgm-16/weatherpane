@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Action versions last verified: 2026-04-11
+# Policy: use latest stable patch unless released <2 weeks ago; re-verify on dependency updates.
+#   actions/checkout:       v6.0.2  (2025-01-09)
+#   pnpm/action-setup:      v6.0.0  (2025-04-10)
+#   actions/setup-node:     v6.3.0  (2025-03-04)
+#   actions/upload-artifact: v4.6.2  (2025-03-19)
+
+jobs:
+  check:
+    name: Typecheck & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: pnpm/action-setup@v6.0.0
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: pnpm/action-setup@v6.0.0
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:unit --coverage
+      - uses: actions/upload-artifact@v4.6.2
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 14
+
+  storybook:
+    name: Storybook Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: pnpm/action-setup@v6.0.0
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:storybook
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: pnpm/action-setup@v6.0.0
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: pnpm/action-setup@v6.0.0
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4.6.2
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
