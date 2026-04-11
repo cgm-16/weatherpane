@@ -2,7 +2,13 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen, waitFor, within } from '@testing-library/react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RouterProvider, createMemoryRouter, useParams } from 'react-router';
 import { describe, expect, test } from 'vitest';
@@ -147,6 +153,18 @@ describe('search route', () => {
         `선택된 위치: ${router.state.location.pathname.replace('/location/', '')}`
       )
     ).toBeVisible();
+  });
+
+  test('does not navigate on Enter when IME composition is active', async () => {
+    const { router } = renderSearchRoute('/search?q=%EB%AA%85%EB%8F%99');
+    const input = await screen.findByRole('searchbox', { name: '지역 검색' });
+
+    await screen.findByRole('listbox', { name: '검색 결과' });
+
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true });
+
+    // IME composition Enter must not trigger navigation
+    expect(router.state.location.pathname).toBe('/search');
   });
 
   test('clears the auto-highlight on the first Esc, then clears the query on the next Esc', async () => {
