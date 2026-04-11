@@ -33,7 +33,11 @@ function isVersionedPayload(
 }
 
 export function resetVersionedValue(storage: StorageLike, key: string) {
-  storage.removeItem(key);
+  try {
+    storage.removeItem(key);
+  } catch {
+    return;
+  }
 }
 
 export function readVersionedValue<T>({
@@ -74,11 +78,15 @@ export function writeVersionedValue<T>({
   version,
   data,
 }: WriteVersionedValueOptions<T>) {
-  storage.setItem(
-    key,
-    JSON.stringify({
-      data,
-      version,
-    } satisfies VersionedPayload<T>)
-  );
+  try {
+    storage.setItem(
+      key,
+      JSON.stringify({
+        data,
+        version,
+      } satisfies VersionedPayload<T>)
+    );
+  } catch {
+    return;
+  }
 }

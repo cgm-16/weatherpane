@@ -6,6 +6,7 @@ import {
   createAqiSnapshotRepository,
   createWeatherSnapshotRepository,
 } from '../../frontend/shared/lib/storage/repositories/snapshot-repositories';
+import { storageKeys } from '../../frontend/shared/lib/storage/storage-keys';
 import { createMemoryStorage } from './test-storage';
 
 const weatherSnapshot: PersistedWeatherSnapshot = {
@@ -56,5 +57,44 @@ describe('snapshot repositories', () => {
 
     repository.remove(aqiSnapshot.locationId);
     expect(repository.get(aqiSnapshot.locationId)).toBeNull();
+  });
+
+  test('weather snapshot repository resets malformed array payloads', () => {
+    const storage = createMemoryStorage();
+    const repository = createWeatherSnapshotRepository({ storage });
+
+    repository.set(weatherSnapshot.locationId, weatherSnapshot);
+    storage.setItem(
+      storageKeys.weatherSnapshots,
+      JSON.stringify({
+        data: [weatherSnapshot],
+        version: 1,
+      })
+    );
+
+    expect(repository.get(weatherSnapshot.locationId)).toBeNull();
+    expect(storage.getItem(storageKeys.weatherSnapshots)).toBeNull();
+  });
+
+  test('aqi snapshot repository resets invalid snapshot shapes', () => {
+    const storage = createMemoryStorage();
+    const repository = createAqiSnapshotRepository({ storage });
+
+    repository.set(aqiSnapshot.locationId, aqiSnapshot);
+    storage.setItem(
+      storageKeys.aqiSnapshots,
+      JSON.stringify({
+        data: {
+          [aqiSnapshot.locationId]: {
+            ...aqiSnapshot,
+            category: 42,
+          },
+        },
+        version: 1,
+      })
+    );
+
+    expect(repository.get(aqiSnapshot.locationId)).toBeNull();
+    expect(storage.getItem(storageKeys.aqiSnapshots)).toBeNull();
   });
 });
