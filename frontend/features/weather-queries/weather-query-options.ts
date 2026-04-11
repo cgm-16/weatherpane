@@ -21,3 +21,16 @@ export function coreWeatherQueryOptions(
     refetchOnWindowFocus: REFETCH_ON_FOCUS,
   });
 }
+
+export function aqiQueryOptions(
+  location: ResolvedLocation,
+  provider: WeatherProvider
+) {
+  return queryOptions({
+    queryKey: weatherQueryKeys.aqi(location.locationId),
+    queryFn: () => provider.getAqi(location),
+    staleTime: AQI_STALE_TIME,
+    retry: QUERY_RETRY,
+    refetchOnWindowFocus: REFETCH_ON_FOCUS,
+  });
+}

@@ -2,7 +2,9 @@ import { describe, expect, test } from 'vitest';
 import { weatherQueryKeys } from '../frontend/features/weather-queries/query-keys';
 import {
   coreWeatherQueryOptions,
+  aqiQueryOptions,
   CORE_WEATHER_STALE_TIME,
+  AQI_STALE_TIME,
 } from '../frontend/features/weather-queries/weather-query-options';
 import { mockWeatherProvider } from '../frontend/shared/api/mock-weather-provider';
 import type { ResolvedLocation } from '../frontend/entities/location';
@@ -95,6 +97,40 @@ describe('coreWeatherQueryOptions', () => {
 
   test('queryFn resolves with CoreWeather for the location', async () => {
     const opts = coreWeatherQueryOptions(testLocation, mockWeatherProvider);
+    const result = await (opts.queryFn as () => Promise<unknown>)();
+    expect((result as { locationId: string }).locationId).toBe(
+      testLocation.locationId
+    );
+  });
+});
+
+describe('aqiQueryOptions', () => {
+  test('AQI_STALE_TIME is 30 minutes in ms', () => {
+    expect(AQI_STALE_TIME).toBe(30 * 60 * 1000);
+  });
+
+  test('queryKey matches weatherQueryKeys.aqi', () => {
+    const opts = aqiQueryOptions(testLocation, mockWeatherProvider);
+    expect(opts.queryKey).toEqual(['weather', 'aqi', testLocation.locationId]);
+  });
+
+  test('staleTime is 30 minutes', () => {
+    const opts = aqiQueryOptions(testLocation, mockWeatherProvider);
+    expect(opts.staleTime).toBe(30 * 60 * 1000);
+  });
+
+  test('retry is 1', () => {
+    const opts = aqiQueryOptions(testLocation, mockWeatherProvider);
+    expect(opts.retry).toBe(1);
+  });
+
+  test('refetchOnWindowFocus is true (refetch on focus only when stale)', () => {
+    const opts = aqiQueryOptions(testLocation, mockWeatherProvider);
+    expect(opts.refetchOnWindowFocus).toBe(true);
+  });
+
+  test('queryFn resolves with Aqi for the location', async () => {
+    const opts = aqiQueryOptions(testLocation, mockWeatherProvider);
     const result = await (opts.queryFn as () => Promise<unknown>)();
     expect((result as { locationId: string }).locationId).toBe(
       testLocation.locationId
