@@ -22,25 +22,24 @@ if (!Array.isArray(rawPaths)) {
 }
 
 // ── Check for duplicates before parsing ───────────────────────────────────
-const seen = new Set<string>();
-for (const path of rawPaths as string[]) {
-  if (seen.has(path)) {
-    throw new Error(
-      `generate-catalog: duplicate entry in source data: "${path}"`
-    );
-  }
-  seen.add(path);
-}
-
-// ── Parse entries ──────────────────────────────────────────────────────────
-const entries = (rawPaths as string[]).map((path, index) => {
-  if (typeof path !== 'string') {
+const seenCanonical = new Set<string>();
+for (const [index, rawPath] of rawPaths.entries()) {
+  if (typeof rawPath !== 'string') {
     throw new Error(
       `generate-catalog: entry at index ${index} is not a string`
     );
   }
-  return parseCatalogEntry(path);
-});
+  const canonicalPath = rawPath.normalize('NFC');
+  if (seenCanonical.has(canonicalPath)) {
+    throw new Error(
+      `generate-catalog: duplicate entry in source data (after NFC normalization): "${canonicalPath}"`
+    );
+  }
+  seenCanonical.add(canonicalPath);
+}
+
+// ── Parse entries ──────────────────────────────────────────────────────────
+const entries = (rawPaths as string[]).map((path) => parseCatalogEntry(path));
 
 // ── Validate popular locations ─────────────────────────────────────────────
 const validation = validatePopularLocations(entries, POPULAR_LOCATIONS);
@@ -53,7 +52,7 @@ if (validation.invalid.length > 0) {
 // ── Write output ───────────────────────────────────────────────────────────
 const catalog: LocationCatalog = {
   version: '1',
-  generatedAt: new Date().toISOString(),
+  generatedAt: process.env.CATALOG_GENERATED_AT ?? new Date().toISOString(),
   total: entries.length,
   entries,
 };
