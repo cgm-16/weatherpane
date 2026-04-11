@@ -122,4 +122,25 @@ describe('location repositories', () => {
     expect(repository.getAll()).toEqual([]);
     expect(storage.getItem(storageKeys.favorites)).toBeNull();
   });
+
+  test('favorites repository resets favorites with overlong nicknames', () => {
+    const storage = createMemoryStorage();
+    const repository = createFavoritesRepository({ storage });
+
+    storage.setItem(
+      storageKeys.favorites,
+      JSON.stringify({
+        data: [
+          {
+            ...favoriteLocation,
+            nickname: '가'.repeat(21),
+          },
+        ],
+        version: 1,
+      })
+    );
+
+    expect(repository.getAll()).toEqual([]);
+    expect(storage.getItem(storageKeys.favorites)).toBeNull();
+  });
 });

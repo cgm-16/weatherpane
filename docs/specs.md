@@ -138,7 +138,7 @@ Favorites의 카드 상태는 “경영 요약”의 확정 규칙(FAV-03~06)을
 
 - 서비스워커: 오프라인 경험/자산 업데이트/요청 가로채기. citeturn1search3
 - Cache API/CacheStorage: 오프라인 에셋 저장 및 요청 커스터마이징. citeturn5search0turn5search4
-- Web Storage: 기능별 키와 schemaVersion을 명시해 작은 영속 상태를 명확하게 관리한다.
+- Web Storage: 기능별 키와 payload `version` 을 명시해 작은 영속 상태를 명확하게 관리한다.
 
 ### 주요 런타임 컴포넌트
 
@@ -225,7 +225,7 @@ sequenceDiagram
 
 ### 저장소 선택과 근거
 
-MVP 단계의 영속 상태는 **기능별 버전드 Web Storage** 를 표준으로 한다. `favorites`, `recents`, `active location`, `theme`, `weather snapshots`, `AQI snapshots` 는 `localStorage` 에 저장하고, unsupported temp-route context 는 세션 범위여야 하므로 `sessionStorage` 에 저장한다. 각 저장소는 키 버전과 payload `schemaVersion` 을 함께 사용하고, 파싱 실패 또는 버전 불일치 시 해당 기능 키를 안전하게 리셋한다.
+MVP 단계의 영속 상태는 **기능별 버전드 Web Storage** 를 표준으로 한다. `favorites`, `recents`, `active location`, `theme`, `weather snapshots`, `AQI snapshots` 는 `localStorage` 에 저장하고, unsupported temp-route context 는 세션 범위여야 하므로 `sessionStorage` 에 저장한다. 각 저장소는 키 버전과 payload `version` 을 함께 사용하고, 파싱 실패 또는 버전 불일치 시 해당 기능 키를 안전하게 리셋한다.
 
 ### 엔티티 목록
 
@@ -652,7 +652,7 @@ PR/이슈 템플릿, CODEOWNERS, 보호 브랜치는 entity["company","Git
   - Home/Search/Detail/Favorites/Recents/Settings의 스켈레톤/오류/stale 상태 구현
   - Favorites “편집/정렬” 모드 토글, 위/아래 버튼, 닉네임 20자 하드캡, 완료 auto-blur 커밋
 - 데이터
-  - 버전드 Web Storage 키/schemaVersion 관리
+  - 버전드 Web Storage 키/payload `version` 관리
   - 스냅샷 저장/로드 및 staleness 판정 로직
   - Recents 기록(즐겨찾기와 독립)
 - 네트워크/동기화

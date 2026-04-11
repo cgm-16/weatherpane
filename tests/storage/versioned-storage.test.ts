@@ -61,6 +61,25 @@ describe('versioned storage helpers', () => {
     ).toBe('default');
   });
 
+  test('returns fallback when reset cleanup throws', () => {
+    const throwingStorage = {
+      ...createMemoryStorage(),
+      getItem: () => '{not-json',
+      removeItem: () => {
+        throw new Error('storage blocked');
+      },
+    };
+
+    expect(
+      readVersionedValue({
+        fallback: 'default',
+        key: 'weatherpane.test.v1',
+        storage: throwingStorage,
+        version: 1,
+      })
+    ).toBe('default');
+  });
+
   test('resets mismatched versions to the fallback value', () => {
     const storage = createMemoryStorage();
 
@@ -81,5 +100,23 @@ describe('versioned storage helpers', () => {
       })
     ).toBeNull();
     expect(storage.getItem('weatherpane.test.v1')).toBeNull();
+  });
+
+  test('does not throw when storage.setItem throws', () => {
+    const throwingStorage = {
+      ...createMemoryStorage(),
+      setItem: () => {
+        throw new Error('storage blocked');
+      },
+    };
+
+    expect(() =>
+      writeVersionedValue({
+        data: { enabled: true },
+        key: 'weatherpane.test.v1',
+        storage: throwingStorage,
+        version: 1,
+      })
+    ).not.toThrow();
   });
 });

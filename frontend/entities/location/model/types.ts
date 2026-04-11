@@ -71,6 +71,8 @@ export interface UnsupportedRouteContext {
   createdAt: ISODateTime;
 }
 
+const favoriteNicknameMaxLength = 20;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -157,7 +159,9 @@ export function isFavoriteLocation(value: unknown): value is FavoriteLocation {
   return (
     isString(value.favoriteId) &&
     isResolvedLocation(value.location) &&
-    (value.nickname === null || isString(value.nickname)) &&
+    (value.nickname === null ||
+      (isString(value.nickname) &&
+        value.nickname.length <= favoriteNicknameMaxLength)) &&
     isNumber(value.order) &&
     isString(value.createdAt) &&
     isString(value.updatedAt)
