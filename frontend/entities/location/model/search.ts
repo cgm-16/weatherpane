@@ -127,6 +127,17 @@ function comparePreparedEntries(
   );
 }
 
+function mapCatalogEntryToSearchResult(
+  entry: CatalogEntry
+): SearchCatalogResult {
+  return {
+    canonicalPath: entry.canonicalPath,
+    catalogLocationId: entry.catalogLocationId,
+    primaryLabel: entry.display.primaryLabel,
+    secondaryPath: entry.display.secondaryLabel,
+  };
+}
+
 export function searchCatalogLocations(
   query: string,
   catalog: LocationCatalog = defaultCatalog
@@ -146,10 +157,22 @@ export function searchCatalogLocations(
     }))
     .filter((match): match is RankedPreparedEntry => match.matchRank !== null)
     .sort(comparePreparedEntries)
-    .map(({ preparedEntry }) => ({
-      canonicalPath: preparedEntry.entry.canonicalPath,
-      catalogLocationId: preparedEntry.entry.catalogLocationId,
-      primaryLabel: preparedEntry.entry.display.primaryLabel,
-      secondaryPath: preparedEntry.entry.display.secondaryLabel,
-    }));
+    .map(({ preparedEntry }) =>
+      mapCatalogEntryToSearchResult(preparedEntry.entry)
+    );
+}
+
+export function getCatalogLocationResultsByCanonicalPath(
+  canonicalPaths: readonly string[],
+  catalog: LocationCatalog = defaultCatalog
+): SearchCatalogResult[] {
+  const entriesByCanonicalPath = new Map(
+    catalog.entries.map((entry) => [entry.canonicalPath, entry])
+  );
+
+  return canonicalPaths.flatMap((canonicalPath) => {
+    const entry = entriesByCanonicalPath.get(canonicalPath);
+
+    return entry ? [mapCatalogEntryToSearchResult(entry)] : [];
+  });
 }
