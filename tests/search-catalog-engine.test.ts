@@ -35,11 +35,14 @@ function createEntry(canonicalPath: string): CatalogEntry {
 
 const entries = [
   createEntry('서울특별시'),
+  createEntry('서울특별시-성동구'),
+  createEntry('서울특별시-성동구-행당동'),
   createEntry('서울특별시-종로구'),
   createEntry('서울특별시-종로구-무악동'),
   createEntry('서울특별시-종로구-청운동'),
   createEntry('부산광역시-중구-중앙동'),
   createEntry('강원특별자치도-고성군-중앙동'),
+  createEntry('강원특별자치도-양양군-성동리'),
 ];
 
 const catalog: LocationCatalog = {
@@ -50,6 +53,25 @@ const catalog: LocationCatalog = {
 };
 
 describe('searchCatalogLocations', () => {
+  it('does not broaden already-suffixed queries to unrelated stripped-name entries', () => {
+    expect(
+      searchCatalogLocations('성동구', catalog).map(
+        ({ canonicalPath }) => canonicalPath
+      )
+    ).toEqual(['서울특별시-성동구', '서울특별시-성동구-행당동']);
+  });
+
+  it('matches decomposed Hangul input via NFC normalization', () => {
+    expect(searchCatalogLocations('청운동'.normalize('NFD'), catalog)).toEqual([
+      {
+        canonicalPath: '서울특별시-종로구-청운동',
+        catalogLocationId: 'catalog:서울특별시-종로구-청운동',
+        primaryLabel: '청운동',
+        secondaryPath: '서울특별시-종로구',
+      },
+    ]);
+  });
+
   it('returns the exact leaf match as a UI-ready result', () => {
     expect(searchCatalogLocations('청운동', catalog)).toEqual([
       {
@@ -68,7 +90,9 @@ describe('searchCatalogLocations', () => {
       )
     ).toEqual([
       '서울특별시',
+      '서울특별시-성동구',
       '서울특별시-종로구',
+      '서울특별시-성동구-행당동',
       '서울특별시-종로구-무악동',
       '서울특별시-종로구-청운동',
     ]);
