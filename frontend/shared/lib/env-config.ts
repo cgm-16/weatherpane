@@ -17,7 +17,18 @@ export type ConfigResult =
 export function parseAppConfig(): ConfigResult {
   const raw = import.meta.env.VITE_WEATHER_PROVIDER_MODE;
 
-  if (!raw || raw === 'mock') {
+  if (!raw) {
+    return {
+      ok: false,
+      error: {
+        code: 'INVALID_PROVIDER_MODE',
+        field: 'VITE_WEATHER_PROVIDER_MODE',
+        message: 'VITE_WEATHER_PROVIDER_MODE is required but not set.',
+      },
+    };
+  }
+
+  if (raw === 'mock') {
     return { ok: true, config: { providerMode: 'mock' } };
   }
 
