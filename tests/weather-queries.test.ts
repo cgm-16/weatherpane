@@ -1,4 +1,7 @@
 import { describe, expect, test } from 'vitest';
+import { QueryClient } from '@tanstack/react-query';
+import { vi } from 'vitest';
+import { refreshLocation } from '../frontend/features/weather-queries/refresh-location';
 import { weatherQueryKeys } from '../frontend/features/weather-queries/query-keys';
 import {
   coreWeatherQueryOptions,
@@ -135,5 +138,38 @@ describe('aqiQueryOptions', () => {
     expect((result as { locationId: string }).locationId).toBe(
       testLocation.locationId
     );
+  });
+});
+
+describe('refreshLocation', () => {
+  test('invalidates core weather query for the given locationId', async () => {
+    const client = new QueryClient();
+    const spy = vi.spyOn(client, 'invalidateQueries');
+
+    await refreshLocation(client, 'loc_test123');
+
+    expect(spy).toHaveBeenCalledWith({
+      queryKey: weatherQueryKeys.coreWeather('loc_test123'),
+    });
+  });
+
+  test('invalidates AQI query for the given locationId', async () => {
+    const client = new QueryClient();
+    const spy = vi.spyOn(client, 'invalidateQueries');
+
+    await refreshLocation(client, 'loc_test123');
+
+    expect(spy).toHaveBeenCalledWith({
+      queryKey: weatherQueryKeys.aqi('loc_test123'),
+    });
+  });
+
+  test('invalidates exactly two queries (core weather + AQI)', async () => {
+    const client = new QueryClient();
+    const spy = vi.spyOn(client, 'invalidateQueries');
+
+    await refreshLocation(client, 'loc_test123');
+
+    expect(spy).toHaveBeenCalledTimes(2);
   });
 });
