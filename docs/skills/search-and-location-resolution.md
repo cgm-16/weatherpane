@@ -30,6 +30,8 @@
 - Manual override table runs before provider geocoding.
 - Provider geocoding runs before unsupported temp-route handling.
 - The override table must stay easy to extend.
+- Resolved route ids use `loc_<catalogLocationId>`.
+- Unsupported temp-route ids use `unsupported::<catalogLocationId>`.
 
 ## Execution checklist
 
