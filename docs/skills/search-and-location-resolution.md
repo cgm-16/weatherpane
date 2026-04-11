@@ -17,6 +17,11 @@
 ## Hard rules
 
 - Search source is the local preprocessed Korea catalog.
+- Search normalization stays narrow and explicit:
+  - NFC-normalize query text
+  - fold whitespace and punctuation for matching
+  - support omitted suffixes only for `시`, `도`, `구`, `군`, `읍`, `면`, `동`, `리`
+  - do not broaden suffix stripping without an explicit spec decision
 - Filtering is instant on every keystroke.
 - The URL query is authoritative on `/search?q=...`.
 - Replace history while typing.
@@ -35,7 +40,7 @@
      - query state on `/search`
      - catalog filtering or ranking
      - location resolution and unsupported handling
-   Done-check: the current owner files for search input, ranking, and resolution are identified.
+       Done-check: the current owner files for search input, ranking, and resolution are identified.
 
 2. Intent: preserve the URL-backed search contract.
    Action:
@@ -43,27 +48,27 @@
    - use history replace while typing
    - remove `q` when the query is cleared
    - only push history on explicit navigation
-   Done-check: a direct open on `/search?q=seoul` hydrates the same UI state as typing the value manually.
+     Done-check: a direct open on `/search?q=seoul` hydrates the same UI state as typing the value manually.
 
 3. Intent: keep search deterministic and Korea-catalog-driven.
    Action:
    - read from the preprocessed local catalog, not a raw district file or provider-driven search endpoint
    - keep filtering local and immediate
-   Done-check: the result list can be derived from local catalog data alone for a given query string.
+     Done-check: the result list can be derived from local catalog data alone for a given query string.
 
 4. Intent: preserve the resolution pipeline.
    Action:
    - apply manual overrides first
    - fall through to provider geocoding second
    - filter or classify unsupported results before changing active location
-   Done-check: unsupported or out-of-scope selections never replace the active location.
+     Done-check: unsupported or out-of-scope selections never replace the active location.
 
 5. Intent: verify the user-visible invariants for each change.
    Action:
    - add or update targeted tests for ranking, URL hydration, history behavior, and unsupported handling
    - run `pnpm exec vitest run path/to/search-behavior.test.ts`
    - run `pnpm exec playwright test path/to/search-flow.spec.ts` when the search flow changed
-   Done-check: the changed behavior is covered by at least one targeted automated test or a clearly stated blocker.
+     Done-check: the changed behavior is covered by at least one targeted automated test or a clearly stated blocker.
 
 ## Verification
 
