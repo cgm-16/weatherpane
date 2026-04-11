@@ -26,6 +26,7 @@ const resolvedLocation = {
 
 const rawGpsLocation = {
   capturedAt: '2026-04-11T09:00:00+09:00',
+  fallbackReason: 'canonicalization-failed' as const,
   kind: 'raw-gps' as const,
   latitude: 37.5665,
   locationId: 'gps:37.5665:126.9780',
@@ -57,6 +58,21 @@ describe('location type guards', () => {
         location: resolvedLocation,
       })
     ).toBe(false);
+  });
+
+  test('reject raw-gps locations with missing or invalid fallback reasons', () => {
+    expect(
+      isRawGpsFallbackLocation({
+        ...rawGpsLocation,
+        fallbackReason: 'mystery',
+      })
+    ).toBe(false);
+
+    const rawGpsWithoutReason: Record<string, unknown> = { ...rawGpsLocation };
+
+    delete rawGpsWithoutReason.fallbackReason;
+
+    expect(isRawGpsFallbackLocation(rawGpsWithoutReason)).toBe(false);
   });
 
   test('reject active and unsupported route contexts with non-ISO timestamps', () => {

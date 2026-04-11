@@ -76,7 +76,7 @@ function buildCatalogLocationPath(
   );
 }
 
-function buildResolvedLocation(
+export function buildResolvedLocation(
   catalogLocation: CatalogLocation,
   fields: ManualLocationOverride | LocationGeocodeCandidate
 ): ResolvedLocation {

@@ -39,6 +39,7 @@ const resolvedLocation: ResolvedLocation = {
 
 const rawGpsLocation: RawGpsFallbackLocation = {
   capturedAt: '2026-04-11T09:00:00+09:00',
+  fallbackReason: 'canonicalization-failed',
   kind: 'raw-gps',
   latitude: 37.5665,
   locationId: 'gps:37.5665:126.9780',
