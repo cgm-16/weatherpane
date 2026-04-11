@@ -1,12 +1,13 @@
 import { describe, expect, test } from 'vitest';
 
+import { normalizeOpenWeatherAqiResponse } from '../frontend/entities/aqi/api/openweather';
 import type { ResolvedLocation } from '../frontend/entities/location/model/types';
 import {
   buildWeatherTextMappingInput,
+  mockOpenWeatherCoreWeatherFixture,
   mapWeatherConditionToVisualBucket,
-  normalizeOpenWeatherAqiResponse,
   normalizeOpenWeatherCoreWeatherResponse,
-} from '../frontend/shared/api/openweather-normalizers';
+} from '../frontend/entities/weather/api/openweather';
 import {
   WeatherProviderError,
   normalizeWeatherProviderError,
@@ -29,7 +30,6 @@ describe('mapWeatherConditionToVisualBucket', () => {
     expect(
       mapWeatherConditionToVisualBucket({
         conditionId: 800,
-        description: '맑음',
         icon: '01d',
         cloudCoverPct: 5,
         precipitationMm: 0,
@@ -41,7 +41,6 @@ describe('mapWeatherConditionToVisualBucket', () => {
     expect(
       mapWeatherConditionToVisualBucket({
         conditionId: 803,
-        description: '구름 많음',
         icon: '03d',
         cloudCoverPct: 72,
         precipitationMm: 0,
@@ -53,7 +52,6 @@ describe('mapWeatherConditionToVisualBucket', () => {
     expect(
       mapWeatherConditionToVisualBucket({
         conditionId: 501,
-        description: '비',
         icon: '10d',
         cloudCoverPct: 94,
         precipitationMm: 1.8,
@@ -65,7 +63,6 @@ describe('mapWeatherConditionToVisualBucket', () => {
     expect(
       mapWeatherConditionToVisualBucket({
         conditionId: 601,
-        description: '눈',
         icon: '13n',
         cloudCoverPct: 91,
         precipitationMm: 2.7,
@@ -79,7 +76,6 @@ describe('buildWeatherTextMappingInput', () => {
     expect(
       buildWeatherTextMappingInput({
         conditionId: 501,
-        description: '비',
         icon: '10d',
         cloudCoverPct: 94,
         precipitationMm: 1.8,
@@ -97,7 +93,6 @@ describe('buildWeatherTextMappingInput', () => {
     expect(
       buildWeatherTextMappingInput({
         conditionId: 601,
-        description: '눈',
         icon: '13n',
         cloudCoverPct: 91,
         precipitationMm: 4.1,
@@ -157,6 +152,44 @@ describe('payload normalization failures', () => {
         },
         resolvedLocation
       )
+    ).toThrowError(WeatherProviderError);
+  });
+
+  test('처음 12개 범위 안의 잘못된 hourly 엔트리를 거부한다', () => {
+    const invalidPayload = {
+      ...mockOpenWeatherCoreWeatherFixture,
+      hourly: mockOpenWeatherCoreWeatherFixture.hourly.map((entry, index) =>
+        index === 7 ? { ...entry, temp: null } : entry
+      ),
+    };
+
+    expect(() =>
+      normalizeOpenWeatherCoreWeatherResponse(invalidPayload, resolvedLocation)
+    ).toThrowError(WeatherProviderError);
+
+    try {
+      normalizeOpenWeatherCoreWeatherResponse(invalidPayload, resolvedLocation);
+    } catch (error) {
+      expect(error).toMatchObject({
+        code: 'INVALID_PROVIDER_RESPONSE',
+        provider: 'mock-openweather',
+      });
+    }
+  });
+
+  test('숫자가 아닌 강수량 값을 거부한다', () => {
+    const invalidPayload = {
+      ...mockOpenWeatherCoreWeatherFixture,
+      current: {
+        ...mockOpenWeatherCoreWeatherFixture.current,
+        rain: {
+          '1h': '0.8',
+        },
+      },
+    };
+
+    expect(() =>
+      normalizeOpenWeatherCoreWeatherResponse(invalidPayload, resolvedLocation)
     ).toThrowError(WeatherProviderError);
   });
 });
