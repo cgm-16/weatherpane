@@ -33,28 +33,28 @@
    Action:
    - read the current normalized model types in `entities/weather/` and `entities/aqi/`
    - confirm the model does not expose raw provider field names
-   Done-check: the app-facing model is clearly defined and does not mirror the raw provider response.
+     Done-check: the app-facing model is clearly defined and does not mirror the raw provider response.
 
 2. Intent: apply the correct stale and retry policy when adding or changing a query hook.
    Action:
    - set `staleTime: 10 * 60 * 1000` for main weather hooks
    - set `staleTime: 30 * 60 * 1000` for AQI hooks
    - set `retry: 1` on both
-   - set `refetchOnWindowFocus: 'if-stale'` (or equivalent) on both
-   Done-check: the hook configuration matches all four policy values exactly.
+   - set `refetchOnWindowFocus: true` on both (TQ v5 removed `'if-stale'`; `true` is the equivalent — the library checks staleness before refetching when this is `true`)
+     Done-check: the hook configuration matches all four policy values exactly.
 
 3. Intent: confirm snapshot persistence respects the fallback cutoff.
    Action:
    - locate the snapshot read path in the repository
    - confirm the read logic checks timestamp age before returning a snapshot
    - confirm weather snapshots older than 24h and AQI snapshots older than 12h are treated as absent
-   Done-check: stale snapshots are not silently returned as valid data.
+     Done-check: stale snapshots are not silently returned as valid data.
 
 4. Intent: confirm that provider adapters normalize before returning.
    Action:
    - read the provider adapter for weather (and AQI if changed)
    - confirm the adapter maps all provider-specific field names to the normalized model before returning
-   Done-check: no raw provider field name appears beyond the adapter boundary.
+     Done-check: no raw provider field name appears beyond the adapter boundary.
 
 ## Verification
 
