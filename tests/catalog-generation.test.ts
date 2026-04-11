@@ -23,8 +23,12 @@ describe('computeCatalogLocationId', () => {
   it('produces known IDs for each depth level', () => {
     expect(computeCatalogLocationId('서울특별시')).toBe('af6564d37582');
     expect(computeCatalogLocationId('서울특별시-종로구')).toBe('e50058fbd673');
-    expect(computeCatalogLocationId('서울특별시-종로구-청운동')).toBe('5f5def784f91');
-    expect(computeCatalogLocationId('전북특별자치도-부안군-위도면-상왕등리')).toBe('8e3a1bacdc51');
+    expect(computeCatalogLocationId('서울특별시-종로구-청운동')).toBe(
+      '5f5def784f91'
+    );
+    expect(
+      computeCatalogLocationId('전북특별자치도-부안군-위도면-상왕등리')
+    ).toBe('8e3a1bacdc51');
   });
 
   it('produces distinct IDs for distinct paths', () => {
@@ -45,7 +49,9 @@ describe('computeCatalogLocationId', () => {
 
   it('is deterministic over 100 repeated calls', () => {
     const path = '부산광역시-해운대구';
-    const ids = Array.from({ length: 100 }, () => computeCatalogLocationId(path));
+    const ids = Array.from({ length: 100 }, () =>
+      computeCatalogLocationId(path)
+    );
     expect(new Set(ids).size).toBe(1);
   });
 });
@@ -132,6 +138,11 @@ describe('parseCatalogEntry depth-1', () => {
   });
   it('overrideKey is null', () => {
     expect(entry.overrideKey).toBeNull();
+  });
+  it('stores NFC-normalized canonicalPath when given NFD input', () => {
+    const nfd = '서울특별시'.normalize('NFD');
+    const nfdEntry = parseCatalogEntry(nfd);
+    expect(nfdEntry.canonicalPath).toBe('서울특별시'.normalize('NFC'));
   });
 });
 

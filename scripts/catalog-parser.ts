@@ -31,14 +31,15 @@ export function computeTokens(canonicalPath: string): string[] {
  * Parses a single raw district string into a CatalogEntry.
  * Throws on empty string, empty segments, or depth outside [1, 4].
  */
-export function parseCatalogEntry(canonicalPath: string): CatalogEntry {
-  if (!canonicalPath) {
+export function parseCatalogEntry(rawPath: string): CatalogEntry {
+  if (!rawPath) {
     throw new Error(`parseCatalogEntry: empty canonicalPath`);
   }
 
+  const canonicalPath = rawPath.normalize('NFC');
   const segments = canonicalPath.split('-');
 
-  if (segments.length < 1 || segments.length > 4) {
+  if (segments.length > 4) {
     throw new Error(
       `parseCatalogEntry: depth ${segments.length} out of range [1,4] for "${canonicalPath}"`
     );
