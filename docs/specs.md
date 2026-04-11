@@ -231,6 +231,7 @@ MVP 단계의 영속 상태는 **기능별 버전드 Web Storage** 를 표준으
 
 - `Location`: 위치 식별/표시명/좌표(선택)
 - `ActiveLocationState`: 현재 선택 위치 + 선택 출처 + 마지막 전환 시각
+- `CurrentLocationRecoveryState`: 현재 위치 조회 실패 시 복구 사유(`permission-denied`, `position-unavailable`, `timeout`)
 - `CoreWeather`: 쿼리/어댑터 계층이 반환하는 정규화된 핵심 날씨 모델
 - `Aqi`: 쿼리/어댑터 계층이 반환하는 정규화된 AQI 모델
 - `WeatherSummarySnapshot`: 홈/즐겨찾기 카드용 요약 스냅샷
@@ -256,6 +257,31 @@ export interface Location {
   lon?: number;
   tz?: string; // default 'Asia/Seoul'
 }
+
+export type RawGpsFallbackReason = 'canonicalization-failed' | 'outside-korea';
+
+export interface RawGpsFallbackLocation {
+  kind: 'raw-gps';
+  locationId: string; // gps:<lat4>:<lng4>
+  name: '현재 위치';
+  latitude: number;
+  longitude: number;
+  capturedAt: ISODateTime;
+  fallbackReason: RawGpsFallbackReason;
+}
+
+export type CurrentLocationRecoveryReason =
+  | 'permission-denied'
+  | 'position-unavailable'
+  | 'timeout';
+
+export type CurrentLocationResult =
+  | { kind: 'resolved'; location: ResolvedLocation }
+  | { kind: 'raw-gps'; location: RawGpsFallbackLocation }
+  | {
+      kind: 'recovery-required';
+      reason: CurrentLocationRecoveryReason;
+    };
 
 export interface WeatherSummarySnapshot {
   locationId: string;
@@ -356,6 +382,8 @@ export interface Aqi {
   source: { provider: string; modelVersion?: string };
 }
 ```
+
+현재 위치 서비스는 `getCurrentPosition()` 기반의 1회 조회만 수행한다. 성공 시 역매핑으로 지원되는 한국 canonical 위치를 `dong > gu/gun > si/do` 순서로 시도하고, canonicalization에 실패하면 raw GPS fallback을 만든다. `fallbackReason: 'outside-korea'` 인 raw GPS 위치는 조회는 가능하지만 즐겨찾기 저장 대상이 아니다. persisted active location이 이미 복원된 경우에는 현재 위치를 백그라운드에서 조용히 다시 조회하지 않는다.
 
 ### Favorites / Recents / Settings 모델(예시)
 
