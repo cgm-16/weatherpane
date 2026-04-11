@@ -154,7 +154,8 @@ function isOptionalPrecipitationAmount(
 
   return (
     isRecord(value) &&
-    (typeof value['1h'] === 'undefined' || isNumber(value['1h']))
+    (typeof value['1h'] === 'undefined' ||
+      (isNumber(value['1h']) && value['1h'] >= 0))
   );
 }
 
@@ -289,6 +290,21 @@ function isOpenWeatherCoreWeatherResponse(
   );
 }
 
+function getConditionText(conditionCode: string): string {
+  switch (conditionCode) {
+    case 'CLEAR':
+      return '맑음';
+    case 'CLOUDY':
+      return '흐림';
+    case 'RAIN':
+      return '비';
+    case 'SNOW':
+      return '눈';
+    default:
+      return conditionCode;
+  }
+}
+
 export function mapWeatherConditionToVisualBucket(
   input: OpenWeatherConditionContext
 ): WeatherVisualBucket {
@@ -339,7 +355,7 @@ function createWeatherCondition(
 
   return {
     code: textMapping.conditionCode,
-    text: condition.description,
+    text: getConditionText(textMapping.conditionCode),
     isDay: textMapping.isDay,
     visualBucket: mapWeatherConditionToVisualBucket(input),
     textMapping,
