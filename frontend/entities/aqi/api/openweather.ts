@@ -1,5 +1,5 @@
 import type { Aqi, AqiCategory } from '../model/aqi';
-import type { ResolvedLocation } from '../../location/model/types';
+import type { ResolvedLocation } from '~/entities/location';
 import {
   WeatherProviderError,
   normalizeWeatherProviderError,
@@ -55,6 +55,10 @@ function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
+function isNonNegativeNumber(value: unknown): value is number {
+  return isNumber(value) && value >= 0;
+}
+
 function isString(value: unknown): value is string {
   return typeof value === 'string';
 }
@@ -83,14 +87,14 @@ function isOpenWeatherAqiResponse(
     isRecord(first.main) &&
     isNumber(first.main.aqi) &&
     isRecord(first.components) &&
-    isNumber(first.components.co) &&
-    isNumber(first.components.no2) &&
-    isNumber(first.components.o3) &&
-    isNumber(first.components.pm2_5) &&
-    isNumber(first.components.pm10) &&
-    isNumber(first.components.so2) &&
+    isNonNegativeNumber(first.components.co) &&
+    isNonNegativeNumber(first.components.no2) &&
+    isNonNegativeNumber(first.components.o3) &&
+    isNonNegativeNumber(first.components.pm2_5) &&
+    isNonNegativeNumber(first.components.pm10) &&
+    isNonNegativeNumber(first.components.so2) &&
     (typeof first.components.nh3 === 'undefined' ||
-      isNumber(first.components.nh3))
+      isNonNegativeNumber(first.components.nh3))
   );
 }
 
