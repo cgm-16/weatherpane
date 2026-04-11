@@ -1,6 +1,7 @@
 import catalogData from '../catalog.generated.json';
 
 import type { CatalogEntry, LocationCatalog } from './catalog';
+import { buildComparableVariants, normalizeComparable } from './location-match';
 
 export interface SearchCatalogResult {
   primaryLabel: string;
@@ -23,45 +24,11 @@ enum MatchRank {
 }
 
 const defaultCatalog = catalogData as LocationCatalog;
-const omittedSuffixes = ['시', '도', '구', '군', '읍', '면', '동', '리'];
-const separatorPattern = /[\s\p{P}\p{S}]+/gu;
 const defaultPreparedEntries = defaultCatalog.entries.map(prepareCatalogEntry);
 const preparedEntriesCache = new WeakMap<
   LocationCatalog,
   PreparedCatalogEntry[]
 >();
-
-function normalizeComparable(value: string): string {
-  return value
-    .normalize('NFC')
-    .trim()
-    .toLowerCase()
-    .replace(separatorPattern, '');
-}
-
-function buildComparableVariants(
-  value: string,
-  includeOmittedSuffixVariants = true
-): Set<string> {
-  const comparable = normalizeComparable(value);
-  const variants = new Set<string>();
-
-  if (!comparable) {
-    return variants;
-  }
-
-  variants.add(comparable);
-
-  if (includeOmittedSuffixVariants) {
-    for (const suffix of omittedSuffixes) {
-      if (comparable.endsWith(suffix) && comparable.length > suffix.length) {
-        variants.add(comparable.slice(0, -suffix.length));
-      }
-    }
-  }
-
-  return variants;
-}
 
 function prepareCatalogEntry(entry: CatalogEntry): PreparedCatalogEntry {
   const segments = [
