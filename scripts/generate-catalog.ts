@@ -8,7 +8,7 @@ import { POPULAR_LOCATIONS } from '../frontend/entities/location/data/popular-lo
 import { parseCatalogEntry, validatePopularLocations } from './catalog-parser';
 
 const root = new URL('..', import.meta.url);
-const inputPath = fileURLToPath(new URL('korea_districts.json', root));
+const inputPath = fileURLToPath(new URL('docs/korea_districts.json', root));
 const outputPath = fileURLToPath(
   new URL('frontend/entities/location/catalog.generated.json', root)
 );
