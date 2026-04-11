@@ -7,7 +7,11 @@ function getBrowserStorage(
     return null;
   }
 
-  return window[storageKind];
+  try {
+    return window[storageKind];
+  } catch {
+    return null;
+  }
 }
 
 export function getLocalStorage() {
