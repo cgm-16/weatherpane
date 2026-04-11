@@ -43,6 +43,24 @@ describe('versioned storage helpers', () => {
     expect(storage.getItem('weatherpane.test.v1')).toBeNull();
   });
 
+  test('returns fallback when storage.getItem throws', () => {
+    const throwingStorage = {
+      ...createMemoryStorage(),
+      getItem: (): string | null => {
+        throw new Error('storage blocked');
+      },
+    };
+
+    expect(
+      readVersionedValue({
+        fallback: 'default',
+        key: 'weatherpane.test.v1',
+        storage: throwingStorage,
+        version: 1,
+      })
+    ).toBe('default');
+  });
+
   test('resets mismatched versions to the fallback value', () => {
     const storage = createMemoryStorage();
 

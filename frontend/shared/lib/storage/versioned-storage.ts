@@ -43,13 +43,13 @@ export function readVersionedValue<T>({
   fallback,
   validate,
 }: ReadVersionedValueOptions<T>): T {
-  const rawValue = storage.getItem(key);
-
-  if (rawValue === null) {
-    return fallback;
-  }
-
   try {
+    const rawValue = storage.getItem(key);
+
+    if (rawValue === null) {
+      return fallback;
+    }
+
     const parsedValue = JSON.parse(rawValue);
 
     if (
