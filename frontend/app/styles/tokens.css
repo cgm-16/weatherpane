@@ -10,7 +10,7 @@
   --font-display: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", sans-serif;
   /* 본문/레이블: 밝은 모드 Be Vietnam Pro, 어두운 모드에서 오버라이드 */
   --font-body: "Be Vietnam Pro", sans-serif;
-  /* Tailwind v4 baseline — font-sans utility maps to project body font */
+  /* Tailwind v4 기본값: font-sans 유틸리티가 프로젝트 본문 서체를 가리킴 */
   --font-sans: "Be Vietnam Pro", sans-serif;
 
   /* ── 테두리 반경 ────────────────────────────────────────────────── */
@@ -114,9 +114,9 @@
   /* 어두운 모드: font-sans도 Plus Jakarta Sans로 통일 */
   --font-sans: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", sans-serif;
 
-  /* 어두운 모드 그림자: primary(#ffb2b6) 기반 색조 */
+  /* 어두운 모드 그림자: on-surface(#e5e2e1) 기반 색조 */
   --shadow-float:
-    0px 2px 4px rgba(255, 178, 182, 0.04),
-    0px 4px 12px rgba(255, 178, 182, 0.04),
-    0px 10px 24px rgba(255, 178, 182, 0.04);
+    0px 2px 4px rgba(229, 226, 225, 0.04),
+    0px 4px 12px rgba(229, 226, 225, 0.04),
+    0px 10px 24px rgba(229, 226, 225, 0.04);
 }
