@@ -240,6 +240,8 @@ MVP 단계의 영속 상태는 **기능별 버전드 Web Storage** 를 표준으
 
 ### TypeScript 인터페이스(예시)
 
+아래 인터페이스는 저장 래퍼를 제외한 도메인 값 예시다. 실제 Web Storage payload는 `VersionedPayload<T>` 형태로 `version` 과 `data` 를 함께 저장한다.
+
 ```ts
 export type ISODateTime = string;
 
@@ -254,7 +256,6 @@ export interface Location {
 }
 
 export interface WeatherSummarySnapshot {
-  schemaVersion: 1;
   locationId: string;
   fetchedAt: ISODateTime; // client received time
   observedAt: ISODateTime; // provider observation time (or fetchedAt)
@@ -269,7 +270,6 @@ export interface WeatherSummarySnapshot {
 }
 
 export interface WeatherDetailSnapshot {
-  schemaVersion: 1;
   locationId: string;
   fetchedAt: ISODateTime;
   current: {
@@ -330,7 +330,7 @@ export interface Settings {
 | `active location`                | `weatherpane.active-location.v1`           | `localStorage`   | `location, source, changedAt`                  |
 | `weather snapshots`              | `weatherpane.weather-snapshots.v1`         | `localStorage`   | `Record<locationId, PersistedWeatherSnapshot>` |
 | `AQI snapshots`                  | `weatherpane.aqi-snapshots.v1`             | `localStorage`   | `Record<locationId, PersistedAqiSnapshot>`     |
-| `favorites`                      | `weatherpane.favorites.v1`                 | `localStorage`   | `Favorite[]`                                   |
+| `favorites`                      | `weatherpane.favorites.v1`                 | `localStorage`   | `FavoriteLocation[]`                           |
 | `recents`                        | `weatherpane.recents.v1`                   | `localStorage`   | `Recent[]`                                     |
 | `theme`                          | `weatherpane.theme.v1`                     | `localStorage`   | `"system" \| "light" \| "dark"`                |
 | `unsupported temp-route context` | `weatherpane.unsupported-route-context.v1` | `sessionStorage` | `Record<token, UnsupportedRouteContext>`       |
@@ -341,17 +341,19 @@ export interface Settings {
 
 ```json
 {
-  "schemaVersion": 1,
-  "locationId": "loc_3f2c1a8b",
-  "fetchedAt": "2026-04-10T08:12:31+09:00",
-  "observedAt": "2026-04-10T08:00:00+09:00",
-  "tempC": 13.4,
-  "conditionCode": "CLOUDY",
-  "conditionText": "흐림",
-  "todayMinC": 9.0,
-  "todayMaxC": 17.0,
-  "sketchKey": "CLOUDY_DAY",
-  "source": { "provider": "ACME_WEATHER", "modelVersion": "2026.03" }
+  "version": 1,
+  "data": {
+    "locationId": "loc_3f2c1a8b",
+    "fetchedAt": "2026-04-10T08:12:31+09:00",
+    "observedAt": "2026-04-10T08:00:00+09:00",
+    "tempC": 13.4,
+    "conditionCode": "CLOUDY",
+    "conditionText": "흐림",
+    "todayMinC": 9.0,
+    "todayMaxC": 17.0,
+    "sketchKey": "CLOUDY_DAY",
+    "source": { "provider": "ACME_WEATHER", "modelVersion": "2026.03" }
+  }
 }
 ```
 
@@ -359,17 +361,27 @@ export interface Settings {
 
 ```json
 {
-  "favorites": [
+  "version": 1,
+  "data": [
     {
       "favoriteId": "fav_a",
-      "locationId": "loc_3f2c1a8b",
+      "location": {
+        "kind": "resolved",
+        "locationId": "loc_3f2c1a8b",
+        "catalogLocationId": "catalog:seoul-jongno",
+        "name": "서울 종로구",
+        "admin1": "서울특별시",
+        "admin2": "종로구",
+        "latitude": 37.5729,
+        "longitude": 126.9794,
+        "timezone": "Asia/Seoul"
+      },
       "nickname": "회사",
       "order": 0,
       "createdAt": "2026-03-01T10:00:00+09:00",
       "updatedAt": "2026-04-10T08:10:00+09:00"
     }
-  ],
-  "collectionUpdatedAt": "2026-04-10T08:10:00+09:00"
+  ]
 }
 ```
 
