@@ -1,12 +1,12 @@
 import type { WeatherProvider } from './weather-provider';
 import {
   mockOpenWeatherAqiFixture,
-  mockOpenWeatherCoreWeatherFixture,
-} from './mock-weather-fixtures';
-import {
   normalizeOpenWeatherAqiResponse,
+} from '../../entities/aqi/api/openweather';
+import {
+  mockOpenWeatherCoreWeatherFixture,
   normalizeOpenWeatherCoreWeatherResponse,
-} from './openweather-normalizers';
+} from '../../entities/weather/api/openweather';
 
 export const mockWeatherProvider: WeatherProvider = {
   mode: 'mock',
