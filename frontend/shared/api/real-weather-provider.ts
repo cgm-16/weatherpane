@@ -1,6 +1,20 @@
 import type { WeatherProvider } from './weather-provider';
+import { WeatherProviderError } from './weather-provider-error';
 
-// 스텁 — 실제 API 통합은 T08+ 작업에서 구현됩니다.
 export const realWeatherProvider: WeatherProvider = {
   mode: 'real',
+  async getCoreWeather() {
+    throw new WeatherProviderError({
+      code: 'PROVIDER_NOT_IMPLEMENTED',
+      provider: 'openweather',
+      message: 'OpenWeather 핵심 날씨 어댑터가 아직 구현되지 않았습니다.',
+    });
+  },
+  async getAqi() {
+    throw new WeatherProviderError({
+      code: 'PROVIDER_NOT_IMPLEMENTED',
+      provider: 'openweather',
+      message: 'OpenWeather AQI 어댑터가 아직 구현되지 않았습니다.',
+    });
+  },
 };

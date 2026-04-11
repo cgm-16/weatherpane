@@ -231,6 +231,8 @@ MVP 단계의 영속 상태는 **기능별 버전드 Web Storage** 를 표준으
 
 - `Location`: 위치 식별/표시명/좌표(선택)
 - `ActiveLocationState`: 현재 선택 위치 + 선택 출처 + 마지막 전환 시각
+- `CoreWeather`: 쿼리/어댑터 계층이 반환하는 정규화된 핵심 날씨 모델
+- `Aqi`: 쿼리/어댑터 계층이 반환하는 정규화된 AQI 모델
 - `WeatherSummarySnapshot`: 홈/즐겨찾기 카드용 요약 스냅샷
 - `WeatherDetailSnapshot`: 상세 화면용 시간별/일별 스냅샷
 - `Favorite`: 즐겨찾기 메타(닉네임, order)
@@ -293,6 +295,65 @@ export interface WeatherDetailSnapshot {
     maxC: number;
     conditionCode: string;
   }>;
+}
+
+export interface CoreWeather {
+  locationId: string;
+  fetchedAt: ISODateTime;
+  observedAt: ISODateTime;
+  current: {
+    temperatureC: number;
+    feelsLikeC?: number;
+    humidityPct?: number;
+    windMps?: number;
+    precipitationMm?: number;
+    uvIndex?: number;
+    dewPointC?: number;
+    condition: {
+      code: string;
+      text: string;
+      isDay: boolean;
+      visualBucket: 'clear' | 'cloudy' | 'rainy' | 'snowy';
+      textMapping: {
+        conditionCode: string;
+        isDay: boolean;
+        precipitationKind: 'none' | 'rain' | 'snow';
+        cloudCoverPct: number;
+        intensity: 'none' | 'light' | 'moderate' | 'heavy';
+      };
+    };
+  };
+  today: {
+    minC: number;
+    maxC: number;
+  };
+  hourly: Array<{
+    at: ISODateTime;
+    temperatureC: number;
+    popPct: number;
+    condition: CoreWeather['current']['condition'];
+  }>;
+  source: { provider: string; modelVersion?: string };
+}
+
+export interface Aqi {
+  locationId: string;
+  fetchedAt: ISODateTime;
+  observedAt: ISODateTime;
+  summary: {
+    aqi: number;
+    category: 'good' | 'fair' | 'moderate' | 'poor' | 'very-poor';
+  };
+  pollutants: {
+    co: number;
+    no2: number;
+    o3: number;
+    pm10: number;
+    pm25: number;
+    so2: number;
+    nh3?: number;
+  };
+  source: { provider: string; modelVersion?: string };
 }
 ```
 

@@ -1,10 +1,14 @@
 import { createContext, use } from 'react';
 
+import type { Aqi } from '~/entities/aqi/model/aqi';
+import type { ResolvedLocation } from '~/entities/location/model/types';
+import type { CoreWeather } from '~/entities/weather/model/core-weather';
 import type { ProviderMode } from '~/shared/lib/env-config';
 
 export interface WeatherProvider {
   readonly mode: ProviderMode;
-  // 날씨 데이터 메서드는 T08+ 작업에서 추가됩니다.
+  getCoreWeather(location: ResolvedLocation): Promise<CoreWeather>;
+  getAqi(location: ResolvedLocation): Promise<Aqi>;
 }
 
 export const WeatherProviderContext = createContext<WeatherProvider | null>(
