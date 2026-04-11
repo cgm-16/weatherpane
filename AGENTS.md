@@ -64,7 +64,7 @@ Minimum required skills by area:
 - Main weather staleTime: 10m
 - AQI staleTime: 30m
 - Retry once
-- Refetch on focus only when stale
+- Refetch on focus only when stale (TQ v5: `refetchOnWindowFocus: true`; `'if-stale'` was removed in v5)
 - Do not persist TanStack Query cache across sessions
 - Weather snapshot fallback cutoff: 24h
 - AQI snapshot fallback cutoff: 12h

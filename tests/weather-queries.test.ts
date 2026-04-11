@@ -1,5 +1,22 @@
 import { describe, expect, test } from 'vitest';
 import { weatherQueryKeys } from '../frontend/features/weather-queries/query-keys';
+import {
+  coreWeatherQueryOptions,
+  CORE_WEATHER_STALE_TIME,
+} from '../frontend/features/weather-queries/weather-query-options';
+import { mockWeatherProvider } from '../frontend/shared/api/mock-weather-provider';
+import type { ResolvedLocation } from '../frontend/entities/location';
+
+const testLocation: ResolvedLocation = {
+  kind: 'resolved',
+  locationId: 'loc_test123',
+  catalogLocationId: 'KR-Seoul',
+  name: '서울',
+  admin1: '서울특별시',
+  latitude: 37.5665,
+  longitude: 126.978,
+  timezone: 'Asia/Seoul',
+};
 
 describe('weatherQueryKeys', () => {
   describe('coreWeather', () => {
@@ -18,6 +35,11 @@ describe('weatherQueryKeys', () => {
       const a = weatherQueryKeys.coreWeather('loc_aaa');
       const b = weatherQueryKeys.coreWeather('loc_bbb');
       expect(a).not.toEqual(b);
+    });
+
+    test('key is exactly 3 elements', () => {
+      const key = weatherQueryKeys.coreWeather('loc_abc');
+      expect(key).toHaveLength(3);
     });
   });
 
@@ -38,5 +60,44 @@ describe('weatherQueryKeys', () => {
       const aq = weatherQueryKeys.aqi('loc_abc');
       expect(cw).not.toEqual(aq);
     });
+
+    test('key is exactly 3 elements', () => {
+      const key = weatherQueryKeys.aqi('loc_abc');
+      expect(key).toHaveLength(3);
+    });
+  });
+});
+
+describe('coreWeatherQueryOptions', () => {
+  test('CORE_WEATHER_STALE_TIME is 10 minutes in ms', () => {
+    expect(CORE_WEATHER_STALE_TIME).toBe(10 * 60 * 1000);
+  });
+
+  test('queryKey matches weatherQueryKeys.coreWeather', () => {
+    const opts = coreWeatherQueryOptions(testLocation, mockWeatherProvider);
+    expect(opts.queryKey).toEqual(['weather', 'core', testLocation.locationId]);
+  });
+
+  test('staleTime is 10 minutes', () => {
+    const opts = coreWeatherQueryOptions(testLocation, mockWeatherProvider);
+    expect(opts.staleTime).toBe(10 * 60 * 1000);
+  });
+
+  test('retry is 1', () => {
+    const opts = coreWeatherQueryOptions(testLocation, mockWeatherProvider);
+    expect(opts.retry).toBe(1);
+  });
+
+  test('refetchOnWindowFocus is true (refetch on focus only when stale)', () => {
+    const opts = coreWeatherQueryOptions(testLocation, mockWeatherProvider);
+    expect(opts.refetchOnWindowFocus).toBe(true);
+  });
+
+  test('queryFn resolves with CoreWeather for the location', async () => {
+    const opts = coreWeatherQueryOptions(testLocation, mockWeatherProvider);
+    const result = await (opts.queryFn as () => Promise<unknown>)();
+    expect((result as { locationId: string }).locationId).toBe(
+      testLocation.locationId
+    );
   });
 });
