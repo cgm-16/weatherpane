@@ -152,6 +152,11 @@ export function SearchPage() {
   }
 
   function handleInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    // IME 조합 중 키 이벤트를 무시하여 한국어 입력이 방해받지 않도록 함
+    if (event.nativeEvent.isComposing) {
+      return;
+    }
+
     if (!hasActiveQuery) {
       return;
     }
