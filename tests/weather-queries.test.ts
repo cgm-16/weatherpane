@@ -90,7 +90,7 @@ describe('coreWeatherQueryOptions', () => {
     expect(opts.retry).toBe(1);
   });
 
-  test('refetchOnWindowFocus is true (refetch on focus only when stale)', () => {
+  test('refetchOnWindowFocus is true', () => {
     const opts = coreWeatherQueryOptions(testLocation, mockWeatherProvider);
     expect(opts.refetchOnWindowFocus).toBe(true);
   });
@@ -124,7 +124,7 @@ describe('aqiQueryOptions', () => {
     expect(opts.retry).toBe(1);
   });
 
-  test('refetchOnWindowFocus is true (refetch on focus only when stale)', () => {
+  test('refetchOnWindowFocus is true', () => {
     const opts = aqiQueryOptions(testLocation, mockWeatherProvider);
     expect(opts.refetchOnWindowFocus).toBe(true);
   });
