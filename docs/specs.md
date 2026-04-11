@@ -259,21 +259,19 @@ export interface WeatherSummarySnapshot {
   locationId: string;
   fetchedAt: ISODateTime; // client received time
   observedAt: ISODateTime; // provider observation time (or fetchedAt)
-  tempC: number;
+  temperatureC: number;
   conditionCode: string; // e.g., CLEAR, RAIN
   conditionText: string; // localized
   todayMinC: number;
   todayMaxC: number;
-  sketchKey: string; // e.g., CLEAR_DAY
   source: { provider: string; modelVersion?: string };
-  lastError?: { at: ISODateTime; type: string; httpStatus?: number };
 }
 
 export interface WeatherDetailSnapshot {
   locationId: string;
   fetchedAt: ISODateTime;
   current: {
-    tempC: number;
+    temperatureC: number;
     feelsLikeC?: number;
     humidityPct?: number;
     windMps?: number;
@@ -285,7 +283,7 @@ export interface WeatherDetailSnapshot {
   };
   hourly: Array<{
     at: ISODateTime;
-    tempC: number;
+    temperatureC: number;
     popPct?: number;
     conditionCode: string;
   }>;
