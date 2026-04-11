@@ -21,6 +21,7 @@ Do not treat TanStack Query cache as long-term persistence.
 ## Required reading before changes
 
 Before planning or executing non-trivial changes, read:
+
 - `docs/agents/README.md`
 - the workflow doc for your agent type (see `docs/agents/README.md` for which one)
 - the nearest relevant skill files in `docs/skills/`
@@ -28,6 +29,7 @@ Before planning or executing non-trivial changes, read:
 If the task changes agent guidance or skill docs, also read `docs/agents/skill-authoring-contract.md`.
 
 Minimum required skills by area:
+
 - search work -> `docs/skills/search-and-location-resolution.md`
 - favorites work -> `docs/skills/favorites-behavior.md`
 - weather/query work -> `docs/skills/weather-domain-contracts.md`
@@ -69,6 +71,7 @@ Minimum required skills by area:
 ## Testing rules
 
 Before proposing completion:
+
 - run lint
 - run typecheck
 - run unit/integration tests for touched behavior
@@ -81,6 +84,7 @@ Production must show explicit config/service errors, not silent demo fallback.
 ## PR rules
 
 Every PR must:
+
 - link an issue
 - describe scope and non-scope
 - state spec alignment
@@ -91,9 +95,11 @@ Every PR must:
 ## Agent output rules
 
 When changing behavior:
+
 - update the relevant docs/skill/spec file in the same PR
 
 When uncertain:
+
 - do not invent new behavior
 - preserve the agreed spec
 - raise the gap explicitly in the issue/PR notes
@@ -103,6 +109,7 @@ When uncertain:
 - Skill files (`SKILL.md`), `docs/skills/*`, and prompt plan files are instructions optimized for Codex - write them in English for clarity
 - All other written artifacts must be in Korean: PR titles/descriptions, commit messages, code comments, documentation files, and issue descriptions
 - Exceptions: `AGENTS.md`, `docs/agents/*`, and `docs/skills/*` must be written in English. Files under `docs/legacy/*` may remain in their original language.
+- All TypeScript/JavaScript source files follow the Korean comment rule, including build scripts under `scripts/`.
 - `docs/` and its subfolders (except `docs/legacy/`) MUST be kept current with the codebase; do not leave outdated content after related changes.
 - `docs/legacy/` contains archived historical documents that may be outdated by design.
 - `docs/agents/` contains prompt plans and LLM-facing operational documents, and these files should be written in English.
