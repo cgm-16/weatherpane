@@ -16,7 +16,7 @@ permissions:
 # Action versions last verified: 2026-04-11
 # Policy: use latest stable patch unless released <2 weeks ago; re-verify on dependency updates.
 #   actions/checkout:       v6.0.2  (2025-01-09)
-#   pnpm/action-setup:      v6.0.0  (2025-04-10)
+#   pnpm/action-setup:      v5.0.0  (2025-03-17) — v6.0.0 caused ERR_PNPM_BROKEN_LOCKFILE
 #   actions/setup-node:     v6.3.0  (2025-03-04)
 #   actions/upload-artifact: v4.6.2  (2025-03-19)
 
@@ -26,11 +26,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
-      - uses: pnpm/action-setup@v6.0.0
+      - uses: pnpm/action-setup@v5.0.0
       - uses: actions/setup-node@v6.3.0
         with:
           node-version: '24'
           cache: 'pnpm'
+      - run: pnpm --version
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm lint
@@ -40,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
-      - uses: pnpm/action-setup@v6.0.0
+      - uses: pnpm/action-setup@v5.0.0
       - uses: actions/setup-node@v6.3.0
         with:
           node-version: '24'
@@ -59,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
-      - uses: pnpm/action-setup@v6.0.0
+      - uses: pnpm/action-setup@v5.0.0
       - uses: actions/setup-node@v6.3.0
         with:
           node-version: '24'
@@ -72,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
-      - uses: pnpm/action-setup@v6.0.0
+      - uses: pnpm/action-setup@v5.0.0
       - uses: actions/setup-node@v6.3.0
         with:
           node-version: '24'
@@ -85,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
-      - uses: pnpm/action-setup@v6.0.0
+      - uses: pnpm/action-setup@v5.0.0
       - uses: actions/setup-node@v6.3.0
         with:
           node-version: '24'
