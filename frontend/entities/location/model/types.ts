@@ -72,6 +72,8 @@ export interface UnsupportedRouteContext {
 }
 
 const favoriteNicknameMaxLength = 20;
+const isoDateTimePattern =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?(Z|([+-])(\d{2}):(\d{2}))$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -83,6 +85,78 @@ function isString(value: unknown): value is string {
 
 function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
+}
+
+function isISODateTime(value: unknown): value is ISODateTime {
+  if (!isString(value)) {
+    return false;
+  }
+
+  const match = isoDateTimePattern.exec(value);
+
+  if (!match) {
+    return false;
+  }
+
+  const [
+    ,
+    yearString,
+    monthString,
+    dayString,
+    hourString,
+    minuteString,
+    secondString,
+    millisecondString,
+    ,
+    offsetSign,
+    offsetHourString,
+    offsetMinuteString,
+  ] = match;
+  const year = Number(yearString);
+  const month = Number(monthString);
+  const day = Number(dayString);
+  const hour = Number(hourString);
+  const minute = Number(minuteString);
+  const second = Number(secondString);
+  const millisecond = Number((millisecondString ?? '').padEnd(3, '0'));
+  const offsetHour = Number(offsetHourString ?? '0');
+  const offsetMinute = Number(offsetMinuteString ?? '0');
+
+  if (
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    hour > 23 ||
+    minute > 59 ||
+    second > 59 ||
+    offsetHour > 23 ||
+    offsetMinute > 59
+  ) {
+    return false;
+  }
+
+  const offsetMinutes =
+    offsetSign === '-'
+      ? -(offsetHour * 60 + offsetMinute)
+      : offsetHour * 60 + offsetMinute;
+  const utcTimestamp =
+    Date.UTC(year, month - 1, day, hour, minute, second, millisecond) -
+    offsetMinutes * 60_000;
+  const localDate = new Date(utcTimestamp + offsetMinutes * 60_000);
+
+  return (
+    localDate.getUTCFullYear() === year &&
+    localDate.getUTCMonth() === month - 1 &&
+    localDate.getUTCDate() === day &&
+    localDate.getUTCHours() === hour &&
+    localDate.getUTCMinutes() === minute &&
+    localDate.getUTCSeconds() === second &&
+    localDate.getUTCMilliseconds() === millisecond
+  );
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return isNumber(value) && Number.isInteger(value) && value >= 0;
 }
 
 function hasOptionalString(value: unknown): value is string | undefined {
@@ -135,7 +209,7 @@ export function isRawGpsFallbackLocation(
     isString(value.name) &&
     isNumber(value.latitude) &&
     isNumber(value.longitude) &&
-    isString(value.capturedAt)
+    isISODateTime(value.capturedAt)
   );
 }
 
@@ -145,7 +219,7 @@ export function isRecentLocation(value: unknown): value is RecentLocation {
   }
 
   return (
-    isString(value.lastOpenedAt) &&
+    isISODateTime(value.lastOpenedAt) &&
     (isResolvedLocation(value.location) ||
       isRawGpsFallbackLocation(value.location))
   );
@@ -162,9 +236,9 @@ export function isFavoriteLocation(value: unknown): value is FavoriteLocation {
     (value.nickname === null ||
       (isString(value.nickname) &&
         value.nickname.length <= favoriteNicknameMaxLength)) &&
-    isNumber(value.order) &&
-    isString(value.createdAt) &&
-    isString(value.updatedAt)
+    isNonNegativeInteger(value.order) &&
+    isISODateTime(value.createdAt) &&
+    isISODateTime(value.updatedAt)
   );
 }
 
@@ -181,7 +255,7 @@ export function isActiveLocation(value: unknown): value is ActiveLocation {
     return false;
   }
 
-  if (!isString(value.changedAt) || !isString(value.source)) {
+  if (!isISODateTime(value.changedAt) || !isString(value.source)) {
     return false;
   }
 
@@ -210,6 +284,6 @@ export function isUnsupportedRouteContext(
   return (
     isString(value.token) &&
     isCatalogLocation(value.catalogLocation) &&
-    isString(value.createdAt)
+    isISODateTime(value.createdAt)
   );
 }
