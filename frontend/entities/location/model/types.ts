@@ -1,4 +1,5 @@
 export type ISODateTime = string;
+export type RawGpsFallbackReason = 'canonicalization-failed' | 'outside-korea';
 
 export interface CatalogLocation {
   catalogLocationId: string;
@@ -28,6 +29,7 @@ export interface RawGpsFallbackLocation {
   latitude: number;
   longitude: number;
   capturedAt: ISODateTime;
+  fallbackReason: RawGpsFallbackReason;
 }
 
 export type ActiveLocationSource =
@@ -72,6 +74,10 @@ export interface UnsupportedRouteContext {
 }
 
 const favoriteNicknameMaxLength = 20;
+const rawGpsFallbackReasons = new Set<RawGpsFallbackReason>([
+  'canonicalization-failed',
+  'outside-korea',
+]);
 const isoDateTimePattern =
   /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?(Z|([+-])(\d{2}):(\d{2}))$/;
 
@@ -209,7 +215,9 @@ export function isRawGpsFallbackLocation(
     isString(value.name) &&
     isNumber(value.latitude) &&
     isNumber(value.longitude) &&
-    isISODateTime(value.capturedAt)
+    isISODateTime(value.capturedAt) &&
+    isString(value.fallbackReason) &&
+    rawGpsFallbackReasons.has(value.fallbackReason as RawGpsFallbackReason)
   );
 }
 

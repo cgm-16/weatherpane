@@ -1,12 +1,17 @@
 export {
+  buildResolvedLocation,
   buildResolvedLocationId,
   buildUnsupportedRouteToken,
   createCatalogLocationResolver,
   isUnsupportedRouteToken,
   recoverUnsupportedRouteContext,
 } from './model/location-resolution';
+export { buildLocationComparablePath } from './model/location-match';
+export type { CatalogEntry, CatalogDepth } from './model/catalog';
 export type {
   CatalogLocation,
+  RawGpsFallbackLocation,
+  RawGpsFallbackReason,
   ResolvedLocation,
   UnsupportedRouteContext,
 } from './model/types';
