@@ -1,6 +1,6 @@
 // frontend/entities/location/data/popular-locations.ts
-// Canonical paths validated against korea_districts.json at generation time.
-// Run `pnpm generate:catalog` after editing this list.
+// 생성 시점에 korea_districts.json 대조 검증된 카노니컬 경로 목록.
+// 이 목록을 수정한 후에는 `pnpm generate:catalog`를 실행하세요.
 
 export const POPULAR_LOCATIONS: string[] = [
   '서울특별시',

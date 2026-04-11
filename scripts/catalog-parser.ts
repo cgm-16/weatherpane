@@ -6,8 +6,8 @@ import type {
 } from '../frontend/entities/location/model/catalog';
 
 /**
- * Returns the first 12 hex characters of the SHA-256 hash of the NFC-normalized
- * canonical path. Deterministic, collision-free across all 20,556 Korea districts.
+ * NFC 정규화된 카노니컬 경로의 SHA-256 해시에서 앞 12개 16진수 문자를 반환한다.
+ * 결정적(deterministic)이며, 현재 데이터셋 20,556개 항목에서 충돌 미발견.
  */
 export function computeCatalogLocationId(canonicalPath: string): string {
   const normalized = canonicalPath.normalize('NFC');
@@ -18,8 +18,8 @@ export function computeCatalogLocationId(canonicalPath: string): string {
 }
 
 /**
- * Returns NFC-normalized tokens: [fullPath, seg1, seg2, ...].
- * Used by the search layer for instant matching.
+ * NFC 정규화된 검색 토큰 배열 [전체경로, 세그먼트1, 세그먼트2, ...]을 반환한다.
+ * 검색 레이어의 즉시 매칭에 사용된다.
  */
 export function computeTokens(canonicalPath: string): string[] {
   const nfcPath = canonicalPath.normalize('NFC');
@@ -28,8 +28,8 @@ export function computeTokens(canonicalPath: string): string[] {
 }
 
 /**
- * Parses a single raw district string into a CatalogEntry.
- * Throws on empty string, empty segments, or depth outside [1, 4].
+ * 원시 행정구역 문자열 하나를 CatalogEntry로 파싱한다.
+ * 빈 문자열, 빈 세그먼트, 또는 depth가 [1, 4] 범위를 벗어나면 예외를 던진다.
  */
 export function parseCatalogEntry(rawPath: string): CatalogEntry {
   if (!rawPath) {
@@ -82,8 +82,8 @@ export interface PopularValidationResult {
 }
 
 /**
- * Checks every path in popularPaths against the entries' canonical paths.
- * Returns { valid, invalid } arrays — caller decides whether to throw.
+ * popularPaths의 모든 경로를 entries의 카노니컬 경로 목록과 대조 검증한다.
+ * { valid, invalid } 배열을 반환하며, 예외 처리는 호출자가 결정한다.
  */
 export function validatePopularLocations(
   entries: CatalogEntry[],

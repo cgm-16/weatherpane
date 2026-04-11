@@ -1,5 +1,5 @@
 // scripts/generate-catalog.ts
-// Run with: pnpm generate:catalog
+// 실행: pnpm generate:catalog
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,7 +13,7 @@ const outputPath = fileURLToPath(
   new URL('frontend/entities/location/catalog.generated.json', root)
 );
 
-// ── Read raw data ──────────────────────────────────────────────────────────
+// ── 원시 데이터 읽기 ────────────────────────────────────────────────────────
 const rawJson = readFileSync(inputPath, 'utf-8');
 const rawPaths: unknown = JSON.parse(rawJson);
 
@@ -21,7 +21,7 @@ if (!Array.isArray(rawPaths)) {
   throw new Error('generate-catalog: input JSON is not an array');
 }
 
-// ── Check for duplicates before parsing ───────────────────────────────────
+// ── 파싱 전 중복 항목 검사 ──────────────────────────────────────────────────
 const seenCanonical = new Set<string>();
 for (const [index, rawPath] of rawPaths.entries()) {
   if (typeof rawPath !== 'string') {
@@ -38,10 +38,10 @@ for (const [index, rawPath] of rawPaths.entries()) {
   seenCanonical.add(canonicalPath);
 }
 
-// ── Parse entries ──────────────────────────────────────────────────────────
+// ── 항목 파싱 ────────────────────────────────────────────────────────────────
 const entries = (rawPaths as string[]).map((path) => parseCatalogEntry(path));
 
-// ── Validate popular locations ─────────────────────────────────────────────
+// ── 인기 지역 검증 ────────────────────────────────────────────────────────────
 const validation = validatePopularLocations(entries, POPULAR_LOCATIONS);
 if (validation.invalid.length > 0) {
   throw new Error(
@@ -49,7 +49,7 @@ if (validation.invalid.length > 0) {
   );
 }
 
-// ── Write output ───────────────────────────────────────────────────────────
+// ── 결과 파일 쓰기 ────────────────────────────────────────────────────────────
 const catalog: LocationCatalog = {
   version: '1',
   generatedAt: process.env.CATALOG_GENERATED_AT ?? new Date().toISOString(),

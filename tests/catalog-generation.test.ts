@@ -8,7 +8,7 @@ import {
 } from '../scripts/catalog-parser';
 import { POPULAR_LOCATIONS } from '../frontend/entities/location/data/popular-locations';
 
-// ─── computeCatalogLocationId ─────────────────────────────────────────────
+// ─── computeCatalogLocationId 테스트 ──────────────────────────────────────
 
 describe('computeCatalogLocationId', () => {
   it('returns a 12-char lowercase hex string', () => {
@@ -56,7 +56,7 @@ describe('computeCatalogLocationId', () => {
   });
 });
 
-// ─── computeTokens ────────────────────────────────────────────────────────
+// ─── computeTokens 테스트 ─────────────────────────────────────────────────
 
 describe('computeTokens', () => {
   it('depth-1: returns [path, seg1]', () => {
@@ -98,7 +98,7 @@ describe('computeTokens', () => {
   });
 });
 
-// ─── parseCatalogEntry — depth 1 ─────────────────────────────────────────
+// ─── parseCatalogEntry 테스트 — depth 1 ──────────────────────────────────
 
 describe('parseCatalogEntry depth-1', () => {
   const entry = parseCatalogEntry('서울특별시');
@@ -146,7 +146,7 @@ describe('parseCatalogEntry depth-1', () => {
   });
 });
 
-// ─── parseCatalogEntry — depth 2 ─────────────────────────────────────────
+// ─── parseCatalogEntry 테스트 — depth 2 ──────────────────────────────────
 
 describe('parseCatalogEntry depth-2', () => {
   const entry = parseCatalogEntry('서울특별시-종로구');
@@ -174,7 +174,7 @@ describe('parseCatalogEntry depth-2', () => {
   });
 });
 
-// ─── parseCatalogEntry — depth 3 ─────────────────────────────────────────
+// ─── parseCatalogEntry 테스트 — depth 3 ──────────────────────────────────
 
 describe('parseCatalogEntry depth-3', () => {
   const entry = parseCatalogEntry('서울특별시-종로구-청운동');
@@ -199,7 +199,7 @@ describe('parseCatalogEntry depth-3', () => {
   });
 });
 
-// ─── parseCatalogEntry — depth 4 ─────────────────────────────────────────
+// ─── parseCatalogEntry 테스트 — depth 4 ──────────────────────────────────
 
 describe('parseCatalogEntry depth-4', () => {
   const entry = parseCatalogEntry('전북특별자치도-부안군-위도면-상왕등리');
@@ -224,7 +224,7 @@ describe('parseCatalogEntry depth-4', () => {
   });
 });
 
-// ─── parseCatalogEntry — malformed input ─────────────────────────────────
+// ─── parseCatalogEntry 테스트 — 잘못된 입력 ──────────────────────────────
 
 describe('parseCatalogEntry malformed input', () => {
   it('throws on empty string', () => {
@@ -247,7 +247,7 @@ describe('parseCatalogEntry malformed input', () => {
   });
 });
 
-// ─── validatePopularLocations ─────────────────────────────────────────────
+// ─── validatePopularLocations 테스트 ──────────────────────────────────────
 
 describe('validatePopularLocations', () => {
   const builtEntries = POPULAR_LOCATIONS.map((p) => parseCatalogEntry(p));
