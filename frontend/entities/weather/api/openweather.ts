@@ -1,4 +1,4 @@
-import type { ResolvedLocation } from '../../location/model/types';
+import type { ResolvedLocation } from '~/entities/location';
 import type {
   CoreWeather,
   WeatherCondition,
@@ -125,6 +125,22 @@ function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
+function isNumberInRange(
+  value: unknown,
+  min: number,
+  max: number
+): value is number {
+  return isNumber(value) && value >= min && value <= max;
+}
+
+function isPercent(value: unknown): value is number {
+  return isNumberInRange(value, 0, 100);
+}
+
+function isUnitInterval(value: unknown): value is number {
+  return isNumberInRange(value, 0, 1);
+}
+
 function isString(value: unknown): value is string {
   return typeof value === 'string';
 }
@@ -218,8 +234,8 @@ function isOpenWeatherHourlyEntry(
     isRecord(value) &&
     isNumber(value.dt) &&
     isNumber(value.temp) &&
-    isNumber(value.pop) &&
-    isNumber(value.clouds) &&
+    isUnitInterval(value.pop) &&
+    isPercent(value.clouds) &&
     isOptionalPrecipitationAmount(value.rain) &&
     isOptionalPrecipitationAmount(value.snow) &&
     Array.isArray(value.weather) &&
@@ -248,11 +264,11 @@ function isOpenWeatherCoreWeatherResponse(
     !isNumber(current.dt) ||
     !isNumber(current.temp) ||
     !isNumber(current.feels_like) ||
-    !isNumber(current.humidity) ||
+    !isPercent(current.humidity) ||
     !isNumber(current.wind_speed) ||
     !isNumber(current.dew_point) ||
     !isNumber(current.uvi) ||
-    !isNumber(current.clouds) ||
+    !isPercent(current.clouds) ||
     !isOptionalPrecipitationAmount(current.rain) ||
     !isOptionalPrecipitationAmount(current.snow) ||
     !Array.isArray(current.weather) ||

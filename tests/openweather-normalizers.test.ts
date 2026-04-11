@@ -1,7 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
-import { normalizeOpenWeatherAqiResponse } from '../frontend/entities/aqi/api/openweather';
-import type { ResolvedLocation } from '../frontend/entities/location/model/types';
+import {
+  mockOpenWeatherAqiFixture,
+  normalizeOpenWeatherAqiResponse,
+} from '../frontend/entities/aqi/api/openweather';
+import type { ResolvedLocation } from '../frontend/entities/location';
 import {
   buildWeatherTextMappingInput,
   mockOpenWeatherCoreWeatherFixture,
@@ -153,6 +156,31 @@ describe('payload normalization failures', () => {
         resolvedLocation
       )
     ).toThrowError(WeatherProviderError);
+
+    try {
+      normalizeOpenWeatherAqiResponse(
+        {
+          fetchedAt: '2026-04-11T09:00:00+09:00',
+          list: [
+            {
+              dt: 0,
+              main: {
+                aqi: 2,
+              },
+              components: {
+                co: 'bad',
+              },
+            },
+          ],
+        },
+        resolvedLocation
+      );
+    } catch (error) {
+      expect(error).toMatchObject({
+        code: 'INVALID_PROVIDER_RESPONSE',
+        provider: 'mock-openweather',
+      });
+    }
   });
 
   test('처음 12개 범위 안의 잘못된 hourly 엔트리를 거부한다', () => {
@@ -185,6 +213,52 @@ describe('payload normalization failures', () => {
         rain: {
           '1h': '0.8',
         },
+      },
+    };
+
+    expect(() =>
+      normalizeOpenWeatherCoreWeatherResponse(invalidPayload, resolvedLocation)
+    ).toThrowError(WeatherProviderError);
+  });
+
+  test('음수 오염물질 농도를 거부한다', () => {
+    const invalidPayload = {
+      ...mockOpenWeatherAqiFixture,
+      list: [
+        {
+          ...mockOpenWeatherAqiFixture.list[0],
+          components: {
+            ...mockOpenWeatherAqiFixture.list[0].components,
+            pm10: -1,
+          },
+        },
+      ],
+    };
+
+    expect(() =>
+      normalizeOpenWeatherAqiResponse(invalidPayload, resolvedLocation)
+    ).toThrowError(WeatherProviderError);
+  });
+
+  test('0에서 1 범위를 벗어난 강수 확률 값을 거부한다', () => {
+    const invalidPayload = {
+      ...mockOpenWeatherCoreWeatherFixture,
+      hourly: mockOpenWeatherCoreWeatherFixture.hourly.map((entry, index) =>
+        index === 0 ? { ...entry, pop: 1.4 } : entry
+      ),
+    };
+
+    expect(() =>
+      normalizeOpenWeatherCoreWeatherResponse(invalidPayload, resolvedLocation)
+    ).toThrowError(WeatherProviderError);
+  });
+
+  test('0에서 100 범위를 벗어난 습도 값을 거부한다', () => {
+    const invalidPayload = {
+      ...mockOpenWeatherCoreWeatherFixture,
+      current: {
+        ...mockOpenWeatherCoreWeatherFixture.current,
+        humidity: 101,
       },
     };
 

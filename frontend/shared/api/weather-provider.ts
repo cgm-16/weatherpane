@@ -1,7 +1,7 @@
 import { createContext, use } from 'react';
 
 import type { Aqi } from '~/entities/aqi/model/aqi';
-import type { ResolvedLocation } from '~/entities/location/model/types';
+import type { ResolvedLocation } from '~/entities/location';
 import type { CoreWeather } from '~/entities/weather/model/core-weather';
 import type { ProviderMode } from '~/shared/lib/env-config';
 
