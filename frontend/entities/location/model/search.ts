@@ -16,10 +16,20 @@ interface PreparedCatalogEntry {
   pathComparable: string;
 }
 
+enum MatchRank {
+  ExactLeaf = 1,
+  ExactSegment = 2,
+  PathSubstring = 4,
+}
+
 const defaultCatalog = catalogData as LocationCatalog;
 const omittedSuffixes = ['시', '도', '구', '군', '읍', '면', '동', '리'];
 const separatorPattern = /[\s\p{P}\p{S}]+/gu;
 const defaultPreparedEntries = defaultCatalog.entries.map(prepareCatalogEntry);
+const preparedEntriesCache = new WeakMap<
+  LocationCatalog,
+  PreparedCatalogEntry[]
+>();
 
 function normalizeComparable(value: string): string {
   return value
@@ -29,7 +39,10 @@ function normalizeComparable(value: string): string {
     .replace(separatorPattern, '');
 }
 
-function buildComparableVariants(value: string): Set<string> {
+function buildComparableVariants(
+  value: string,
+  includeOmittedSuffixVariants = true
+): Set<string> {
   const comparable = normalizeComparable(value);
   const variants = new Set<string>();
 
@@ -39,9 +52,11 @@ function buildComparableVariants(value: string): Set<string> {
 
   variants.add(comparable);
 
-  for (const suffix of omittedSuffixes) {
-    if (comparable.endsWith(suffix) && comparable.length > suffix.length) {
-      variants.add(comparable.slice(0, -suffix.length));
+  if (includeOmittedSuffixVariants) {
+    for (const suffix of omittedSuffixes) {
+      if (comparable.endsWith(suffix) && comparable.length > suffix.length) {
+        variants.add(comparable.slice(0, -suffix.length));
+      }
     }
   }
 
@@ -76,36 +91,50 @@ function getPreparedEntries(catalog: LocationCatalog): PreparedCatalogEntry[] {
     return defaultPreparedEntries;
   }
 
-  return catalog.entries.map(prepareCatalogEntry);
+  const cachedEntries = preparedEntriesCache.get(catalog);
+
+  if (cachedEntries) {
+    return cachedEntries;
+  }
+
+  const preparedEntries = catalog.entries.map(prepareCatalogEntry);
+  preparedEntriesCache.set(catalog, preparedEntries);
+
+  return preparedEntries;
 }
 
 function classifyMatch(
   queryComparable: string,
   queryVariants: Set<string>,
   preparedEntry: PreparedCatalogEntry
-): number | null {
+): MatchRank | null {
   for (const variant of queryVariants) {
     if (preparedEntry.leafVariants.has(variant)) {
-      return 1;
+      return MatchRank.ExactLeaf;
     }
   }
 
   for (const variant of queryVariants) {
     if (preparedEntry.segmentVariants.has(variant)) {
-      return 2;
+      return MatchRank.ExactSegment;
     }
   }
 
   if (preparedEntry.pathComparable.includes(queryComparable)) {
-    return 4;
+    return MatchRank.PathSubstring;
   }
 
   return null;
 }
 
+interface RankedPreparedEntry {
+  matchRank: MatchRank;
+  preparedEntry: PreparedCatalogEntry;
+}
+
 function comparePreparedEntries(
-  left: { matchRank: number; preparedEntry: PreparedCatalogEntry },
-  right: { matchRank: number; preparedEntry: PreparedCatalogEntry }
+  left: RankedPreparedEntry,
+  right: RankedPreparedEntry
 ): number {
   if (left.matchRank !== right.matchRank) {
     return left.matchRank - right.matchRank;
@@ -141,19 +170,14 @@ export function searchCatalogLocations(
     return [];
   }
 
-  const queryVariants = buildComparableVariants(query);
+  const queryVariants = buildComparableVariants(query, false);
 
   return getPreparedEntries(catalog)
     .map((preparedEntry) => ({
       matchRank: classifyMatch(queryComparable, queryVariants, preparedEntry),
       preparedEntry,
     }))
-    .filter(
-      (
-        match
-      ): match is { matchRank: number; preparedEntry: PreparedCatalogEntry } =>
-        match.matchRank !== null
-    )
+    .filter((match): match is RankedPreparedEntry => match.matchRank !== null)
     .sort(comparePreparedEntries)
     .map(({ preparedEntry }) => ({
       canonicalPath: preparedEntry.entry.canonicalPath,
