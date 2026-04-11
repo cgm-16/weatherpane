@@ -10,12 +10,17 @@ afterEach(() => {
 });
 
 describe('parseAppConfig', () => {
-  test('defaults to mock mode when env var is not set', () => {
+  test('환경 변수가 설정되지 않은 경우 ConfigError를 반환한다', () => {
     vi.stubEnv('VITE_WEATHER_PROVIDER_MODE', '');
 
     const result = parseAppConfig();
 
-    expect(result).toEqual({ ok: true, config: { providerMode: 'mock' } });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe('INVALID_PROVIDER_MODE');
+      expect(result.error.field).toBe('VITE_WEATHER_PROVIDER_MODE');
+      expect(result.error.message).toContain('required');
+    }
   });
 
   test('returns mock config when env var is "mock"', () => {
