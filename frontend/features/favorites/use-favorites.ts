@@ -28,6 +28,7 @@ export function useFavorites() {
         .filter((f) => f.location.locationId !== location.locationId)
         .map((f, i) => ({ ...f, order: i }));
       repo.replaceAll(updated);
+      setFavorites(updated);
     } else if (current.length < MAX_FAVORITES) {
       const now = new Date().toISOString();
       const newFav: FavoriteLocation = {
@@ -38,10 +39,10 @@ export function useFavorites() {
         createdAt: now,
         updatedAt: now,
       };
-      repo.replaceAll([...current, newFav]);
+      const next = [...current, newFav];
+      repo.replaceAll(next);
+      setFavorites(next);
     }
-
-    setFavorites(createFavoritesRepository().getAll());
   }
 
   return {
