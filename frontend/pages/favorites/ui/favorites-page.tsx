@@ -1,6 +1,8 @@
-import { useFavorites } from '~/features/favorites';
-import { FavoriteUndoToast } from '~/features/favorites';
-import { useRefreshQueue } from '~/features/favorites/use-refresh-queue';
+import {
+  useFavorites,
+  FavoriteUndoToast,
+  useRefreshQueue,
+} from '~/features/favorites';
 import { FavoriteCard } from './favorite-card';
 import { FavoritesEmptyState } from './favorites-empty-state';
 
