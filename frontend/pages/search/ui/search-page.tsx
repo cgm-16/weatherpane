@@ -2,6 +2,7 @@ import { useId, useState, type KeyboardEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { useSearchSelection } from '../../../features/search';
+import { useActiveLocation } from '../../../features/app-bootstrap/active-location-context';
 
 import { POPULAR_LOCATIONS } from '../../../entities/location/data/popular-locations';
 import {
@@ -9,6 +10,11 @@ import {
   searchCatalogLocations,
   type SearchCatalogResult,
 } from '../../../entities/location/model/search';
+import type {
+  RecentLocation,
+  ResolvedLocation,
+} from '../../../entities/location/model/types';
+import { createRecentsRepository } from '../../../shared/lib/storage/repositories/location-repositories';
 import { cn } from '../../../shared/lib/utils';
 
 const popularResults =
@@ -99,10 +105,50 @@ function PopularLocationButton({
   );
 }
 
+// 최근 지역 버튼 — 인기 지역 버튼과 동일한 외형이지만 이미 해결된 위치 데이터를 사용합니다.
+function RecentLocationButton({
+  recent,
+  onSelect,
+}: {
+  recent: RecentLocation & { location: ResolvedLocation };
+  onSelect: (recent: RecentLocation & { location: ResolvedLocation }) => void;
+}) {
+  const secondaryPath = recent.location.admin2
+    ? `${recent.location.admin1}-${recent.location.admin2}`
+    : recent.location.admin1;
+
+  return (
+    <button
+      className="rounded-[var(--radius-md)] bg-card px-4 py-4 text-left shadow-[var(--shadow-float)] transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+      type="button"
+      onClick={() => onSelect(recent)}
+    >
+      <p
+        className="text-base leading-none font-semibold text-foreground"
+        style={{ fontFamily: 'var(--font-display)' }}
+      >
+        {recent.location.name}
+      </p>
+      <p className="mt-2 text-sm text-muted-foreground">{secondaryPath}</p>
+    </button>
+  );
+}
+
 export function SearchPage() {
   const navigate = useNavigate();
   const { selectResult, resolvingId, selectionError, retrySelection } =
     useSearchSelection();
+  const { setActiveLocation } = useActiveLocation();
+  const [resolvedRecents] = useState<
+    Array<RecentLocation & { location: ResolvedLocation }>
+  >(() =>
+    createRecentsRepository()
+      .getAll()
+      .filter(
+        (r): r is RecentLocation & { location: ResolvedLocation } =>
+          r.location.kind === 'resolved'
+      )
+  );
   const optionBaseId = useId();
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') ?? '';
@@ -206,6 +252,18 @@ export function SearchPage() {
         updateQuery('');
       }
     }
+  }
+
+  function selectRecent(
+    recent: RecentLocation & { location: ResolvedLocation }
+  ) {
+    setActiveLocation({
+      kind: 'resolved',
+      location: recent.location,
+      source: 'recent',
+      changedAt: new Date().toISOString(),
+    });
+    navigate(`/location/${recent.location.catalogLocationId}`);
   }
 
   return (
@@ -326,28 +384,55 @@ export function SearchPage() {
             )}
           </section>
         ) : (
-          <section className="space-y-4 rounded-[calc(var(--radius-lg)+0.25rem)] bg-muted p-4 sm:p-5">
-            <div className="space-y-2 px-1">
-              <h2
-                className="text-xl font-semibold text-foreground"
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                인기 지역
-              </h2>
-              <p className="text-sm leading-6 text-muted-foreground">
-                빠르게 열 수 있는 대표 지역을 먼저 보여줍니다.
-              </p>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {popularResults.map((result) => (
-                <PopularLocationButton
-                  key={result.catalogLocationId}
-                  result={result}
-                  onSelect={selectResult}
-                />
-              ))}
-            </div>
-          </section>
+          <>
+            {resolvedRecents.length > 0 && (
+              <section className="space-y-4 rounded-[calc(var(--radius-lg)+0.25rem)] bg-muted p-4 sm:p-5">
+                <div className="space-y-2 px-1">
+                  <h2
+                    className="text-xl font-semibold text-foreground"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    최근 지역
+                  </h2>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    최근에 열어본 지역입니다.
+                  </p>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {resolvedRecents.map((recent) => (
+                    <RecentLocationButton
+                      key={recent.location.locationId}
+                      recent={recent}
+                      onSelect={selectRecent}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <section className="space-y-4 rounded-[calc(var(--radius-lg)+0.25rem)] bg-muted p-4 sm:p-5">
+              <div className="space-y-2 px-1">
+                <h2
+                  className="text-xl font-semibold text-foreground"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  인기 지역
+                </h2>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  빠르게 열 수 있는 대표 지역을 먼저 보여줍니다.
+                </p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {popularResults.map((result) => (
+                  <PopularLocationButton
+                    key={result.catalogLocationId}
+                    result={result}
+                    onSelect={selectResult}
+                  />
+                ))}
+              </div>
+            </section>
+          </>
         )}
       </div>
     </main>
