@@ -13,8 +13,8 @@ vi.mock('../frontend/features/favorites/use-favorites', () => ({
   useFavorites: vi.fn(() => ({
     favorites: [],
     isFavorite: vi.fn(() => false),
-    addFavorite: vi.fn(),
-    removeFavorite: vi.fn(),
+    addFavorite: vi.fn(() => 'added' as const),
+    removeFavorite: vi.fn(() => 'removed' as const),
     undoEntry: null,
     undoRemove: vi.fn(),
     atMaxFavorites: false,
@@ -169,16 +169,16 @@ describe('HomeDashboard 즐겨찾기', () => {
   test('즐겨찾기 추가 버튼이 렌더링된다', () => {
     renderDashboard();
     expect(
-      screen.getByRole('button', { name: /즐겨찾기/ })
+      screen.getByRole('button', { name: /즐겨찾기 추가/ })
     ).toBeInTheDocument();
   });
 
-  test('isFavorite이 true이면 버튼 레이블이 변경된다', () => {
+  test('isFavorite이 true이면 버튼 레이블이 "즐겨찾기 해제"로 변경된다', () => {
     vi.mocked(useFavorites).mockReturnValue({
       favorites: [],
       isFavorite: () => true,
-      addFavorite: vi.fn(),
-      removeFavorite: vi.fn(),
+      addFavorite: vi.fn(() => 'added' as const),
+      removeFavorite: vi.fn(() => 'removed' as const),
       undoEntry: null,
       undoRemove: vi.fn(),
       atMaxFavorites: false,
@@ -189,12 +189,12 @@ describe('HomeDashboard 즐겨찾기', () => {
     ).toBeInTheDocument();
   });
 
-  test('즐겨찾기가 최대 6개이면 버튼이 비활성화된다', () => {
+  test('즐겨찾기가 최대 6개이면 추가 버튼이 비활성화된다', () => {
     vi.mocked(useFavorites).mockReturnValue({
       favorites: [],
       isFavorite: () => false,
-      addFavorite: vi.fn(),
-      removeFavorite: vi.fn(),
+      addFavorite: vi.fn(() => 'max-reached' as const),
+      removeFavorite: vi.fn(() => 'removed' as const),
       undoEntry: null,
       undoRemove: vi.fn(),
       atMaxFavorites: true,
@@ -207,18 +207,114 @@ describe('HomeDashboard 즐겨찾기', () => {
 
   test('즐겨찾기 추가 버튼 클릭 시 addFavorite이 호출된다', async () => {
     const user = userEvent.setup();
-    const addFavorite = vi.fn();
+    const addFavorite = vi.fn(() => 'added' as const);
     vi.mocked(useFavorites).mockReturnValue({
       favorites: [],
       isFavorite: () => false,
       addFavorite,
-      removeFavorite: vi.fn(),
+      removeFavorite: vi.fn(() => 'removed' as const),
       undoEntry: null,
       undoRemove: vi.fn(),
       atMaxFavorites: false,
     });
     renderDashboard();
-    await user.click(screen.getByRole('button', { name: /즐겨찾기/ }));
+    await user.click(screen.getByRole('button', { name: /즐겨찾기 추가/ }));
     expect(addFavorite).toHaveBeenCalledWith(loc);
+  });
+
+  test('즐겨찾기 해제 버튼 클릭 시 removeFavorite이 호출된다', async () => {
+    const user = userEvent.setup();
+    const removeFavorite = vi.fn(() => 'removed' as const);
+    vi.mocked(useFavorites).mockReturnValue({
+      favorites: [],
+      isFavorite: () => true,
+      addFavorite: vi.fn(() => 'added' as const),
+      removeFavorite,
+      undoEntry: null,
+      undoRemove: vi.fn(),
+      atMaxFavorites: false,
+    });
+    renderDashboard();
+    await user.click(screen.getByRole('button', { name: /즐겨찾기 해제/ }));
+    expect(removeFavorite).toHaveBeenCalledWith(loc.locationId);
+  });
+
+  test('undoEntry가 있으면 실행 취소 토스트가 표시된다', () => {
+    vi.mocked(useFavorites).mockReturnValue({
+      favorites: [],
+      isFavorite: () => false,
+      addFavorite: vi.fn(() => 'added' as const),
+      removeFavorite: vi.fn(() => 'removed' as const),
+      undoEntry: {
+        snapshot: [],
+        removedItem: {
+          favoriteId: 'fav_1',
+          location: loc,
+          nickname: null,
+          order: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      },
+      undoRemove: vi.fn(),
+      atMaxFavorites: false,
+    });
+    renderDashboard();
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /실행 취소/ })
+    ).toBeInTheDocument();
+  });
+
+  test('실행 취소 버튼 클릭 시 undoRemove가 호출된다', async () => {
+    const user = userEvent.setup();
+    const undoRemove = vi.fn();
+    vi.mocked(useFavorites).mockReturnValue({
+      favorites: [],
+      isFavorite: () => false,
+      addFavorite: vi.fn(() => 'added' as const),
+      removeFavorite: vi.fn(() => 'removed' as const),
+      undoEntry: {
+        snapshot: [],
+        removedItem: {
+          favoriteId: 'fav_1',
+          location: loc,
+          nickname: null,
+          order: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      },
+      undoRemove,
+      atMaxFavorites: false,
+    });
+    renderDashboard();
+    await user.click(screen.getByRole('button', { name: /실행 취소/ }));
+    expect(undoRemove).toHaveBeenCalledOnce();
+  });
+});
+
+describe('HomeDashboard raw-GPS 위치', () => {
+  const rawLoc: import('../frontend/entities/location/model/types').RawGpsFallbackLocation =
+    {
+      kind: 'raw-gps',
+      locationId: 'loc_rawgps',
+      name: '현재 위치',
+      latitude: 37.5,
+      longitude: 127.0,
+      capturedAt: new Date().toISOString(),
+      fallbackReason: 'outside-korea',
+    };
+
+  test('raw-GPS 위치이면 즐겨찾기 버튼이 비활성화된다', () => {
+    renderDashboard({ location: rawLoc });
+    expect(screen.getByRole('button', { name: /즐겨찾기/ })).toBeDisabled();
+  });
+
+  test('raw-GPS 위치이면 즐겨찾기 불가 안내 텍스트가 표시된다', () => {
+    renderDashboard({ location: rawLoc });
+    expect(
+      screen.getByText(/즐겨찾기에 추가할 수 없습니다/)
+    ).toBeInTheDocument();
   });
 });

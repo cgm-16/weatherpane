@@ -1,13 +1,17 @@
 import { Link } from 'react-router';
 import { useFavorites } from '~/features/favorites/use-favorites';
+import { FavoriteUndoToast } from '~/features/favorites/ui/favorite-undo-toast';
 import { persistRecent } from '~/features/recents';
 import { HourlyStrip } from '~/shared/ui/hourly-strip';
-import type { ResolvedLocation } from '~/entities/location/model/types';
+import type {
+  ResolvedLocation,
+  RawGpsFallbackLocation,
+} from '~/entities/location/model/types';
 import type { CoreWeather } from '~/entities/weather/model/core-weather';
 import type { Aqi } from '~/entities/aqi/model/aqi';
 
 interface HomeDashboardProps {
-  location: ResolvedLocation;
+  location: ResolvedLocation | RawGpsFallbackLocation;
   weather: CoreWeather;
   aqi: Aqi;
   isRefreshing: boolean;
@@ -31,9 +35,16 @@ export function HomeDashboard({
   hasRefreshError,
   onRefresh,
 }: HomeDashboardProps) {
-  const { isFavorite, addFavorite, removeFavorite, atMaxFavorites } =
-    useFavorites();
-  const favorited = isFavorite(location.locationId);
+  const {
+    isFavorite,
+    addFavorite,
+    removeFavorite,
+    undoEntry,
+    undoRemove,
+    atMaxFavorites,
+  } = useFavorites();
+  const canFavorite = location.kind === 'resolved';
+  const favorited = canFavorite && isFavorite(location.locationId);
   const clampedAqi = Math.min(5, Math.max(1, aqi.summary.aqi));
 
   return (
@@ -49,7 +60,7 @@ export function HomeDashboard({
             aria-label="새로고침"
             disabled={isRefreshing}
             onClick={() => {
-              persistRecent(location);
+              if (location.kind === 'resolved') persistRecent(location);
               onRefresh();
             }}
             className="flex h-9 w-9 items-center justify-center rounded-full text-foreground disabled:opacity-40"
@@ -66,10 +77,11 @@ export function HomeDashboard({
           <button
             type="button"
             aria-label={favorited ? '즐겨찾기 해제' : '즐겨찾기 추가'}
-            disabled={!favorited && atMaxFavorites}
+            disabled={!canFavorite || (!favorited && atMaxFavorites)}
             onClick={() => {
-              persistRecent(location);
-              if (isFavorite(location.locationId)) {
+              if (!canFavorite) return;
+              if (location.kind === 'resolved') persistRecent(location);
+              if (favorited) {
                 removeFavorite(location.locationId);
               } else {
                 addFavorite(location);
@@ -84,6 +96,13 @@ export function HomeDashboard({
         </div>
       </header>
 
+      {/* raw-GPS 위치는 즐겨찾기 불가 안내 */}
+      {!canFavorite && (
+        <p className="px-4 pt-1 font-body text-xs text-muted-foreground">
+          지원되지 않는 위치입니다. 즐겨찾기에 추가할 수 없습니다.
+        </p>
+      )}
+
       {/* 비차단 새로고침 오류 */}
       {hasRefreshError && (
         <div
@@ -96,7 +115,7 @@ export function HomeDashboard({
 
       {/* 메인 요약 카드 — 탭 시 상세 페이지로 이동 */}
       <Link
-        to={`/location/${location.catalogLocationId}`}
+        to={canFavorite ? `/location/${location.catalogLocationId}` : ''}
         className="mx-4 mt-3 flex flex-col items-center gap-2 rounded-[--radius-md] bg-card px-6 py-8"
         aria-label={`${location.name}: ${Math.round(weather.current.temperatureC)}° ${weather.current.condition.text}, 날씨 상세 보기`}
       >
@@ -119,8 +138,8 @@ export function HomeDashboard({
         </span>
       </Link>
 
-      {/* 6시간 시간별 미리보기 */}
-      {weather.hourly.length > 0 && (
+      {/* 6시간 시간별 미리보기 — resolved 위치만 timezone을 가짐 */}
+      {canFavorite && weather.hourly.length > 0 && (
         <section className="px-4 pt-4">
           <HourlyStrip hourly={weather.hourly} timeZone={location.timezone} />
         </section>
@@ -164,6 +183,16 @@ export function HomeDashboard({
           </p>
         </div>
       </div>
+
+      {undoEntry && (
+        <FavoriteUndoToast
+          locationName={
+            undoEntry.removedItem.nickname ??
+            undoEntry.removedItem.location.name
+          }
+          onUndo={undoRemove}
+        />
+      )}
     </main>
   );
 }
