@@ -21,6 +21,7 @@ interface DetailUvCardProps {
 
 export function DetailUvCard({ uvIndex }: DetailUvCardProps) {
   const [open, setOpen] = useState(false);
+  const category = uvIndex != null ? uvCategory(uvIndex) : null;
 
   return (
     <>
@@ -49,7 +50,7 @@ export function DetailUvCard({ uvIndex }: DetailUvCardProps) {
         )}
       </div>
 
-      {open && (
+      {open && category != null && (
         <div
           className="fixed inset-0 z-50"
           role="dialog"
@@ -82,11 +83,11 @@ export function DetailUvCard({ uvIndex }: DetailUvCardProps) {
                   {uvIndex}
                 </span>
                 <span className="font-headline text-xl font-bold text-muted-foreground">
-                  {uvCategory(uvIndex!).label}
+                  {category.label}
                 </span>
               </div>
               <p className="font-body text-base text-muted-foreground">
-                {uvCategory(uvIndex!).advice}
+                {category.advice}
               </p>
             </div>
           </div>
