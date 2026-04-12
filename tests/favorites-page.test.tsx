@@ -1,4 +1,10 @@
 // @vitest-environment jsdom
+const mockNavigateFn = vi.fn();
+
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router')>();
+  return { ...actual, useNavigate: vi.fn(() => mockNavigateFn) };
+});
 vi.mock('../frontend/features/app-bootstrap/active-location-context', () => ({
   useActiveLocation: vi.fn(),
 }));
@@ -11,7 +17,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { describe, expect, test, vi, afterEach } from 'vitest';
+import { describe, expect, test, vi, afterEach, beforeEach } from 'vitest';
 import { FavoritesEmptyState } from '../frontend/pages/favorites/ui/favorites-empty-state';
 import { FavoriteCard } from '../frontend/pages/favorites/ui/favorite-card';
 import { useActiveLocation } from '../frontend/features/app-bootstrap/active-location-context';
@@ -95,6 +101,11 @@ const staleWeatherData: CoreWeather = {
   fetchedAt: new Date(Date.now() - 15 * 60_000).toISOString(), // 15 min ago
 };
 
+const veryStaleWeatherData: CoreWeather = {
+  ...freshWeatherData,
+  fetchedAt: new Date(Date.now() - 70 * 60_000).toISOString(), // 70 min ago
+};
+
 // --- FavoriteCard helpers ---
 
 function makeQueryClient() {
@@ -126,6 +137,10 @@ function makeWeatherQuery(overrides: Record<string, unknown> = {}): any {
 const mockSetActiveLocation = vi.fn();
 
 describe('FavoriteCard', () => {
+  beforeEach(() => {
+    mockNavigateFn.mockClear();
+  });
+
   afterEach(() => {
     vi.mocked(useActiveLocation).mockReset();
     vi.mocked(useCoreWeather).mockReset();
@@ -201,6 +216,7 @@ describe('FavoriteCard', () => {
     expect(screen.getByText('24°')).toBeInTheDocument();
     expect(screen.getByText('28°')).toBeInTheDocument();
     expect(screen.getByText('18°')).toBeInTheDocument();
+    expect(screen.queryByText(/오래된 정보/i)).not.toBeInTheDocument();
   });
 
   test('shows nickname when set', () => {
@@ -218,7 +234,46 @@ describe('FavoriteCard', () => {
       makeWeatherQuery({ data: staleWeatherData })
     );
     renderCard(seoulFav);
-    expect(screen.getByText(/오래된 정보/i)).toBeInTheDocument();
+    expect(screen.getByText('오래된 정보')).toBeInTheDocument();
+  });
+
+  test('shows very stale indicator when data is 70 minutes old', () => {
+    setupActiveLocation();
+    vi.mocked(useCoreWeather).mockReturnValue(
+      makeWeatherQuery({ data: veryStaleWeatherData })
+    );
+    renderCard(seoulFav);
+    expect(screen.getByText('매우 오래된 정보')).toBeInTheDocument();
+  });
+
+  test('shows snapshot and stale indicator when refresh failed but snapshot exists', () => {
+    setupActiveLocation();
+    vi.mocked(useCoreWeather).mockReturnValue(
+      makeWeatherQuery({
+        data: freshWeatherData,
+        isLoading: false,
+        isError: true,
+      })
+    );
+    renderCard(seoulFav);
+    expect(screen.getByRole('article')).toBeInTheDocument();
+    expect(screen.getByText('서울')).toBeInTheDocument();
+    expect(screen.getByText('24°')).toBeInTheDocument();
+    expect(screen.getByText('오래된 정보')).toBeInTheDocument();
+  });
+
+  test('shows snapshot when offline but cached data is available', () => {
+    Object.defineProperty(navigator, 'onLine', {
+      value: false,
+      configurable: true,
+    });
+    setupActiveLocation();
+    vi.mocked(useCoreWeather).mockReturnValue(
+      makeWeatherQuery({ data: freshWeatherData })
+    );
+    renderCard(seoulFav);
+    expect(screen.getByRole('article')).toBeInTheDocument();
+    expect(screen.getByText('서울')).toBeInTheDocument();
   });
 
   test('clicking card navigates to /location/:id and sets active location', async () => {
@@ -237,7 +292,7 @@ describe('FavoriteCard', () => {
         source: 'favorite',
       })
     );
-    // navigation is handled by MemoryRouter internally; we verify setActiveLocation was called
+    expect(mockNavigateFn).toHaveBeenCalledWith('/location/loc-seoul');
   });
 
   test('skeleton is not navigable (no article role)', () => {
