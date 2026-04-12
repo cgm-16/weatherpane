@@ -8,6 +8,7 @@ import { LocationUnsupported } from '../frontend/pages/location/ui/location-unsu
 import { LocationNotFound } from '../frontend/pages/location/ui/location-not-found';
 import { LocationConnectionError } from '../frontend/pages/location/ui/location-connection-error';
 import { useDetailBootstrap } from '../frontend/features/app-bootstrap/use-detail-bootstrap';
+import { useWeatherRefresh } from '../frontend/features/weather-queries/use-weather-refresh';
 import { LocationPage } from '../frontend/pages/location/ui/location-page';
 
 vi.mock('../frontend/features/app-bootstrap/use-detail-bootstrap', () => ({
@@ -37,7 +38,9 @@ describe('LocationUnsupported', () => {
       </MemoryRouter>
     );
     expect(screen.getByRole('main')).toBeInTheDocument();
-    expect(screen.getByRole('heading')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /지원하지 않는 지역입니다/i })
+    ).toBeInTheDocument();
   });
 
   test('검색으로 돌아가기 링크가 /search로 연결된다', () => {
@@ -83,7 +86,9 @@ describe('LocationNotFound', () => {
       </MemoryRouter>
     );
     expect(screen.getByRole('main')).toBeInTheDocument();
-    expect(screen.getByRole('heading')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /페이지를 찾을 수 없습니다/i })
+    ).toBeInTheDocument();
   });
 
   test('홈으로 링크가 /로 연결된다', () => {
@@ -119,7 +124,9 @@ describe('LocationConnectionError', () => {
       </MemoryRouter>
     );
     expect(screen.getByRole('main')).toBeInTheDocument();
-    expect(screen.getByRole('heading')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /날씨 정보를 불러오지 못했습니다/i })
+    ).toBeInTheDocument();
   });
 
   test('다시 시도 버튼 클릭 시 onRetry가 호출된다', async () => {
@@ -206,7 +213,9 @@ describe('LocationPage 상태별 렌더링', () => {
   test('not-found → LocationNotFound를 표시한다', () => {
     vi.mocked(useDetailBootstrap).mockReturnValue({ kind: 'not-found' });
     renderPage('invalid-id');
-    expect(screen.getByRole('heading')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /페이지를 찾을 수 없습니다/i })
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /홈으로/ })).toBeInTheDocument();
   });
 
@@ -225,6 +234,19 @@ describe('LocationPage 상태별 렌더링', () => {
     expect(
       screen.getByRole('button', { name: /다시 시도/ })
     ).toBeInTheDocument();
+  });
+
+  test('recoverable-error → 다시 시도 클릭 시 refresh를 location ID로 호출한다', async () => {
+    const user = userEvent.setup();
+    const mockRefresh = vi.fn();
+    vi.mocked(useWeatherRefresh).mockReturnValue(mockRefresh);
+    vi.mocked(useDetailBootstrap).mockReturnValue({
+      kind: 'recoverable-error',
+      location: loc,
+    });
+    renderPage();
+    await user.click(screen.getByRole('button', { name: /다시 시도/ }));
+    expect(mockRefresh).toHaveBeenCalledWith(loc.locationId);
   });
 
   test('stale-fallback → 오프라인 배너와 기온을 표시한다', () => {
