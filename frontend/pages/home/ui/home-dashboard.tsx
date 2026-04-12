@@ -49,7 +49,10 @@ export function HomeDashboard({
             className="flex h-9 w-9 items-center justify-center rounded-full text-foreground disabled:opacity-40"
           >
             <span
-              className={`material-symbols-outlined text-[22px]${isRefreshing ? 'animate-spin' : ''}`}
+              className={[
+                'material-symbols-outlined text-[22px]',
+                isRefreshing ? 'animate-spin' : '',
+              ].join(' ')}
             >
               refresh
             </span>
