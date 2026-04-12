@@ -72,6 +72,14 @@
    - run `pnpm exec playwright test path/to/search-flow.spec.ts` when the search flow changed
      Done-check: the changed behavior is covered by at least one targeted automated test or a clearly stated blocker.
 
+6. Intent: confirm the search selection pipeline is wired end-to-end.
+   Action:
+   - confirm `useSearchSelection` is the sole owner of selection logic in `SearchPage` — no inline `selectResult`
+   - confirm resolved path: `setActiveLocation` called before navigation, recents updated
+   - confirm unsupported path: navigation only, no `setActiveLocation`, no recents write
+   - confirm `useWeatherProvider().geocode` is injected into `createCatalogLocationResolver`
+     Done-check: a direct click on a search result navigates to `/location/${catalogLocationId}` with active location set, or to `/location/unsupported::${id}` without.
+
 ## Verification
 
 - direct-open `/search?q=...` hydration matches typed state
