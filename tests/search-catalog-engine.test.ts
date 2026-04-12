@@ -5,7 +5,10 @@ import type {
   CatalogEntry,
   LocationCatalog,
 } from '../frontend/entities/location/model/catalog';
-import { searchCatalogLocations } from '../frontend/entities/location/model/search';
+import {
+  getCatalogEntryById,
+  searchCatalogLocations,
+} from '../frontend/entities/location/model/search';
 
 function createEntry(canonicalPath: string): CatalogEntry {
   const segments = canonicalPath.split('-');
@@ -146,5 +149,15 @@ describe('searchCatalogLocations', () => {
   it('returns no results for an empty query', () => {
     expect(searchCatalogLocations('', catalog)).toEqual([]);
     expect(searchCatalogLocations('   ', catalog)).toEqual([]);
+  });
+});
+
+describe('getCatalogEntryById', () => {
+  it('returns the entry for a known id and null for unknown', () => {
+    const firstEntry = entries[0];
+    expect(getCatalogEntryById(firstEntry.catalogLocationId, catalog)).toEqual(
+      firstEntry
+    );
+    expect(getCatalogEntryById('nonexistent-id', catalog)).toBeNull();
   });
 });
