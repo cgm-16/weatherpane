@@ -5,7 +5,7 @@ import { DetailDashboard } from './detail-dashboard';
 import { LocationUnsupported } from './location-unsupported';
 import { LocationNotFound } from './location-not-found';
 import { LocationConnectionError } from './location-connection-error';
-import { HomeLastUpdated } from '~/pages/home/ui/home-last-updated';
+import { LastUpdated } from '~/shared/ui/last-updated';
 
 interface LocationPageProps {
   resolvedLocationId: string;
@@ -64,13 +64,13 @@ export function LocationPage({ resolvedLocationId }: LocationPageProps) {
         </p>
         <div className="flex gap-4">
           <span className="font-body text-sm text-muted-foreground">
-            H {bootstrap.weather.todayMaxC}°
+            H {Math.round(bootstrap.weather.todayMaxC)}°
           </span>
           <span className="font-body text-sm text-muted-foreground">
-            L {bootstrap.weather.todayMinC}°
+            L {Math.round(bootstrap.weather.todayMinC)}°
           </span>
         </div>
-        <HomeLastUpdated
+        <LastUpdated
           fetchedAt={bootstrap.weather.fetchedAt}
           timezone={bootstrap.location.timezone}
         />

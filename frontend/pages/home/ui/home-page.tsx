@@ -5,7 +5,7 @@ import { HomeDashboard } from './home-dashboard';
 import { HomeNoLocation } from './home-no-location';
 import { HomeConnectionError } from './home-connection-error';
 import { HomeConfigError } from './home-config-error';
-import { HomeLastUpdated } from './home-last-updated';
+import { LastUpdated } from '~/shared/ui/last-updated';
 
 export function HomePage() {
   const bootstrap = useHomeBootstrap();
@@ -68,7 +68,7 @@ export function HomePage() {
             L {bootstrap.weather.todayMinC}°
           </span>
         </div>
-        <HomeLastUpdated
+        <LastUpdated
           fetchedAt={bootstrap.weather.fetchedAt}
           timezone={bootstrap.location.timezone}
         />

@@ -2,7 +2,7 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest';
-import { HomeLastUpdated } from '../frontend/pages/home/ui/home-last-updated';
+import { LastUpdated } from '../frontend/shared/ui/last-updated';
 
 // 이 Vitest 환경에서 userEvent + vi.useFakeTimers()를 함께 쓰면 중단된다.
 // userEvent v14는 포인터 시뮬레이션에 setTimeout을 사용하는데, fake clock이
@@ -15,24 +15,22 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('HomeLastUpdated', () => {
+describe('LastUpdated', () => {
   test('방금 업데이트된 시각은 "방금 전"으로 표시한다', () => {
     const now = new Date().toISOString();
-    render(<HomeLastUpdated fetchedAt={now} timezone="Asia/Seoul" />);
+    render(<LastUpdated fetchedAt={now} timezone="Asia/Seoul" />);
     expect(screen.getByText(/방금 전/)).toBeInTheDocument();
   });
 
   test('5분 전 시각은 "5분 전"으로 표시한다', () => {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    render(
-      <HomeLastUpdated fetchedAt={fiveMinutesAgo} timezone="Asia/Seoul" />
-    );
+    render(<LastUpdated fetchedAt={fiveMinutesAgo} timezone="Asia/Seoul" />);
     expect(screen.getByText(/5분 전/)).toBeInTheDocument();
   });
 
   test('1분이 지나면 상대 시각이 자동으로 업데이트된다', () => {
     const now = new Date().toISOString();
-    render(<HomeLastUpdated fetchedAt={now} timezone="Asia/Seoul" />);
+    render(<LastUpdated fetchedAt={now} timezone="Asia/Seoul" />);
     expect(screen.getByText(/방금 전/)).toBeInTheDocument();
     act(() => {
       vi.advanceTimersByTime(61 * 1000);
@@ -42,7 +40,7 @@ describe('HomeLastUpdated', () => {
 
   test('클릭하면 절대 시각이 표시된다', () => {
     const fetchedAt = '2026-04-12T09:00:00+09:00';
-    render(<HomeLastUpdated fetchedAt={fetchedAt} timezone="Asia/Seoul" />);
+    render(<LastUpdated fetchedAt={fetchedAt} timezone="Asia/Seoul" />);
     const badge = screen.getByRole('button');
     fireEvent.click(badge);
     // Should show formatted absolute time (contains date/time digits)
@@ -53,15 +51,13 @@ describe('HomeLastUpdated', () => {
     const ninetyMinutesAgo = new Date(
       Date.now() - 90 * 60 * 1000
     ).toISOString();
-    render(
-      <HomeLastUpdated fetchedAt={ninetyMinutesAgo} timezone="Asia/Seoul" />
-    );
+    render(<LastUpdated fetchedAt={ninetyMinutesAgo} timezone="Asia/Seoul" />);
     expect(screen.getByText(/1시간 전/)).toBeInTheDocument();
   });
 
   test('절대 시각 클릭 후 다시 클릭하면 상대 시각으로 돌아간다', () => {
     const now = new Date().toISOString();
-    render(<HomeLastUpdated fetchedAt={now} timezone="Asia/Seoul" />);
+    render(<LastUpdated fetchedAt={now} timezone="Asia/Seoul" />);
     const badge = screen.getByRole('button');
     fireEvent.click(badge);
     fireEvent.click(badge);
