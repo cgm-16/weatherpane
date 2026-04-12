@@ -44,6 +44,41 @@ test('위치가 설정된 홈에서 날씨 대시보드가 표시된다', async 
   await expect(page.getByRole('button', { name: /새로고침/ })).toBeVisible();
 });
 
+test('즐겨찾기 추가 후 제거 → 실행 취소 흐름이 동작한다', async ({ page }) => {
+  await page.addInitScript(
+    ({ key, value }) => localStorage.setItem(key, value),
+    { key: ACTIVE_LOCATION_KEY, value: seoulActiveLocation }
+  );
+
+  await page.goto('/');
+
+  // 날씨 데이터가 로드될 때까지 대기
+  await expect(page.getByText(/17°/).first()).toBeVisible();
+
+  // 즐겨찾기 버튼이 '즐겨찾기 추가' 상태여야 합니다
+  const addBtn = page.getByRole('button', { name: '즐겨찾기 추가' });
+  await expect(addBtn).toBeVisible();
+
+  // 즐겨찾기 추가
+  await addBtn.click();
+
+  // 버튼이 '즐겨찾기 해제' 상태로 변경되어야 합니다
+  const removeBtn = page.getByRole('button', { name: '즐겨찾기 해제' });
+  await expect(removeBtn).toBeVisible();
+
+  // 즐겨찾기 제거 → 실행 취소 토스트가 나타나야 합니다
+  await removeBtn.click();
+  const undoBtn = page.getByRole('button', { name: '실행 취소' });
+  await expect(undoBtn).toBeVisible();
+
+  // 실행 취소 클릭 → 토스트가 사라지고 즐겨찾기 상태가 복원되어야 합니다
+  await undoBtn.click();
+  await expect(undoBtn).not.toBeVisible();
+  await expect(
+    page.getByRole('button', { name: '즐겨찾기 해제' })
+  ).toBeVisible();
+});
+
 test('홈 대시보드에서 상세 보기 클릭 시 상세 페이지로 이동한다', async ({
   page,
 }) => {
