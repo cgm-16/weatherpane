@@ -7,6 +7,23 @@ import userEvent from '@testing-library/user-event';
 import { LocationUnsupported } from '../frontend/pages/location/ui/location-unsupported';
 import { LocationNotFound } from '../frontend/pages/location/ui/location-not-found';
 import { LocationConnectionError } from '../frontend/pages/location/ui/location-connection-error';
+import { useDetailBootstrap } from '../frontend/features/app-bootstrap/use-detail-bootstrap';
+import { LocationPage } from '../frontend/pages/location/ui/location-page';
+
+vi.mock('../frontend/features/app-bootstrap/use-detail-bootstrap', () => ({
+  useDetailBootstrap: vi.fn(),
+}));
+vi.mock('../frontend/features/weather-queries/use-weather-refresh', () => ({
+  useWeatherRefresh: vi.fn(() => vi.fn()),
+}));
+vi.mock('../frontend/features/favorites/use-favorites', () => ({
+  useFavorites: vi.fn(() => ({
+    favorites: [],
+    isFavorite: vi.fn(() => false),
+    toggleFavorite: vi.fn(),
+    atMaxFavorites: false,
+  })),
+}));
 
 describe('LocationUnsupported', () => {
   test('지원 불가 메시지를 표시한다', () => {
@@ -134,5 +151,127 @@ describe('LocationConnectionError', () => {
     expect(
       screen.getByRole('link', { name: /현재 위치로 돌아가기/ })
     ).toHaveAttribute('href', '/');
+  });
+});
+
+const loc = {
+  kind: 'resolved' as const,
+  locationId: 'loc_KR-Seoul',
+  catalogLocationId: 'KR-Seoul',
+  name: '서울',
+  admin1: '서울특별시',
+  latitude: 37.56,
+  longitude: 126.97,
+  timezone: 'Asia/Seoul',
+};
+
+const locationPageCondition = {
+  code: 'CLEAR',
+  text: '맑음',
+  isDay: true,
+  visualBucket: 'clear' as const,
+  textMapping: {
+    conditionCode: 'CLEAR',
+    isDay: true,
+    precipitationKind: 'none' as const,
+    cloudCoverPct: 0,
+    intensity: 'none' as const,
+  },
+};
+
+function renderPage(resolvedLocationId = 'KR-Seoul') {
+  return render(
+    <MemoryRouter>
+      <LocationPage resolvedLocationId={resolvedLocationId} />
+    </MemoryRouter>
+  );
+}
+
+describe('LocationPage 상태별 렌더링', () => {
+  test('unsupported → LocationUnsupported를 표시한다', () => {
+    vi.mocked(useDetailBootstrap).mockReturnValue({
+      kind: 'unsupported',
+      catalogLocationId: 'KR-Busan',
+    });
+    renderPage('unsupported::KR-Busan');
+    expect(
+      screen.getByRole('link', { name: /검색으로 돌아가기/ })
+    ).toBeInTheDocument();
+  });
+
+  test('not-found → LocationNotFound를 표시한다', () => {
+    vi.mocked(useDetailBootstrap).mockReturnValue({ kind: 'not-found' });
+    renderPage('invalid-id');
+    expect(screen.getByRole('heading')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /홈으로/ })).toBeInTheDocument();
+  });
+
+  test('loading → 로딩 메시지를 표시한다', () => {
+    vi.mocked(useDetailBootstrap).mockReturnValue({ kind: 'loading' });
+    renderPage();
+    expect(screen.getByText(/불러오는 중/)).toBeInTheDocument();
+  });
+
+  test('recoverable-error → LocationConnectionError를 표시한다', () => {
+    vi.mocked(useDetailBootstrap).mockReturnValue({
+      kind: 'recoverable-error',
+      location: loc,
+    });
+    renderPage();
+    expect(
+      screen.getByRole('button', { name: /다시 시도/ })
+    ).toBeInTheDocument();
+  });
+
+  test('stale-fallback → 오프라인 배너와 기온을 표시한다', () => {
+    const now = new Date().toISOString();
+    vi.mocked(useDetailBootstrap).mockReturnValue({
+      kind: 'stale-fallback',
+      location: loc,
+      weather: {
+        locationId: 'loc_KR-Seoul',
+        fetchedAt: now,
+        observedAt: now,
+        temperatureC: 17,
+        conditionCode: 'CLEAR',
+        conditionText: '맑음',
+        todayMinC: 10,
+        todayMaxC: 22,
+        source: { provider: 'mock' },
+      },
+      aqi: null,
+    });
+    renderPage();
+    expect(screen.getByText(/오프라인 상태/)).toBeInTheDocument();
+    expect(screen.getByText(/17/)).toBeInTheDocument();
+  });
+
+  test('data → DetailDashboard를 표시한다', () => {
+    vi.mocked(useDetailBootstrap).mockReturnValue({
+      kind: 'data',
+      location: loc,
+      isRefreshing: false,
+      hasRefreshError: false,
+      weather: {
+        locationId: 'loc_KR-Seoul',
+        fetchedAt: new Date().toISOString(),
+        observedAt: new Date().toISOString(),
+        current: { temperatureC: 18, condition: locationPageCondition },
+        today: { minC: 10, maxC: 22 },
+        hourly: [],
+        source: { provider: 'mock' },
+      },
+      aqi: {
+        locationId: 'loc_KR-Seoul',
+        fetchedAt: new Date().toISOString(),
+        observedAt: new Date().toISOString(),
+        summary: { aqi: 2, category: 'fair' },
+        pollutants: { co: 200, no2: 10, o3: 50, pm10: 25, pm25: 15, so2: 3 },
+        source: { provider: 'mock' },
+      },
+    });
+    renderPage();
+    expect(screen.getByText(/18°/)).toBeInTheDocument();
+    expect(screen.getByText('서울')).toBeInTheDocument();
   });
 });

@@ -1,19 +1,92 @@
-import { PlaceholderPage } from '../../../shared/ui/placeholder-page';
+// useDetailBootstrap으로 상세 페이지 렌더링을 조율합니다.
+import { useWeatherRefresh } from '~/features/weather-queries/use-weather-refresh';
+import { useDetailBootstrap } from '~/features/app-bootstrap/use-detail-bootstrap';
+import { DetailDashboard } from './detail-dashboard';
+import { LocationUnsupported } from './location-unsupported';
+import { LocationNotFound } from './location-not-found';
+import { LocationConnectionError } from './location-connection-error';
+import { HomeLastUpdated } from '~/pages/home/ui/home-last-updated';
 
-type LocationPageProps = {
+interface LocationPageProps {
   resolvedLocationId: string;
-};
+}
 
 export function LocationPage({ resolvedLocationId }: LocationPageProps) {
+  const bootstrap = useDetailBootstrap(resolvedLocationId);
+  const refresh = useWeatherRefresh();
+
+  if (bootstrap.kind === 'unsupported') {
+    return <LocationUnsupported />;
+  }
+
+  if (bootstrap.kind === 'not-found') {
+    return <LocationNotFound />;
+  }
+
+  if (bootstrap.kind === 'loading') {
+    return (
+      <main
+        className="flex min-h-screen items-center justify-center bg-background"
+        role="main"
+      >
+        <p className="font-body text-muted-foreground">
+          날씨 정보를 불러오는 중...
+        </p>
+      </main>
+    );
+  }
+
+  if (bootstrap.kind === 'recoverable-error') {
+    return (
+      <LocationConnectionError
+        onRetry={() => refresh(bootstrap.location.locationId)}
+      />
+    );
+  }
+
+  if (bootstrap.kind === 'stale-fallback') {
+    return (
+      <main
+        className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background"
+        role="main"
+      >
+        <div className="flex items-center gap-2 rounded-full bg-muted px-4 py-2">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-border" />
+          <span className="font-headline text-[11px] font-bold tracking-widest text-muted-foreground uppercase">
+            오프라인 상태
+          </span>
+        </div>
+        <p className="font-display text-5xl font-extrabold text-foreground">
+          {Math.round(bootstrap.weather.temperatureC)}°C
+        </p>
+        <p className="font-body text-muted-foreground">
+          {bootstrap.weather.conditionText}
+        </p>
+        <div className="flex gap-4">
+          <span className="font-body text-sm text-muted-foreground">
+            H {bootstrap.weather.todayMaxC}°
+          </span>
+          <span className="font-body text-sm text-muted-foreground">
+            L {bootstrap.weather.todayMinC}°
+          </span>
+        </div>
+        <HomeLastUpdated
+          fetchedAt={bootstrap.weather.fetchedAt}
+          timezone={bootstrap.location.timezone}
+        />
+      </main>
+    );
+  }
+
+  // 모든 오류 분기를 소진한 경우 bootstrap.kind === 'data'
   return (
-    <PlaceholderPage
-      description="Placeholder route for a resolved location detail screen."
-      title="Location placeholder"
-    >
-      <p className="mt-4 text-sm text-slate-300">
-        resolvedLocationId:{' '}
-        <span className="font-medium text-sky-200">{resolvedLocationId}</span>
-      </p>
-    </PlaceholderPage>
+    <DetailDashboard
+      location={bootstrap.location}
+      weather={bootstrap.weather}
+      aqi={bootstrap.aqi}
+      isRefreshing={bootstrap.isRefreshing}
+      hasRefreshError={bootstrap.hasRefreshError}
+      onRefresh={() => refresh(bootstrap.location.locationId)}
+    />
   );
 }
