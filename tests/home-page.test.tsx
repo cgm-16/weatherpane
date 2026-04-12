@@ -8,12 +8,12 @@ vi.mock('../frontend/features/app-bootstrap/use-home-bootstrap', () => ({
   useHomeBootstrap: vi.fn(),
 }));
 
-// useWeatherRefresh replaces useQueryClient in home-page.tsx
+// useWeatherRefresh는 home-page.tsx에서 useQueryClient를 대체한다.
 vi.mock('../frontend/features/weather-queries/use-weather-refresh', () => ({
   useWeatherRefresh: vi.fn(() => vi.fn()),
 }));
 
-// HomeDashboard uses useFavorites
+// HomeDashboard는 useFavorites를 사용한다.
 vi.mock('../frontend/features/favorites/use-favorites', () => ({
   useFavorites: vi.fn(() => ({
     favorites: [],
@@ -153,7 +153,7 @@ describe('HomePage 상태별 렌더링', () => {
     });
     renderPage();
     expect(screen.getByText(/18°/)).toBeInTheDocument();
-    // AQI category label is Korean: 'fair' maps to '보통'
+    // AQI 카테고리 라벨은 한국어: 'fair'는 '보통'으로 표시된다.
     expect(screen.getByText('보통')).toBeInTheDocument();
   });
 });

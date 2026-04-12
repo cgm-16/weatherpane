@@ -12,10 +12,15 @@ function conditionIcon(entry: CoreWeatherHourlyEntry): string {
   return 'thermostat';
 }
 
-// ISO 문자열을 한국어 오전/오후 시 형식으로 변환한다.
-function formatHour(at: string): string {
-  const date = new Date(at);
-  const hour = date.getHours();
+// ISO 문자열을 지정된 시간대의 한국어 오전/오후 시 형식으로 변환한다.
+// ICU 로케일 데이터에 의존하지 않도록 Intl로 시각(24시간)을 추출한 뒤 한국어 서식을 수동으로 적용한다.
+function formatHour(at: string, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    hour12: false,
+    timeZone,
+  }).formatToParts(new Date(at));
+  const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? 0) % 24;
   if (hour === 0) return '오전 12시';
   if (hour < 12) return `오전 ${hour}시`;
   if (hour === 12) return '오후 12시';
@@ -24,9 +29,10 @@ function formatHour(at: string): string {
 
 interface HomeHourlyStripProps {
   hourly: CoreWeatherHourlyEntry[];
+  timeZone: string;
 }
 
-export function HomeHourlyStrip({ hourly }: HomeHourlyStripProps) {
+export function HomeHourlyStrip({ hourly, timeZone }: HomeHourlyStripProps) {
   const entries = hourly.slice(0, 6);
 
   return (
@@ -42,7 +48,7 @@ export function HomeHourlyStrip({ hourly }: HomeHourlyStripProps) {
           className="flex min-w-[60px] flex-shrink-0 flex-col items-center gap-1 rounded-[--radius-md] bg-card px-3 py-3"
         >
           <span className="font-body text-xs text-muted-foreground">
-            {formatHour(entry.at)}
+            {formatHour(entry.at, timeZone)}
           </span>
           <span className="material-symbols-outlined text-[20px] text-foreground">
             {conditionIcon(entry)}

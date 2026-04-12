@@ -4,10 +4,10 @@ import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest';
 import { HomeLastUpdated } from '../frontend/pages/home/ui/home-last-updated';
 
-// userEvent + vi.useFakeTimers() hangs in this vitest environment because
-// userEvent v14 uses setTimeout internally for pointer simulation and the fake
-// clock prevents those timers from resolving. fireEvent is used for click
-// toggle tests, which test the same state transition without pointer delays.
+// 이 Vitest 환경에서 userEvent + vi.useFakeTimers()를 함께 쓰면 중단된다.
+// userEvent v14는 포인터 시뮬레이션에 setTimeout을 사용하는데, fake clock이
+// 해당 타이머를 처리하지 않기 때문이다. 클릭 토글 테스트에는 같은 상태 전환을
+// 포인터 지연 없이 검증할 수 있는 fireEvent를 사용한다.
 beforeEach(() => {
   vi.useFakeTimers();
 });
