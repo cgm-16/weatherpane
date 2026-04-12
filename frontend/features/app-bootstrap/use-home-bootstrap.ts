@@ -5,7 +5,10 @@ import { useActiveLocation } from './active-location-context';
 import { useCoreWeather } from '~/features/weather-queries/use-core-weather';
 import { useAqi } from '~/features/weather-queries/use-aqi';
 import { getConfigError } from '~/app/providers/app-providers';
-import { createWeatherSnapshotRepository, createAqiSnapshotRepository } from '~/shared/lib/storage/repositories/snapshot-repositories';
+import {
+  createWeatherSnapshotRepository,
+  createAqiSnapshotRepository,
+} from '~/shared/lib/storage/repositories/snapshot-repositories';
 import { coreWeatherToSnapshot } from '~/entities/weather/model/core-weather-to-snapshot';
 import { aqiToSnapshot } from '~/entities/aqi/model/aqi-to-snapshot';
 import { isWeatherSnapshotFresh, isAqiSnapshotFresh } from './snapshot-cutoff';
@@ -20,8 +23,20 @@ export type HomeBootstrapState =
   | { kind: 'no-location' }
   | { kind: 'config-error'; error: ConfigError }
   | { kind: 'loading' }
-  | { kind: 'data'; location: ResolvedLocation; weather: CoreWeather; aqi: Aqi; isRefreshing: boolean; hasRefreshError: boolean }
-  | { kind: 'stale-fallback'; location: ResolvedLocation; weather: PersistedWeatherSnapshot; aqi: PersistedAqiSnapshot | null }
+  | {
+      kind: 'data';
+      location: ResolvedLocation;
+      weather: CoreWeather;
+      aqi: Aqi;
+      isRefreshing: boolean;
+      hasRefreshError: boolean;
+    }
+  | {
+      kind: 'stale-fallback';
+      location: ResolvedLocation;
+      weather: PersistedWeatherSnapshot;
+      aqi: PersistedAqiSnapshot | null;
+    }
   | { kind: 'recoverable-error'; location: ResolvedLocation };
 
 export function useHomeBootstrap(): HomeBootstrapState {
@@ -69,6 +84,7 @@ export function useHomeBootstrap(): HomeBootstrapState {
       weather: weatherQuery.data,
       aqi: aqiQuery.data,
       isRefreshing: weatherQuery.isFetching || aqiQuery.isFetching,
+      // 재시도 중인 경우 오류 표시를 억제합니다 — 두 쿼리 모두 완료된 후에만 표시합니다.
       hasRefreshError:
         (weatherQuery.isError || aqiQuery.isError) &&
         !weatherQuery.isFetching &&
@@ -78,13 +94,22 @@ export function useHomeBootstrap(): HomeBootstrapState {
 
   // fetch 실패 → 스냅샷 폴백 시도 (날씨 또는 AQI 중 하나라도 실패하면 진입합니다)
   if (weatherQuery.isError || aqiQuery.isError) {
-    const weatherSnapshot = createWeatherSnapshotRepository().get(location.locationId);
+    const weatherSnapshot = createWeatherSnapshotRepository().get(
+      location.locationId
+    );
     const aqiSnapshot = createAqiSnapshotRepository().get(location.locationId);
 
     if (weatherSnapshot && isWeatherSnapshotFresh(weatherSnapshot.fetchedAt)) {
       const freshAqi =
-        aqiSnapshot && isAqiSnapshotFresh(aqiSnapshot.fetchedAt) ? aqiSnapshot : null;
-      return { kind: 'stale-fallback', location, weather: weatherSnapshot, aqi: freshAqi };
+        aqiSnapshot && isAqiSnapshotFresh(aqiSnapshot.fetchedAt)
+          ? aqiSnapshot
+          : null;
+      return {
+        kind: 'stale-fallback',
+        location,
+        weather: weatherSnapshot,
+        aqi: freshAqi,
+      };
     }
 
     return { kind: 'recoverable-error', location };
