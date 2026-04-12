@@ -1,7 +1,8 @@
 // 연결 오류 화면입니다. 스냅샷 없이 fetch 실패 시 표시됩니다.
 interface HomeConnectionErrorProps {
   onRetry: () => void;
-  onGoToSavedPlaces: () => void;
+  // WP-017 즐겨찾기 구현 전까지는 전달하지 않으면 버튼을 숨깁니다.
+  onGoToSavedPlaces?: () => void;
 }
 
 export function HomeConnectionError({ onRetry, onGoToSavedPlaces }: HomeConnectionErrorProps) {
@@ -52,14 +53,16 @@ export function HomeConnectionError({ onRetry, onGoToSavedPlaces }: HomeConnecti
             <span className="material-symbols-outlined text-xl">refresh</span>
             Retry Connection
           </button>
-          <button
-            type="button"
-            onClick={onGoToSavedPlaces}
-            className="flex w-full items-center justify-center gap-2 rounded-sm bg-secondary-container px-6 py-4 font-headline font-semibold text-on-secondary-fixed transition-all hover:bg-surface-container-highest active:scale-95"
-          >
-            <span className="material-symbols-outlined text-xl">bookmarks</span>
-            Go to Saved Places
-          </button>
+          {onGoToSavedPlaces && (
+            <button
+              type="button"
+              onClick={onGoToSavedPlaces}
+              className="flex w-full items-center justify-center gap-2 rounded-sm bg-secondary-container px-6 py-4 font-headline font-semibold text-on-secondary-fixed transition-all hover:bg-surface-container-highest active:scale-95"
+            >
+              <span className="material-symbols-outlined text-xl">bookmarks</span>
+              Go to Saved Places
+            </button>
+          )}
         </div>
 
         <p className="mt-8 font-label text-xs font-medium uppercase tracking-widest text-on-surface-variant/60">

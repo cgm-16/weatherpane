@@ -34,9 +34,6 @@ export function HomePage() {
           void queryClient.invalidateQueries({ queryKey: weatherQueryKeys.coreWeather(locationId) });
           void queryClient.invalidateQueries({ queryKey: weatherQueryKeys.aqi(locationId) });
         }}
-        onGoToSavedPlaces={() => {
-          // WP-017 즐겨찾기 구현 후 연결 예정
-        }}
       />
     );
   }
