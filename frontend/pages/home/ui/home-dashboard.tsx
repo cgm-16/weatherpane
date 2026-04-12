@@ -1,6 +1,5 @@
 import { Link } from 'react-router';
-import { useFavorites } from '~/features/favorites/use-favorites';
-import { FavoriteUndoToast } from '~/features/favorites/ui/favorite-undo-toast';
+import { useFavorites, FavoriteUndoToast } from '~/features/favorites';
 import { persistRecent } from '~/features/recents';
 import { HourlyStrip } from '~/shared/ui/hourly-strip';
 import type {
