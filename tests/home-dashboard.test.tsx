@@ -13,7 +13,10 @@ vi.mock('../frontend/features/favorites/use-favorites', () => ({
   useFavorites: vi.fn(() => ({
     favorites: [],
     isFavorite: vi.fn(() => false),
-    toggleFavorite: vi.fn(),
+    addFavorite: vi.fn(),
+    removeFavorite: vi.fn(),
+    undoEntry: null,
+    undoRemove: vi.fn(),
     atMaxFavorites: false,
   })),
 }));
@@ -174,7 +177,10 @@ describe('HomeDashboard 즐겨찾기', () => {
     vi.mocked(useFavorites).mockReturnValue({
       favorites: [],
       isFavorite: () => true,
-      toggleFavorite: vi.fn(),
+      addFavorite: vi.fn(),
+      removeFavorite: vi.fn(),
+      undoEntry: null,
+      undoRemove: vi.fn(),
       atMaxFavorites: false,
     });
     renderDashboard();
@@ -187,7 +193,10 @@ describe('HomeDashboard 즐겨찾기', () => {
     vi.mocked(useFavorites).mockReturnValue({
       favorites: [],
       isFavorite: () => false,
-      toggleFavorite: vi.fn(),
+      addFavorite: vi.fn(),
+      removeFavorite: vi.fn(),
+      undoEntry: null,
+      undoRemove: vi.fn(),
       atMaxFavorites: true,
     });
     renderDashboard();
@@ -196,17 +205,20 @@ describe('HomeDashboard 즐겨찾기', () => {
     ).toBeDisabled();
   });
 
-  test('즐겨찾기 버튼 클릭 시 toggleFavorite이 호출된다', async () => {
+  test('즐겨찾기 추가 버튼 클릭 시 addFavorite이 호출된다', async () => {
     const user = userEvent.setup();
-    const toggleFavorite = vi.fn();
+    const addFavorite = vi.fn();
     vi.mocked(useFavorites).mockReturnValue({
       favorites: [],
       isFavorite: () => false,
-      toggleFavorite,
+      addFavorite,
+      removeFavorite: vi.fn(),
+      undoEntry: null,
+      undoRemove: vi.fn(),
       atMaxFavorites: false,
     });
     renderDashboard();
     await user.click(screen.getByRole('button', { name: /즐겨찾기/ }));
-    expect(toggleFavorite).toHaveBeenCalledWith(loc);
+    expect(addFavorite).toHaveBeenCalledWith(loc);
   });
 });
