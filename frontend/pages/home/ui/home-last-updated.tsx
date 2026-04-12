@@ -41,6 +41,11 @@ export function HomeLastUpdated({ fetchedAt, timezone }: HomeLastUpdatedProps) {
     <button
       type="button"
       onClick={() => setShowAbsolute((prev) => !prev)}
+      aria-label={
+        showAbsolute
+          ? '절대 시각 표시 중 — 클릭하면 상대 시각으로 전환'
+          : '마지막 업데이트 시각 — 클릭하면 절대 시각으로 전환'
+      }
       className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 font-body text-xs text-muted-foreground"
     >
       <span className="material-symbols-outlined text-[14px]">schedule</span>

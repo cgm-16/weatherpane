@@ -49,6 +49,16 @@ describe('HomeLastUpdated', () => {
     expect(screen.getByText(/2026/)).toBeInTheDocument();
   });
 
+  test('90분 전 시각은 "1시간 전"으로 표시한다', () => {
+    const ninetyMinutesAgo = new Date(
+      Date.now() - 90 * 60 * 1000
+    ).toISOString();
+    render(
+      <HomeLastUpdated fetchedAt={ninetyMinutesAgo} timezone="Asia/Seoul" />
+    );
+    expect(screen.getByText(/1시간 전/)).toBeInTheDocument();
+  });
+
   test('절대 시각 클릭 후 다시 클릭하면 상대 시각으로 돌아간다', () => {
     const now = new Date().toISOString();
     render(<HomeLastUpdated fetchedAt={now} timezone="Asia/Seoul" />);
