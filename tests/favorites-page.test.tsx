@@ -482,4 +482,40 @@ describe('FavoritesPage', () => {
     renderPage();
     expect(screen.getByText(/서울/)).toBeInTheDocument();
   });
+
+  test('undo toast shows nickname when removedItem has a nickname', () => {
+    vi.mocked(useFavorites).mockReturnValue({
+      favorites: [],
+      undoEntry: {
+        snapshot: [seoulFavWithNickname],
+        removedItem: seoulFavWithNickname,
+      },
+      undoRemove: vi.fn(),
+      isFavorite: vi.fn(),
+      addFavorite: vi.fn(),
+      removeFavorite: vi.fn(),
+      atMaxFavorites: false,
+    });
+    renderPage();
+    expect(screen.getByText(/집/)).toBeInTheDocument();
+    // location name should NOT appear in the toast in place of the nickname
+    // (the name '서울' may appear in other contexts so only checking nickname presence is sufficient)
+  });
+
+  test('clicking undo button calls undoRemove', async () => {
+    const user = userEvent.setup();
+    const mockUndoRemove = vi.fn();
+    vi.mocked(useFavorites).mockReturnValue({
+      favorites: [],
+      undoEntry: { snapshot: [seoulFav], removedItem: seoulFav },
+      undoRemove: mockUndoRemove,
+      isFavorite: vi.fn(),
+      addFavorite: vi.fn(),
+      removeFavorite: vi.fn(),
+      atMaxFavorites: false,
+    });
+    renderPage();
+    await user.click(screen.getByRole('button', { name: /실행 취소/i }));
+    expect(mockUndoRemove).toHaveBeenCalledOnce();
+  });
 });
