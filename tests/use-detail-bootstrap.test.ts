@@ -42,7 +42,7 @@ import { useDetailBootstrap } from '../frontend/features/app-bootstrap/use-detai
 
 const location = {
   kind: 'resolved' as const,
-  locationId: 'loc_KR-Seoul',
+  locationId: 'loc_test',
   catalogLocationId: 'KR-Seoul',
   name: '서울',
   admin1: '서울특별시',
@@ -100,7 +100,7 @@ function successQuery(data: unknown, isFetching = false): any {
 
 const now = new Date().toISOString();
 const weather: CoreWeather = {
-  locationId: 'loc_KR-Seoul',
+  locationId: 'loc_test',
   fetchedAt: now,
   observedAt: now,
   current: {
@@ -124,7 +124,7 @@ const weather: CoreWeather = {
   source: { provider: 'mock' },
 };
 const aqi: Aqi = {
-  locationId: 'loc_KR-Seoul',
+  locationId: 'loc_test',
   fetchedAt: now,
   observedAt: now,
   summary: { aqi: 2, category: 'fair' },
@@ -208,7 +208,7 @@ describe('useDetailBootstrap', () => {
   test('fetch 실패 + 유효 스냅샷 → stale-fallback 반환', () => {
     const fresh = new Date(Date.now() - 60_000).toISOString();
     const ws = {
-      locationId: 'loc_KR-Seoul',
+      locationId: 'loc_test',
       fetchedAt: fresh,
       observedAt: fresh,
       temperatureC: 17,
@@ -234,7 +234,7 @@ describe('useDetailBootstrap', () => {
   test('fetch 실패 + 만료된 스냅샷 → recoverable-error 반환', () => {
     const stale = new Date(Date.now() - 25 * 3_600_000).toISOString();
     const ws = {
-      locationId: 'loc_KR-Seoul',
+      locationId: 'loc_test',
       fetchedAt: stale,
       observedAt: stale,
       temperatureC: 17,
@@ -263,5 +263,60 @@ describe('useDetailBootstrap', () => {
     vi.mocked(useAqi).mockReturnValue(errorQuery());
     const { result } = renderHook(() => useDetailBootstrap('KR-Seoul'));
     expect(result.current.kind).toBe('recoverable-error');
+  });
+
+  test('data + 하나가 isError이며 isFetching이 아니면 hasRefreshError: true', () => {
+    vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
+    vi.mocked(useCoreWeather).mockReturnValue(successQuery(weather));
+    vi.mocked(useAqi).mockReturnValue({ ...successQuery(aqi), isError: true });
+    const { result } = renderHook(() => useDetailBootstrap('KR-Seoul'));
+    expect(result.current.kind).toBe('data');
+    if (result.current.kind === 'data') {
+      expect(result.current.hasRefreshError).toBe(true);
+      expect(result.current.isRefreshing).toBe(false);
+    }
+  });
+
+  test('fetch 실패 + 유효 날씨·AQI 스냅샷 → stale-fallback에 aqi 포함', () => {
+    const fresh = new Date(Date.now() - 60_000).toISOString();
+    const ws = {
+      locationId: 'loc_test',
+      fetchedAt: fresh,
+      observedAt: fresh,
+      temperatureC: 17,
+      conditionCode: 'CLEAR',
+      conditionText: '맑음',
+      todayMinC: 10,
+      todayMaxC: 22,
+      source: { provider: 'mock' },
+    };
+    const as_ = {
+      locationId: 'loc_test',
+      fetchedAt: fresh,
+      observedAt: fresh,
+      aqi: 2,
+      category: 'fair',
+      source: { provider: 'mock' },
+    };
+    vi.mocked(createWeatherSnapshotRepository).mockReturnValue({
+      get: vi.fn(() => ws),
+      set: vi.fn(),
+      remove: vi.fn(),
+      clear: vi.fn(),
+    });
+    vi.mocked(createAqiSnapshotRepository).mockReturnValue({
+      get: vi.fn(() => as_),
+      set: vi.fn(),
+      remove: vi.fn(),
+      clear: vi.fn(),
+    });
+    vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
+    vi.mocked(useCoreWeather).mockReturnValue(errorQuery());
+    vi.mocked(useAqi).mockReturnValue(errorQuery());
+    const { result } = renderHook(() => useDetailBootstrap('KR-Seoul'));
+    expect(result.current.kind).toBe('stale-fallback');
+    if (result.current.kind === 'stale-fallback') {
+      expect(result.current.aqi).not.toBeNull();
+    }
   });
 });

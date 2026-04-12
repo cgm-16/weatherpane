@@ -42,12 +42,21 @@ export function useDetailBootstrap(
 ): DetailBootstrapState {
   const { activeLocation } = useActiveLocation();
 
-  // resolved 위치만 날씨 쿼리에 전달합니다.
+  const isUnsupported = resolvedLocationId.startsWith('unsupported::');
+
+  // resolvedLocation 파생: unsupported 라우트이거나 활성 위치가 일치하지 않으면 null
   const resolvedLocation: ResolvedLocation | null =
-    activeLocation?.kind === 'resolved' ? activeLocation.location : null;
+    !isUnsupported &&
+    activeLocation?.kind === 'resolved' &&
+    activeLocation.location.catalogLocationId === resolvedLocationId
+      ? activeLocation.location
+      : null;
 
   const weatherQuery = useCoreWeather(resolvedLocation);
   const aqiQuery = useAqi(resolvedLocation);
+
+  // config-error는 홈 부트스트랩에서만 처리합니다.
+  // 상세 페이지에서 설정 오류가 발생하면 쿼리 실패 → recoverable-error로 폴백됩니다.
 
   // 성공 시 스냅샷 저장 — 다음 오프라인 진입을 대비합니다.
   useEffect(() => {
@@ -66,9 +75,11 @@ export function useDetailBootstrap(
   // 훅 호출 이후에 조건부 반환합니다 (Rules of Hooks 준수).
 
   // unsupported:: 접두사 → 지원하지 않는 위치
-  if (resolvedLocationId.startsWith('unsupported::')) {
-    const catalogLocationId = resolvedLocationId.slice('unsupported::'.length);
-    return { kind: 'unsupported', catalogLocationId };
+  if (isUnsupported) {
+    return {
+      kind: 'unsupported',
+      catalogLocationId: resolvedLocationId.slice('unsupported::'.length),
+    };
   }
 
   // 활성 위치가 없거나 catalogLocationId가 일치하지 않으면 not-found 반환
