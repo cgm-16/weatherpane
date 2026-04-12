@@ -25,5 +25,8 @@ export default defineConfig({
     command: `pnpm dev --host 127.0.0.1 --port ${port} --strictPort`,
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: !process.env.CI,
+    env: {
+      VITE_WEATHER_PROVIDER_MODE: 'mock',
+    },
   },
 });
