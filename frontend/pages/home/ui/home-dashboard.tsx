@@ -127,10 +127,13 @@ export function HomeDashboard({
           <p className="font-body text-xs text-muted-foreground">
             {aqiCategoryLabel[aqi.summary.category] ?? aqi.summary.category}
           </p>
+          {/* AQI는 유럽 1–5 순위 척도를 가정합니다 (1=좋음, 5=매우 나쁨). */}
           <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full bg-primary"
-              style={{ width: `${((aqi.summary.aqi - 1) / 4) * 100}%` }}
+              style={{
+                width: `${Math.min(100, Math.max(0, ((aqi.summary.aqi - 1) / 4) * 100))}%`,
+              }}
             />
           </div>
         </div>

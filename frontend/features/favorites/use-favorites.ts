@@ -7,6 +7,9 @@ import type {
 
 const MAX_FAVORITES = 6;
 
+// 참고: 이 훅은 단일 인스턴스를 가정합니다. React 트리에 두 인스턴스가 동시에
+// 마운트되면 각각의 useState가 독립적으로 동작하여 서로의 변경을 인식하지 못합니다.
+// 즐겨찾기 페이지가 추가될 경우 컨텍스트 또는 외부 상태로 교체해야 합니다.
 export function useFavorites() {
   const [favorites, setFavorites] = useState<FavoriteLocation[]>(() =>
     createFavoritesRepository().getAll()
