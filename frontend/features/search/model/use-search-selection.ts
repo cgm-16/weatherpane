@@ -45,10 +45,14 @@ export function useSearchSelection() {
   const { setActiveLocation } = useActiveLocation();
   const { geocode } = useWeatherProvider();
   const [resolvingId, setResolvingId] = useState<string | null>(null);
+  const [selectionError, setSelectionError] = useState<Error | null>(null);
+  const [pendingRetryResult, setPendingRetryResult] =
+    useState<SearchCatalogResult | null>(null);
 
   async function selectResult(result: SearchCatalogResult) {
     if (resolvingId !== null) return;
     setResolvingId(result.catalogLocationId);
+    setSelectionError(null);
 
     try {
       const entry = getCatalogEntryById(result.catalogLocationId);
@@ -89,10 +93,23 @@ export function useSearchSelection() {
       } else {
         navigate(`/location/${resolution.token}`);
       }
+    } catch (err) {
+      console.error('[use-search-selection] resolveCatalogLocation 실패', err);
+      setSelectionError(
+        err instanceof Error
+          ? err
+          : new Error('위치를 불러오는 데 실패했습니다.')
+      );
+      setPendingRetryResult(result);
     } finally {
       setResolvingId(null);
     }
   }
 
-  return { selectResult, resolvingId };
+  function retrySelection() {
+    if (pendingRetryResult === null) return;
+    void selectResult(pendingRetryResult);
+  }
+
+  return { selectResult, resolvingId, selectionError, retrySelection };
 }

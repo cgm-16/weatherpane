@@ -329,6 +329,75 @@ describe('search result selection', () => {
     expect(storage.getItem(storageKeys.activeLocation)).toBeNull();
   });
 
+  test('geocode 오류 시 이동하지 않고 오류 메시지를 표시한다', async () => {
+    vi.mocked(useWeatherProvider).mockReturnValue({
+      mode: 'mock',
+      getCoreWeather: vi.fn(),
+      getAqi: vi.fn(),
+      geocode: vi.fn().mockRejectedValue(new Error('네트워크 오류')),
+    });
+
+    const { router, user } = renderSearchRouteWithStorage(
+      '/search?q=%EC%B2%AD%EC%9A%B4%EB%8F%99'
+    );
+
+    const option = await screen.findByRole('option', {
+      name: /서울특별시-종로구-청운동/i,
+    });
+
+    await user.click(option);
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeVisible();
+    });
+    expect(router.state.location.pathname).toBe('/search');
+  });
+
+  test('오류 후 재시도 버튼을 클릭하면 선택을 다시 시도한다', async () => {
+    const geocode = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('일시적 오류'))
+      .mockResolvedValue([
+        {
+          name: '청운동',
+          admin1: '서울특별시',
+          admin2: '종로구',
+          countryCode: 'KR',
+          latitude: 37.5729,
+          longitude: 126.9794,
+          timezone: 'Asia/Seoul',
+        },
+      ]);
+
+    vi.mocked(useWeatherProvider).mockReturnValue({
+      mode: 'mock',
+      getCoreWeather: vi.fn(),
+      getAqi: vi.fn(),
+      geocode,
+    });
+
+    const { router, user } = renderSearchRouteWithStorage(
+      '/search?q=%EC%B2%AD%EC%9A%B4%EB%8F%99'
+    );
+
+    const option = await screen.findByRole('option', {
+      name: /서울특별시-종로구-청운동/i,
+    });
+
+    await user.click(option);
+
+    const retryButton = await screen.findByRole('button', {
+      name: /다시 시도/,
+    });
+    await user.click(retryButton);
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toMatch(
+        /^\/location\/[0-9a-f]{12}$/
+      );
+    });
+  });
+
   test('선택 진행 중에는 listbox가 aria-busy=true가 된다', async () => {
     let resolveGeocode!: (value: unknown[]) => void;
     vi.mocked(useWeatherProvider).mockReturnValue({

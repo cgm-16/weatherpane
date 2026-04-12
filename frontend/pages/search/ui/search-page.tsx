@@ -101,7 +101,8 @@ function PopularLocationButton({
 
 export function SearchPage() {
   const navigate = useNavigate();
-  const { selectResult, resolvingId } = useSearchSelection();
+  const { selectResult, resolvingId, selectionError, retrySelection } =
+    useSearchSelection();
   const optionBaseId = useId();
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') ?? '';
@@ -252,6 +253,25 @@ export function SearchPage() {
             </div>
           </div>
         </section>
+
+        {selectionError !== null && (
+          <div
+            aria-live="polite"
+            className="flex items-center justify-between gap-4 rounded-[calc(var(--radius-lg)+0.25rem)] bg-destructive/10 px-5 py-4 text-destructive"
+            role="alert"
+          >
+            <p className="text-sm font-medium">
+              위치를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
+            </p>
+            <button
+              className="shrink-0 rounded-[var(--radius-md)] bg-destructive px-3 py-1.5 text-sm font-medium text-destructive-foreground transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-destructive focus-visible:outline-none"
+              type="button"
+              onClick={retrySelection}
+            >
+              다시 시도
+            </button>
+          </div>
+        )}
 
         {hasActiveQuery ? (
           <section className="space-y-4 rounded-[calc(var(--radius-lg)+0.25rem)] bg-muted p-4 sm:p-5">
