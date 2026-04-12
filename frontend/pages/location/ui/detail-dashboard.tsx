@@ -1,14 +1,18 @@
 import { Link } from 'react-router';
 import { useFavorites } from '~/features/favorites/use-favorites';
+import { FavoriteUndoToast } from '~/features/favorites/ui/favorite-undo-toast';
 import { HourlyStrip } from '~/shared/ui/hourly-strip';
 import { DetailAqiCard } from './detail-aqi-card';
 import { DetailUvCard } from './detail-uv-card';
-import type { ResolvedLocation } from '~/entities/location/model/types';
+import type {
+  ResolvedLocation,
+  RawGpsFallbackLocation,
+} from '~/entities/location/model/types';
 import type { CoreWeather } from '~/entities/weather/model/core-weather';
 import type { Aqi } from '~/entities/aqi/model/aqi';
 
 interface DetailDashboardProps {
-  location: ResolvedLocation;
+  location: ResolvedLocation | RawGpsFallbackLocation;
   weather: CoreWeather;
   aqi: Aqi;
   isRefreshing: boolean;
@@ -24,9 +28,16 @@ export function DetailDashboard({
   hasRefreshError,
   onRefresh,
 }: DetailDashboardProps) {
-  const { isFavorite, addFavorite, removeFavorite, atMaxFavorites } =
-    useFavorites();
-  const favorited = isFavorite(location.locationId);
+  const {
+    isFavorite,
+    addFavorite,
+    removeFavorite,
+    undoEntry,
+    undoRemove,
+    atMaxFavorites,
+  } = useFavorites();
+  const canFavorite = location.kind === 'resolved';
+  const favorited = canFavorite && isFavorite(location.locationId);
 
   return (
     <main className="flex min-h-screen flex-col bg-background" role="main">
@@ -64,9 +75,10 @@ export function DetailDashboard({
           <button
             type="button"
             aria-label={favorited ? '즐겨찾기 해제' : '즐겨찾기 추가'}
-            disabled={!favorited && atMaxFavorites}
+            disabled={!canFavorite || (!favorited && atMaxFavorites)}
             onClick={() => {
-              if (isFavorite(location.locationId)) {
+              if (!canFavorite) return;
+              if (favorited) {
                 removeFavorite(location.locationId);
               } else {
                 addFavorite(location);
@@ -80,6 +92,13 @@ export function DetailDashboard({
           </button>
         </div>
       </header>
+
+      {/* raw-GPS 위치는 즐겨찾기 불가 안내 */}
+      {!canFavorite && (
+        <p className="px-4 pt-1 font-body text-xs text-muted-foreground">
+          지원되지 않는 위치입니다. 즐겨찾기에 추가할 수 없습니다.
+        </p>
+      )}
 
       {/* 비차단 새로고침 오류 */}
       {hasRefreshError && (
@@ -109,8 +128,8 @@ export function DetailDashboard({
         </div>
       </div>
 
-      {/* 12시간 시간별 예보 */}
-      {weather.hourly.length > 0 && (
+      {/* 12시간 시간별 예보 — resolved 위치만 timezone을 가짐 */}
+      {canFavorite && weather.hourly.length > 0 && (
         <section className="px-4 pt-4" aria-label="시간별 예보">
           <HourlyStrip
             hourly={weather.hourly}
@@ -151,6 +170,16 @@ export function DetailDashboard({
           </p>
         </div>
       </div>
+
+      {undoEntry && (
+        <FavoriteUndoToast
+          locationName={
+            undoEntry.removedItem.nickname ??
+            undoEntry.removedItem.location.name
+          }
+          onUndo={undoRemove}
+        />
+      )}
     </main>
   );
 }
