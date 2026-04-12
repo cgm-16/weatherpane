@@ -8,12 +8,11 @@ import {
   getCatalogEntryById,
 } from '~/entities/location';
 import { createUnsupportedRouteContextRepository } from '~/shared/lib/storage/repositories/unsupported-route-context-repository';
-import { createRecentsRepository } from '~/shared/lib/storage/repositories/location-repositories';
+import { persistRecent } from '~/features/recents';
 import type { SearchCatalogResult } from '~/entities/location/model/search';
 import type {
   ActiveLocation,
   CatalogLocation,
-  ResolvedLocation,
 } from '~/entities/location/model/types';
 import type { CatalogEntry } from '~/entities/location/model/catalog';
 
@@ -27,17 +26,6 @@ function buildCatalogLocationFromEntry(entry: CatalogEntry): CatalogLocation {
     latitude: 0,
     longitude: 0,
   };
-}
-
-function prependRecent(location: ResolvedLocation, now: string) {
-  const repo = createRecentsRepository();
-  const existing = repo.getAll();
-  const filtered = existing.filter(
-    (r) =>
-      r.location.kind !== 'resolved' ||
-      r.location.catalogLocationId !== location.catalogLocationId
-  );
-  repo.replaceAll([{ location, lastOpenedAt: now }, ...filtered]);
 }
 
 export function useSearchSelection() {
@@ -88,7 +76,7 @@ export function useSearchSelection() {
           changedAt: now,
         };
         setActiveLocation(activeLocation);
-        prependRecent(resolution.location, now);
+        persistRecent(resolution.location);
         navigate(`/location/${result.catalogLocationId}`);
       } else {
         navigate(`/location/${resolution.token}`);
