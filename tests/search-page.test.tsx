@@ -531,7 +531,11 @@ describe('search default state — recents and popular', () => {
     seedRecents([makeRecentLocation('5f5def784f91', '청운동', '서울특별시')]);
     const { router, storage } = renderSearchRoute();
 
-    const btn = await screen.findByRole('button', { name: /청운동/ });
+    const recentsHeading = await screen.findByRole('heading', {
+      name: '최근 지역',
+    });
+    const recentsSection = recentsHeading.closest('section')!;
+    const btn = within(recentsSection).getByRole('button', { name: /청운동/ });
     await userEvent.setup().click(btn);
 
     await waitFor(() => {

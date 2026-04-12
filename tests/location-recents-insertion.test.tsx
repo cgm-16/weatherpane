@@ -109,8 +109,9 @@ describe('LocationPage — recents insertion on entry', () => {
       </MemoryRouter>
     );
 
-    // 충분한 시간을 기다린 후 호출되지 않았음을 확인한다.
-    await new Promise((r) => setTimeout(r, 50));
-    expect(recentsModule.persistRecent).not.toHaveBeenCalled();
+    // 비동기 이펙트가 안정화될 때까지 기다린 후 호출되지 않았음을 확인한다.
+    await waitFor(() =>
+      expect(recentsModule.persistRecent).not.toHaveBeenCalled()
+    );
   });
 });
