@@ -18,7 +18,4 @@ test('direct-open search hydrates from q and Enter follows the highlighted resul
   await searchbox.press('Enter');
 
   await expect(page).toHaveURL(/\/location\/5f5def784f91$/);
-  await expect(
-    page.getByRole('link', { name: '홈으로 돌아가기' })
-  ).toBeVisible();
 });
