@@ -1,3 +1,4 @@
+import type { LocationGeocodeCandidate } from '../../entities/location';
 import type { WeatherProvider } from './weather-provider';
 import {
   mockOpenWeatherAqiFixture,
@@ -18,5 +19,23 @@ export const mockWeatherProvider: WeatherProvider = {
   },
   async getAqi(location) {
     return normalizeOpenWeatherAqiResponse(mockOpenWeatherAqiFixture, location);
+  },
+  async geocode(query: string): Promise<LocationGeocodeCandidate[]> {
+    // canonicalPath 세그먼트를 분리하여 한국 지오코딩 결과를 시뮬레이션합니다.
+    const segments = query.split('-');
+    const name = segments[segments.length - 1];
+    const admin1 = segments[0];
+    const admin2 = segments.length >= 3 ? segments[1] : undefined;
+    return [
+      {
+        name,
+        admin1,
+        ...(admin2 ? { admin2 } : {}),
+        countryCode: 'KR',
+        latitude: 37.5665,
+        longitude: 126.978,
+        timezone: 'Asia/Seoul',
+      },
+    ];
   },
 };
