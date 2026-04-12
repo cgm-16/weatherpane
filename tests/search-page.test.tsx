@@ -11,9 +11,28 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RouterProvider, createMemoryRouter, useParams } from 'react-router';
-import { describe, expect, test } from 'vitest';
+import { vi, afterEach, describe, expect, test } from 'vitest';
 
 import SearchRoute from '../app/routes/search';
+import { storageKeys } from '../frontend/shared/lib/storage/storage-keys';
+import { createMemoryStorage } from './storage/test-storage';
+import { ActiveLocationProvider } from '../frontend/features/app-bootstrap/active-location-context';
+import { useWeatherProvider } from '../frontend/shared/api/weather-provider';
+
+vi.mock('../frontend/shared/api/weather-provider', async (importActual) => {
+  const actual =
+    await importActual<
+      typeof import('../frontend/shared/api/weather-provider')
+    >();
+  return {
+    ...actual,
+    useWeatherProvider: vi.fn(),
+  };
+});
+
+afterEach(() => {
+  vi.resetAllMocks();
+});
 
 function LocationStub() {
   const { resolvedLocationId } = useParams();
@@ -22,6 +41,24 @@ function LocationStub() {
 }
 
 function renderSearchRoute(initialEntry = '/search') {
+  vi.mocked(useWeatherProvider).mockReturnValue({
+    mode: 'mock',
+    getCoreWeather: vi.fn(),
+    getAqi: vi.fn(),
+    geocode: vi.fn().mockResolvedValue([
+      {
+        name: '명동',
+        admin1: '서울특별시',
+        admin2: '중구',
+        countryCode: 'KR',
+        latitude: 37.5635,
+        longitude: 126.9819,
+        timezone: 'Asia/Seoul',
+      },
+    ]),
+  });
+
+  const storage = createMemoryStorage();
   const router = createMemoryRouter(
     [
       {
@@ -38,12 +75,37 @@ function renderSearchRoute(initialEntry = '/search') {
     }
   );
 
-  render(<RouterProvider router={router} />);
+  render(
+    <ActiveLocationProvider storage={storage}>
+      <RouterProvider router={router} />
+    </ActiveLocationProvider>
+  );
 
   return {
     router,
     user: userEvent.setup(),
   };
+}
+
+function renderSearchRouteWithStorage(
+  initialEntry = '/search',
+  storage = createMemoryStorage()
+) {
+  const router = createMemoryRouter(
+    [
+      { path: '/search', element: <SearchRoute /> },
+      { path: '/location/:resolvedLocationId', element: <LocationStub /> },
+    ],
+    { initialEntries: [initialEntry] }
+  );
+
+  render(
+    <ActiveLocationProvider storage={storage}>
+      <RouterProvider router={router} />
+    </ActiveLocationProvider>
+  );
+
+  return { router, storage, user: userEvent.setup() };
 }
 
 describe('search route', () => {
@@ -190,5 +252,111 @@ describe('search route', () => {
       expect(router.state.location.search).toBe('');
     });
     expect(input).toHaveValue('');
+  });
+});
+
+describe('search result selection', () => {
+  test('성공한 선택은 detail로 이동하고 active location을 업데이트한다', async () => {
+    vi.mocked(useWeatherProvider).mockReturnValue({
+      mode: 'mock',
+      getCoreWeather: vi.fn(),
+      getAqi: vi.fn(),
+      geocode: vi.fn().mockResolvedValue([
+        {
+          name: '청운동',
+          admin1: '서울특별시',
+          admin2: '종로구',
+          countryCode: 'KR',
+          latitude: 37.5729,
+          longitude: 126.9794,
+          timezone: 'Asia/Seoul',
+        },
+      ]),
+    });
+
+    const storage = createMemoryStorage();
+    const { router, user } = renderSearchRouteWithStorage(
+      '/search?q=%EC%B2%AD%EC%9A%B4%EB%8F%99',
+      storage
+    );
+
+    const option = await screen.findByRole('option', {
+      name: /서울특별시-종로구-청운동/i,
+    });
+
+    await user.click(option);
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toMatch(
+        /^\/location\/[0-9a-f]{12}$/
+      );
+    });
+    expect(router.state.historyAction).toBe('PUSH');
+
+    const stored = storage.getItem(storageKeys.activeLocation);
+    expect(stored).not.toBeNull();
+    const parsed = JSON.parse(stored!);
+    expect(parsed.data.kind).toBe('resolved');
+    expect(parsed.data.source).toBe('search');
+  });
+
+  test('비지원 선택은 unsupported 라우트로 이동하고 active location을 변경하지 않는다', async () => {
+    vi.mocked(useWeatherProvider).mockReturnValue({
+      mode: 'mock',
+      getCoreWeather: vi.fn(),
+      getAqi: vi.fn(),
+      geocode: vi.fn().mockResolvedValue([]),
+    });
+
+    const storage = createMemoryStorage();
+    const { router, user } = renderSearchRouteWithStorage(
+      '/search?q=%EC%B2%AD%EC%9A%B4%EB%8F%99',
+      storage
+    );
+
+    const option = await screen.findByRole('option', {
+      name: /서울특별시-종로구-청운동/i,
+    });
+
+    await user.click(option);
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toMatch(
+        /^\/location\/unsupported::/
+      );
+    });
+
+    expect(storage.getItem(storageKeys.activeLocation)).toBeNull();
+  });
+
+  test('선택 진행 중에는 listbox가 aria-busy=true가 된다', async () => {
+    let resolveGeocode!: (value: unknown[]) => void;
+    vi.mocked(useWeatherProvider).mockReturnValue({
+      mode: 'mock',
+      getCoreWeather: vi.fn(),
+      getAqi: vi.fn(),
+      geocode: vi.fn().mockReturnValue(
+        new Promise((resolve) => {
+          resolveGeocode = resolve;
+        })
+      ),
+    });
+
+    const { user } = renderSearchRouteWithStorage(
+      '/search?q=%EC%B2%AD%EC%9A%B4%EB%8F%99'
+    );
+
+    const option = await screen.findByRole('option', {
+      name: /서울특별시-종로구-청운동/i,
+    });
+
+    await user.click(option);
+
+    const listbox = screen.getByRole('listbox', { name: '검색 결과' });
+    await waitFor(() => {
+      expect(listbox).toHaveAttribute('aria-busy', 'true');
+    });
+
+    resolveGeocode([]);
   });
 });
