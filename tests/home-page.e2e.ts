@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { storageKeys } from '../frontend/shared/lib/storage/storage-keys';
 
 // 목 프로바이더는 어떤 위치에서도 17.2°C를 반환합니다.
 // 앱 로드 전에 localStorage에 활성 위치를 미리 심어 두어야 합니다.
-const ACTIVE_LOCATION_KEY = 'weatherpane.active-location.v1';
+const ACTIVE_LOCATION_KEY = storageKeys.activeLocation;
 
 const seoulActiveLocation = JSON.stringify({
   version: 1,

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useReducer } from 'react';
 
 interface HomeLastUpdatedProps {
-  fetchedAt: string; // ISO 8601
-  timezone: string; // e.g., 'Asia/Seoul'
+  fetchedAt: string; // ISO 8601 형식
+  timezone: string; // 예: 'Asia/Seoul'
 }
 
 function relativeMinutes(fetchedAt: string): number {
@@ -27,13 +27,14 @@ function formatAbsolute(fetchedAt: string, timezone: string): string {
 }
 
 export function HomeLastUpdated({ fetchedAt, timezone }: HomeLastUpdatedProps) {
-  const [minutes, setMinutes] = useState(() => relativeMinutes(fetchedAt));
+  // 60초마다 dispatch해 컴포넌트를 강제로 재렌더링한다.
+  // minutes는 렌더 시점에 fetchedAt에서 직접 계산하므로 fetchedAt 변경 즉시 반영된다.
+  const [, tick] = useReducer((n: number) => n + 1, 0);
+  const minutes = relativeMinutes(fetchedAt);
   const [showAbsolute, setShowAbsolute] = useState(false);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setMinutes(relativeMinutes(fetchedAt));
-    }, 60_000);
+    const id = setInterval(tick, 60_000);
     return () => clearInterval(id);
   }, [fetchedAt]);
 

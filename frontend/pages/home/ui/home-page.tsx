@@ -76,7 +76,7 @@ export function HomePage() {
     );
   }
 
-  // bootstrap.kind === 'data'
+  // 모든 오류 분기를 소진한 경우 bootstrap.kind === 'data'
   return (
     <HomeDashboard
       location={bootstrap.location}

@@ -32,6 +32,7 @@ export function HomeDashboard({
 }: HomeDashboardProps) {
   const { isFavorite, toggleFavorite, atMaxFavorites } = useFavorites();
   const favorited = isFavorite(location.locationId);
+  const clampedAqi = Math.min(5, Math.max(1, aqi.summary.aqi));
 
   return (
     <main className="flex min-h-screen flex-col bg-background" role="main">
@@ -109,7 +110,10 @@ export function HomeDashboard({
       {/* 6시간 시간별 미리보기 */}
       {weather.hourly.length > 0 && (
         <section className="px-4 pt-4">
-          <HomeHourlyStrip hourly={weather.hourly} />
+          <HomeHourlyStrip
+            hourly={weather.hourly}
+            timeZone={location.timezone}
+          />
         </section>
       )}
 
@@ -122,7 +126,7 @@ export function HomeDashboard({
           </span>
           <p className="font-body text-xs text-muted-foreground">대기질</p>
           <p className="font-display text-2xl font-bold text-foreground">
-            {aqi.summary.aqi}
+            {clampedAqi}
           </p>
           <p className="font-body text-xs text-muted-foreground">
             {aqiCategoryLabel[aqi.summary.category] ?? aqi.summary.category}
@@ -132,7 +136,7 @@ export function HomeDashboard({
             <div
               className="h-full rounded-full bg-primary"
               style={{
-                width: `${Math.min(100, Math.max(0, ((aqi.summary.aqi - 1) / 4) * 100))}%`,
+                width: `${((clampedAqi - 1) / 4) * 100}%`,
               }}
             />
           </div>
