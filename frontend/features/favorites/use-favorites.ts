@@ -10,7 +10,7 @@ const MAX_FAVORITES = 6;
 export type AddFavoriteResult = 'added' | 'duplicate' | 'max-reached';
 export type RemoveFavoriteResult = 'removed' | 'not-found';
 
-interface UndoEntry {
+export interface UndoEntry {
   snapshot: FavoriteLocation[];
   removedItem: FavoriteLocation;
 }
@@ -36,13 +36,10 @@ export function useFavorites() {
   }
 
   function addFavorite(location: ResolvedLocation): AddFavoriteResult {
-    const repo = createFavoritesRepository();
-    const current = repo.getAll();
-
-    if (current.some((f) => f.location.locationId === location.locationId)) {
+    if (favorites.some((f) => f.location.locationId === location.locationId)) {
       return 'duplicate';
     }
-    if (current.length >= MAX_FAVORITES) {
+    if (favorites.length >= MAX_FAVORITES) {
       return 'max-reached';
     }
 
@@ -51,36 +48,34 @@ export function useFavorites() {
       favoriteId: crypto.randomUUID(),
       location,
       nickname: null,
-      order: current.length,
+      order: favorites.length,
       createdAt: now,
       updatedAt: now,
     };
-    const next = [...current, newFav];
-    repo.replaceAll(next);
+    const next = [...favorites, newFav];
+    createFavoritesRepository().replaceAll(next);
     setFavorites(next);
     return 'added';
   }
 
   function removeFavorite(locationId: string): RemoveFavoriteResult {
-    const repo = createFavoritesRepository();
-    const current = repo.getAll();
-    const toRemove = current.find((f) => f.location.locationId === locationId);
-
+    const toRemove = favorites.find(
+      (f) => f.location.locationId === locationId
+    );
     if (!toRemove) return 'not-found';
 
-    const updated = current
+    const updated = favorites
       .filter((f) => f.location.locationId !== locationId)
       .map((f, i) => ({ ...f, order: i }));
-    repo.replaceAll(updated);
+    createFavoritesRepository().replaceAll(updated);
     setFavorites(updated);
-    setUndoEntry({ snapshot: current, removedItem: toRemove });
+    setUndoEntry({ snapshot: favorites, removedItem: toRemove });
     return 'removed';
   }
 
   function undoRemove(): void {
     if (!undoEntry) return;
-    const repo = createFavoritesRepository();
-    repo.replaceAll(undoEntry.snapshot);
+    createFavoritesRepository().replaceAll(undoEntry.snapshot);
     setFavorites(undoEntry.snapshot);
     setUndoEntry(null);
   }

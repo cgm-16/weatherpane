@@ -4,14 +4,14 @@ import { describe, expect, test, beforeEach, vi, afterEach } from 'vitest';
 import { useFavorites } from '../frontend/features/favorites/use-favorites';
 import type { ResolvedLocation } from '../frontend/entities/location/model/types';
 
-const makeLocation = (id: string): ResolvedLocation => ({
+const makeLocation = (id: string, index = 0): ResolvedLocation => ({
   kind: 'resolved',
   locationId: `loc_${id}`,
   catalogLocationId: id,
   name: `도시 ${id}`,
   admin1: '경기도',
-  latitude: 37 + Math.random(),
-  longitude: 127 + Math.random(),
+  latitude: 37 + index * 0.1,
+  longitude: 127 + index * 0.1,
   timezone: 'Asia/Seoul',
 });
 
@@ -54,7 +54,7 @@ describe('useFavorites', () => {
   test('addFavorite는 6개 초과 시 "max-reached"를 반환한다', () => {
     const { result } = renderHook(() => useFavorites());
     const locs = Array.from({ length: 6 }, (_, i) =>
-      makeLocation(`KR-City${i}`)
+      makeLocation(`KR-City${i}`, i)
     );
     for (const loc of locs) {
       act(() => {
@@ -72,7 +72,7 @@ describe('useFavorites', () => {
   test('6개 즐겨찾기가 가득 찼을 때 atMaxFavorites는 true다', () => {
     const { result } = renderHook(() => useFavorites());
     const locs = Array.from({ length: 6 }, (_, i) =>
-      makeLocation(`KR-City${i}`)
+      makeLocation(`KR-City${i}`, i)
     );
     for (const loc of locs) {
       act(() => {
