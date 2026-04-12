@@ -11,17 +11,25 @@ vi.mock('../frontend/features/app-bootstrap/active-location-context', () => ({
 vi.mock('../frontend/features/weather-queries/use-core-weather', () => ({
   useCoreWeather: vi.fn(),
 }));
+vi.mock('../frontend/features/favorites/use-favorites', () => ({
+  useFavorites: vi.fn(),
+}));
+vi.mock('../frontend/features/favorites/use-refresh-queue', () => ({
+  useRefreshQueue: vi.fn(),
+}));
 
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useNavigate } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, test, vi, afterEach, beforeEach } from 'vitest';
 import { FavoritesEmptyState } from '../frontend/pages/favorites/ui/favorites-empty-state';
 import { FavoriteCard } from '../frontend/pages/favorites/ui/favorite-card';
+import { FavoritesPage } from '../frontend/pages/favorites/ui/favorites-page';
 import { useActiveLocation } from '../frontend/features/app-bootstrap/active-location-context';
 import { useCoreWeather } from '../frontend/features/weather-queries/use-core-weather';
+import { useFavorites } from '../frontend/features/favorites/use-favorites';
 import type { FavoriteLocation } from '../frontend/entities/location/model/types';
 import type { CoreWeather } from '../frontend/entities/weather/model/core-weather';
 
@@ -369,5 +377,109 @@ describe('FavoriteCard', () => {
       renderCard(seoulFav);
       expect(screen.queryByText(/오래된 정보/i)).not.toBeInTheDocument();
     });
+  });
+});
+
+describe('FavoritesPage', () => {
+  const mockSetActiveLocationPage = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useNavigate).mockReturnValue(mockNavigateFn);
+    vi.mocked(useActiveLocation).mockReturnValue({
+      activeLocation: null,
+      setActiveLocation: mockSetActiveLocationPage,
+      clearActiveLocation: vi.fn(),
+    });
+    vi.mocked(useCoreWeather).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      refetch: vi.fn(),
+    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+  });
+
+  function renderPage() {
+    return render(
+      <QueryClientProvider client={makeQueryClient()}>
+        <MemoryRouter>
+          <FavoritesPage />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+  }
+
+  test('renders empty state when favorites list is empty', () => {
+    vi.mocked(useFavorites).mockReturnValue({
+      favorites: [],
+      undoEntry: null,
+      undoRemove: vi.fn(),
+      isFavorite: vi.fn(),
+      addFavorite: vi.fn(),
+      removeFavorite: vi.fn(),
+      atMaxFavorites: false,
+    });
+    renderPage();
+    expect(
+      screen.getByRole('link', { name: /장소 검색하기/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /현재 위치 보기/i })
+    ).toBeInTheDocument();
+  });
+
+  test('renders a card skeleton for each favorite while weather is loading', () => {
+    vi.mocked(useFavorites).mockReturnValue({
+      favorites: [
+        seoulFav,
+        {
+          ...seoulFav,
+          favoriteId: 'fav-2',
+          location: {
+            ...seoulFav.location,
+            locationId: 'loc-busan',
+            name: '부산',
+          },
+        },
+      ],
+      undoEntry: null,
+      undoRemove: vi.fn(),
+      isFavorite: vi.fn(),
+      addFavorite: vi.fn(),
+      removeFavorite: vi.fn(),
+      atMaxFavorites: false,
+    });
+    renderPage();
+    expect(screen.getAllByTestId('card-skeleton')).toHaveLength(2);
+  });
+
+  test('renders undo toast when undoEntry is present', () => {
+    vi.mocked(useFavorites).mockReturnValue({
+      favorites: [],
+      undoEntry: { snapshot: [seoulFav], removedItem: seoulFav },
+      undoRemove: vi.fn(),
+      isFavorite: vi.fn(),
+      addFavorite: vi.fn(),
+      removeFavorite: vi.fn(),
+      atMaxFavorites: false,
+    });
+    renderPage();
+    expect(
+      screen.getByRole('button', { name: /실행 취소/i })
+    ).toBeInTheDocument();
+  });
+
+  test('undo toast shows the removed location name', () => {
+    vi.mocked(useFavorites).mockReturnValue({
+      favorites: [],
+      undoEntry: { snapshot: [seoulFav], removedItem: seoulFav },
+      undoRemove: vi.fn(),
+      isFavorite: vi.fn(),
+      addFavorite: vi.fn(),
+      removeFavorite: vi.fn(),
+      atMaxFavorites: false,
+    });
+    renderPage();
+    expect(screen.getByText(/서울/)).toBeInTheDocument();
   });
 });
