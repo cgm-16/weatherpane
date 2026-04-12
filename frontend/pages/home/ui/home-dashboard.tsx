@@ -85,7 +85,7 @@ export function HomeDashboard({
       <Link
         to={`/location/${location.catalogLocationId}`}
         className="mx-4 mt-3 flex flex-col items-center gap-2 rounded-[--radius-md] bg-card px-6 py-8"
-        aria-label={`${location.name} 날씨 상세 보기`}
+        aria-label={`${location.name}: ${Math.round(weather.current.temperatureC)}° ${weather.current.condition.text}, 날씨 상세 보기`}
       >
         <p className="font-display text-7xl font-extrabold text-foreground">
           {Math.round(weather.current.temperatureC)}°
@@ -130,7 +130,7 @@ export function HomeDashboard({
           <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full bg-primary"
-              style={{ width: `${(aqi.summary.aqi / 5) * 100}%` }}
+              style={{ width: `${((aqi.summary.aqi - 1) / 4) * 100}%` }}
             />
           </div>
         </div>
