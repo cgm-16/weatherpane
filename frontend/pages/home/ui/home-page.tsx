@@ -30,9 +30,9 @@ export function HomePage() {
     return (
       <HomeConnectionError
         onRetry={() => {
-          void queryClient.invalidateQueries({
-            queryKey: weatherQueryKeys.coreWeather(bootstrap.location.locationId),
-          });
+          const locationId = bootstrap.location.locationId;
+          void queryClient.invalidateQueries({ queryKey: weatherQueryKeys.coreWeather(locationId) });
+          void queryClient.invalidateQueries({ queryKey: weatherQueryKeys.aqi(locationId) });
         }}
         onGoToSavedPlaces={() => {
           // WP-017 즐겨찾기 구현 후 연결 예정
