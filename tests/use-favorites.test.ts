@@ -78,6 +78,16 @@ describe('useFavorites', () => {
     expect(result.current.atMaxFavorites).toBe(true);
   });
 
+  test('즐겨찾기는 리마운트 후에도 유지된다', () => {
+    const { result, unmount } = renderHook(() => useFavorites());
+    act(() => {
+      result.current.toggleFavorite(seoulLocation);
+    });
+    unmount();
+    const { result: result2 } = renderHook(() => useFavorites());
+    expect(result2.current.isFavorite(seoulLocation.locationId)).toBe(true);
+  });
+
   test('즐겨찾기가 가득 찬 경우 추가 toggleFavorite는 무시된다', () => {
     const { result } = renderHook(() => useFavorites());
     const locations = Array.from(
