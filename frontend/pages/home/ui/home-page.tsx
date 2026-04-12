@@ -55,7 +55,7 @@ export function HomePage() {
         </div>
         {/* 최소 날씨 표시 */}
         <p className="font-display text-5xl font-extrabold text-foreground">
-          {bootstrap.weather.temperatureC}°C
+          {Math.round(bootstrap.weather.temperatureC)}°C
         </p>
         <p className="font-body text-muted-foreground">
           {bootstrap.weather.conditionText}
