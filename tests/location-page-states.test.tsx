@@ -1,12 +1,11 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
+import userEvent from '@testing-library/user-event';
 import { LocationUnsupported } from '../frontend/pages/location/ui/location-unsupported';
 import { LocationNotFound } from '../frontend/pages/location/ui/location-not-found';
-import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
 import { LocationConnectionError } from '../frontend/pages/location/ui/location-connection-error';
 
 describe('LocationUnsupported', () => {

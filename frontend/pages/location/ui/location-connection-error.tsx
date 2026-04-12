@@ -16,7 +16,7 @@ export function LocationConnectionError({
       <div className="w-full max-w-md rounded-[--radius-lg] bg-card p-8">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2">
           <span className="h-2 w-2 rounded-full bg-destructive" />
-          <span className="font-display text-[11px] font-bold tracking-widest text-muted-foreground uppercase">
+          <span className="font-headline text-[11px] font-bold tracking-widest text-muted-foreground uppercase">
             오프라인 상태
           </span>
         </div>
