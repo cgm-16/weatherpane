@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { useFavorites } from '~/features/favorites/use-favorites';
+import { persistRecent } from '~/features/recents';
 import { HourlyStrip } from '~/shared/ui/hourly-strip';
 import type { ResolvedLocation } from '~/entities/location/model/types';
 import type { CoreWeather } from '~/entities/weather/model/core-weather';
@@ -46,7 +47,10 @@ export function HomeDashboard({
             type="button"
             aria-label="새로고침"
             disabled={isRefreshing}
-            onClick={onRefresh}
+            onClick={() => {
+              persistRecent(location);
+              onRefresh();
+            }}
             className="flex h-9 w-9 items-center justify-center rounded-full text-foreground disabled:opacity-40"
           >
             <span
@@ -62,7 +66,10 @@ export function HomeDashboard({
             type="button"
             aria-label={favorited ? '즐겨찾기 해제' : '즐겨찾기 추가'}
             disabled={!favorited && atMaxFavorites}
-            onClick={() => toggleFavorite(location)}
+            onClick={() => {
+              persistRecent(location);
+              toggleFavorite(location);
+            }}
             className="flex h-9 w-9 items-center justify-center rounded-full text-foreground disabled:opacity-40"
           >
             <span className="material-symbols-outlined text-[22px]">
