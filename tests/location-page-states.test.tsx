@@ -21,7 +21,10 @@ vi.mock('../frontend/features/favorites/use-favorites', () => ({
   useFavorites: vi.fn(() => ({
     favorites: [],
     isFavorite: vi.fn(() => false),
-    toggleFavorite: vi.fn(),
+    addFavorite: vi.fn(),
+    removeFavorite: vi.fn(),
+    undoEntry: null,
+    undoRemove: vi.fn(),
     atMaxFavorites: false,
   })),
 }));

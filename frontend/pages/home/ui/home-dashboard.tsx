@@ -31,7 +31,8 @@ export function HomeDashboard({
   hasRefreshError,
   onRefresh,
 }: HomeDashboardProps) {
-  const { isFavorite, toggleFavorite, atMaxFavorites } = useFavorites();
+  const { isFavorite, addFavorite, removeFavorite, atMaxFavorites } =
+    useFavorites();
   const favorited = isFavorite(location.locationId);
   const clampedAqi = Math.min(5, Math.max(1, aqi.summary.aqi));
 
@@ -68,7 +69,11 @@ export function HomeDashboard({
             disabled={!favorited && atMaxFavorites}
             onClick={() => {
               persistRecent(location);
-              toggleFavorite(location);
+              if (isFavorite(location.locationId)) {
+                removeFavorite(location.locationId);
+              } else {
+                addFavorite(location);
+              }
             }}
             className="flex h-9 w-9 items-center justify-center rounded-full text-foreground disabled:opacity-40"
           >

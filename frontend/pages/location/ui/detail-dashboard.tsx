@@ -24,7 +24,8 @@ export function DetailDashboard({
   hasRefreshError,
   onRefresh,
 }: DetailDashboardProps) {
-  const { isFavorite, toggleFavorite, atMaxFavorites } = useFavorites();
+  const { isFavorite, addFavorite, removeFavorite, atMaxFavorites } =
+    useFavorites();
   const favorited = isFavorite(location.locationId);
 
   return (
@@ -64,7 +65,13 @@ export function DetailDashboard({
             type="button"
             aria-label={favorited ? '즐겨찾기 해제' : '즐겨찾기 추가'}
             disabled={!favorited && atMaxFavorites}
-            onClick={() => toggleFavorite(location)}
+            onClick={() => {
+              if (isFavorite(location.locationId)) {
+                removeFavorite(location.locationId);
+              } else {
+                addFavorite(location);
+              }
+            }}
             className="flex h-9 w-9 items-center justify-center rounded-full text-foreground disabled:opacity-40"
           >
             <span className="material-symbols-outlined text-[22px]">

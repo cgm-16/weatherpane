@@ -1,78 +1,82 @@
 // @vitest-environment jsdom
 import { renderHook, act } from '@testing-library/react';
-import { describe, expect, test, beforeEach } from 'vitest';
+import { describe, expect, test, beforeEach, vi, afterEach } from 'vitest';
 import { useFavorites } from '../frontend/features/favorites/use-favorites';
 import type { ResolvedLocation } from '../frontend/entities/location/model/types';
 
-const seoulLocation: ResolvedLocation = {
+const makeLocation = (id: string): ResolvedLocation => ({
   kind: 'resolved',
-  locationId: 'loc_seoul',
-  catalogLocationId: 'KR-Seoul',
-  name: '서울',
-  admin1: '서울특별시',
-  latitude: 37.56,
-  longitude: 126.97,
+  locationId: `loc_${id}`,
+  catalogLocationId: id,
+  name: `도시 ${id}`,
+  admin1: '경기도',
+  latitude: 37 + Math.random(),
+  longitude: 127 + Math.random(),
   timezone: 'Asia/Seoul',
-};
+});
 
-const busanLocation: ResolvedLocation = {
-  kind: 'resolved',
-  locationId: 'loc_busan',
-  catalogLocationId: 'KR-Busan',
-  name: '부산',
-  admin1: '부산광역시',
-  latitude: 35.18,
-  longitude: 129.07,
-  timezone: 'Asia/Seoul',
-};
+const seoul = makeLocation('KR-Seoul');
+const busan = makeLocation('KR-Busan');
 
 describe('useFavorites', () => {
   beforeEach(() => {
     localStorage.clear();
   });
-
-  test('초기 상태에서 isFavorite는 false를 반환한다', () => {
-    const { result } = renderHook(() => useFavorites());
-    expect(result.current.isFavorite(seoulLocation.locationId)).toBe(false);
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
-  test('toggleFavorite는 즐겨찾기를 추가한다', () => {
+  // --- addFavorite ---
+
+  test('addFavorite는 새 즐겨찾기를 추가하고 "added"를 반환한다', () => {
     const { result } = renderHook(() => useFavorites());
+    let ret: string;
     act(() => {
-      result.current.toggleFavorite(seoulLocation);
+      ret = result.current.addFavorite(seoul);
     });
-    expect(result.current.isFavorite(seoulLocation.locationId)).toBe(true);
+    expect(ret!).toBe('added');
+    expect(result.current.isFavorite(seoul.locationId)).toBe(true);
   });
 
-  test('toggleFavorite는 기존 즐겨찾기를 제거한다', () => {
+  test('addFavorite는 이미 추가된 위치에 대해 "duplicate"를 반환한다', () => {
     const { result } = renderHook(() => useFavorites());
     act(() => {
-      result.current.toggleFavorite(seoulLocation);
+      result.current.addFavorite(seoul);
     });
+    let ret: string;
     act(() => {
-      result.current.toggleFavorite(seoulLocation);
+      ret = result.current.addFavorite(seoul);
     });
-    expect(result.current.isFavorite(seoulLocation.locationId)).toBe(false);
+    expect(ret!).toBe('duplicate');
+    expect(result.current.favorites).toHaveLength(1);
+  });
+
+  test('addFavorite는 6개 초과 시 "max-reached"를 반환한다', () => {
+    const { result } = renderHook(() => useFavorites());
+    const locs = Array.from({ length: 6 }, (_, i) =>
+      makeLocation(`KR-City${i}`)
+    );
+    for (const loc of locs) {
+      act(() => {
+        result.current.addFavorite(loc);
+      });
+    }
+    let ret: string;
+    act(() => {
+      ret = result.current.addFavorite(busan);
+    });
+    expect(ret!).toBe('max-reached');
+    expect(result.current.favorites).toHaveLength(6);
   });
 
   test('6개 즐겨찾기가 가득 찼을 때 atMaxFavorites는 true다', () => {
     const { result } = renderHook(() => useFavorites());
-    const locations = Array.from(
-      { length: 6 },
-      (_, i): ResolvedLocation => ({
-        kind: 'resolved',
-        locationId: `loc_${i}`,
-        catalogLocationId: `KR-City${i}`,
-        name: `도시${i}`,
-        admin1: '경기도',
-        latitude: 37 + i * 0.1,
-        longitude: 127 + i * 0.1,
-        timezone: 'Asia/Seoul',
-      })
+    const locs = Array.from({ length: 6 }, (_, i) =>
+      makeLocation(`KR-City${i}`)
     );
-    for (const loc of locations) {
+    for (const loc of locs) {
       act(() => {
-        result.current.toggleFavorite(loc);
+        result.current.addFavorite(loc);
       });
     }
     expect(result.current.atMaxFavorites).toBe(true);
@@ -81,37 +85,141 @@ describe('useFavorites', () => {
   test('즐겨찾기는 리마운트 후에도 유지된다', () => {
     const { result, unmount } = renderHook(() => useFavorites());
     act(() => {
-      result.current.toggleFavorite(seoulLocation);
+      result.current.addFavorite(seoul);
     });
     unmount();
-    const { result: result2 } = renderHook(() => useFavorites());
-    expect(result2.current.isFavorite(seoulLocation.locationId)).toBe(true);
+    const { result: r2 } = renderHook(() => useFavorites());
+    expect(r2.current.isFavorite(seoul.locationId)).toBe(true);
   });
 
-  test('즐겨찾기가 가득 찬 경우 추가 toggleFavorite는 무시된다', () => {
+  // --- removeFavorite ---
+
+  test('removeFavorite는 즐겨찾기를 제거하고 "removed"를 반환한다', () => {
     const { result } = renderHook(() => useFavorites());
-    const locations = Array.from(
-      { length: 6 },
-      (_, i): ResolvedLocation => ({
-        kind: 'resolved',
-        locationId: `loc_${i}`,
-        catalogLocationId: `KR-City${i}`,
-        name: `도시${i}`,
-        admin1: '경기도',
-        latitude: 37 + i * 0.1,
-        longitude: 127 + i * 0.1,
-        timezone: 'Asia/Seoul',
-      })
-    );
-    for (const loc of locations) {
-      act(() => {
-        result.current.toggleFavorite(loc);
-      });
-    }
     act(() => {
-      result.current.toggleFavorite(busanLocation);
+      result.current.addFavorite(seoul);
     });
-    expect(result.current.isFavorite(busanLocation.locationId)).toBe(false);
-    expect(result.current.favorites).toHaveLength(6);
+    let ret: string;
+    act(() => {
+      ret = result.current.removeFavorite(seoul.locationId);
+    });
+    expect(ret!).toBe('removed');
+    expect(result.current.isFavorite(seoul.locationId)).toBe(false);
+  });
+
+  test('removeFavorite는 없는 항목에 대해 "not-found"를 반환한다', () => {
+    const { result } = renderHook(() => useFavorites());
+    let ret: string;
+    act(() => {
+      ret = result.current.removeFavorite('nonexistent');
+    });
+    expect(ret!).toBe('not-found');
+  });
+
+  test('removeFavorite는 favorites.v1 키만 수정하고 active-location.v1 키는 건드리지 않는다', () => {
+    const activeKey = 'weatherpane.active-location.v1';
+    const favKey = 'weatherpane.favorites.v1';
+    const activeValue = JSON.stringify({ kind: 'resolved', location: seoul });
+    localStorage.setItem(activeKey, activeValue);
+
+    const { result } = renderHook(() => useFavorites());
+    act(() => {
+      result.current.addFavorite(seoul);
+    });
+    act(() => {
+      result.current.removeFavorite(seoul.locationId);
+    });
+
+    expect(localStorage.getItem(activeKey)).toBe(activeValue);
+    const stored = JSON.parse(localStorage.getItem(favKey) ?? '{"data":[]}');
+    expect(stored.data).toHaveLength(0);
+  });
+
+  // --- undo ---
+
+  test('removeFavorite 후 undoEntry가 설정된다', () => {
+    const { result } = renderHook(() => useFavorites());
+    act(() => {
+      result.current.addFavorite(seoul);
+    });
+    act(() => {
+      result.current.removeFavorite(seoul.locationId);
+    });
+    expect(result.current.undoEntry).not.toBeNull();
+    expect(result.current.undoEntry?.removedItem.location.locationId).toBe(
+      seoul.locationId
+    );
+  });
+
+  test('undoRemove는 정확한 이전 상태(위치 및 닉네임 포함)를 복원한다', () => {
+    const { result } = renderHook(() => useFavorites());
+    act(() => {
+      result.current.addFavorite(seoul);
+    });
+    act(() => {
+      result.current.addFavorite(busan);
+    });
+    act(() => {
+      result.current.removeFavorite(seoul.locationId);
+    });
+    expect(result.current.favorites).toHaveLength(1);
+    act(() => {
+      result.current.undoRemove();
+    });
+    expect(result.current.favorites).toHaveLength(2);
+    expect(result.current.isFavorite(seoul.locationId)).toBe(true);
+    const restoredSeoul = result.current.favorites.find(
+      (f) => f.location.locationId === seoul.locationId
+    );
+    expect(restoredSeoul?.order).toBe(0);
+  });
+
+  test('새 removeFavorite 호출은 이전 undo 항목을 교체한다', () => {
+    const { result } = renderHook(() => useFavorites());
+    act(() => {
+      result.current.addFavorite(seoul);
+    });
+    act(() => {
+      result.current.addFavorite(busan);
+    });
+    act(() => {
+      result.current.removeFavorite(seoul.locationId);
+    });
+    act(() => {
+      result.current.removeFavorite(busan.locationId);
+    });
+    expect(result.current.undoEntry?.removedItem.location.locationId).toBe(
+      busan.locationId
+    );
+  });
+
+  test('undoRemove 후 undoEntry가 null이 된다', () => {
+    const { result } = renderHook(() => useFavorites());
+    act(() => {
+      result.current.addFavorite(seoul);
+    });
+    act(() => {
+      result.current.removeFavorite(seoul.locationId);
+    });
+    act(() => {
+      result.current.undoRemove();
+    });
+    expect(result.current.undoEntry).toBeNull();
+  });
+
+  test('5초 후 undoEntry가 자동으로 만료된다', () => {
+    vi.useFakeTimers();
+    const { result } = renderHook(() => useFavorites());
+    act(() => {
+      result.current.addFavorite(seoul);
+    });
+    act(() => {
+      result.current.removeFavorite(seoul.locationId);
+    });
+    expect(result.current.undoEntry).not.toBeNull();
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(result.current.undoEntry).toBeNull();
   });
 });
