@@ -27,17 +27,13 @@ function formatHour(at: string, timeZone: string): string {
   return `오후 ${hour - 12}시`;
 }
 
-interface HomeHourlyStripProps {
+interface HourlyStripProps {
   hourly: CoreWeatherHourlyEntry[];
   timeZone: string;
   count?: number;
 }
 
-export function HomeHourlyStrip({
-  hourly,
-  timeZone,
-  count = 6,
-}: HomeHourlyStripProps) {
+export function HourlyStrip({ hourly, timeZone, count = 6 }: HourlyStripProps) {
   const entries = hourly.slice(0, count);
 
   return (

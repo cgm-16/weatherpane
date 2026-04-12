@@ -2,7 +2,7 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
-import { HomeHourlyStrip } from '../frontend/pages/home/ui/home-hourly-strip';
+import { HourlyStrip } from '../frontend/shared/ui/hourly-strip';
 import type { CoreWeatherHourlyEntry } from '../frontend/entities/weather/model/core-weather';
 
 const condition = {
@@ -27,36 +27,36 @@ function makeEntry(utcHour: number, tempC: number): CoreWeatherHourlyEntry {
   return { at: at.toISOString(), temperatureC: tempC, popPct: 0, condition };
 }
 
-describe('HomeHourlyStrip', () => {
+describe('HourlyStrip', () => {
   test('최대 6개 카드를 렌더링한다', () => {
     const hourly = Array.from({ length: 8 }, (_, i) => makeEntry(i, 17 + i));
-    render(<HomeHourlyStrip hourly={hourly} timeZone="Asia/Seoul" />);
+    render(<HourlyStrip hourly={hourly} timeZone="Asia/Seoul" />);
     expect(screen.getAllByRole('listitem')).toHaveLength(6);
   });
 
   test('각 카드에 기온이 표시된다', () => {
     // UTC 00:00 = Seoul 09:00
     const hourly = [makeEntry(0, 17)];
-    render(<HomeHourlyStrip hourly={hourly} timeZone="Asia/Seoul" />);
+    render(<HourlyStrip hourly={hourly} timeZone="Asia/Seoul" />);
     expect(screen.getByText(/17°/)).toBeInTheDocument();
   });
 
   test('빈 hourly 배열은 빈 목록을 렌더링한다', () => {
-    render(<HomeHourlyStrip hourly={[]} timeZone="Asia/Seoul" />);
+    render(<HourlyStrip hourly={[]} timeZone="Asia/Seoul" />);
     expect(screen.queryAllByRole('listitem')).toHaveLength(0);
   });
 
   test('서울 자정(UTC 15:00)은 "오전 12시"로 표시한다', () => {
     // UTC 15:00 = Seoul 00:00 (자정)
     const entry = makeEntry(15, 15);
-    render(<HomeHourlyStrip hourly={[entry]} timeZone="Asia/Seoul" />);
+    render(<HourlyStrip hourly={[entry]} timeZone="Asia/Seoul" />);
     expect(screen.getByText('오전 12시')).toBeInTheDocument();
   });
 
   test('서울 정오(UTC 03:00)는 "오후 12시"로 표시한다', () => {
     // UTC 03:00 = Seoul 12:00 (정오)
     const entry = makeEntry(3, 20);
-    render(<HomeHourlyStrip hourly={[entry]} timeZone="Asia/Seoul" />);
+    render(<HourlyStrip hourly={[entry]} timeZone="Asia/Seoul" />);
     expect(screen.getByText('오후 12시')).toBeInTheDocument();
   });
 
@@ -65,7 +65,7 @@ describe('HomeHourlyStrip', () => {
       makeEntry(i, 18 + i)
     );
     render(
-      <HomeHourlyStrip hourly={manyHourly} timeZone="Asia/Seoul" count={12} />
+      <HourlyStrip hourly={manyHourly} timeZone="Asia/Seoul" count={12} />
     );
     expect(screen.getAllByRole('listitem')).toHaveLength(12);
   });
