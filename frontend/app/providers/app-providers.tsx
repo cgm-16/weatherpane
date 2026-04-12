@@ -9,6 +9,7 @@ import {
 } from '~/shared/lib/env-config';
 import type { ConfigError } from '~/shared/lib/env-config';
 import { WeatherProviderContext } from '~/shared/api/weather-provider';
+import { ActiveLocationProvider } from '~/features/app-bootstrap/active-location-context';
 
 // 시작 시 한 번만 파싱되며 런타임 중 환경 변수 변경에 반응하지 않습니다.
 const configResult = parseAppConfig();
@@ -33,7 +34,9 @@ export function AppProviders({ children }: AppProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <WeatherProviderContext value={weatherProvider}>
-        {children}
+        <ActiveLocationProvider>
+          {children}
+        </ActiveLocationProvider>
       </WeatherProviderContext>
     </QueryClientProvider>
   );
