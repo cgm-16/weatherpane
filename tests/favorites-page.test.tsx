@@ -57,7 +57,7 @@ describe('FavoritesEmptyState', () => {
   });
 });
 
-// --- FavoriteCard fixtures ---
+// --- FavoriteCard 픽스처 ---
 
 const seoulFav: FavoriteLocation = {
   favoriteId: 'fav-1',
@@ -114,7 +114,7 @@ const veryStaleWeatherData: CoreWeather = {
   fetchedAt: new Date(Date.now() - 70 * 60_000).toISOString(), // 70 min ago
 };
 
-// --- FavoriteCard helpers ---
+// --- FavoriteCard 헬퍼 ---
 
 function makeQueryClient() {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -267,7 +267,9 @@ describe('FavoriteCard', () => {
       })
     );
     renderCard(seoulFav);
-    expect(screen.getByRole('article')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '서울 날씨 보기' })
+    ).toBeInTheDocument();
     expect(screen.getByText('서울')).toBeInTheDocument();
     expect(screen.getByText('24°')).toBeInTheDocument();
     expect(screen.getByText('오래된 정보')).toBeInTheDocument();
@@ -283,7 +285,9 @@ describe('FavoriteCard', () => {
       makeWeatherQuery({ data: freshWeatherData })
     );
     renderCard(seoulFav);
-    expect(screen.getByRole('article')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '서울 날씨 보기' })
+    ).toBeInTheDocument();
     expect(screen.getByText('서울')).toBeInTheDocument();
   });
 
@@ -293,7 +297,7 @@ describe('FavoriteCard', () => {
       makeWeatherQuery({ data: freshWeatherData })
     );
     renderCard(seoulFav);
-    const card = screen.getByRole('article');
+    const card = screen.getByRole('button', { name: '서울 날씨 보기' });
     await userEvent.click(card);
     expect(mockSetActiveLocation).toHaveBeenCalledOnce();
     expect(mockSetActiveLocation).toHaveBeenCalledWith(
@@ -306,18 +310,18 @@ describe('FavoriteCard', () => {
     expect(mockNavigateFn).toHaveBeenCalledWith('/location/loc-seoul');
   });
 
-  test('skeleton is not navigable (no article role)', () => {
+  test('skeleton is not navigable (button role absent)', () => {
     setupActiveLocation();
     vi.mocked(useCoreWeather).mockReturnValue(
       makeWeatherQuery({ isLoading: true })
     );
     renderCard(seoulFav);
-    expect(screen.queryByRole('article')).toBeNull();
+    expect(screen.queryByRole('button', { name: /날씨 보기/ })).toBeNull();
   });
 
   describe('staleness thresholds', () => {
-    // Freeze time so boundary calculations are exact and deterministic.
-    // getStaleness uses strict > comparison: age must exceed the threshold to cross it.
+    // 경계 계산이 정확하고 결정적이도록 시간을 고정한다.
+    // getStaleness는 엄격한 > 비교를 사용한다: 임계값을 초과해야 경계를 넘는다.
     const FROZEN_NOW = new Date('2024-01-01T12:00:00.000Z').getTime();
 
     beforeEach(() => {
@@ -329,7 +333,7 @@ describe('FavoriteCard', () => {
       vi.useRealTimers();
     });
 
-    // exactly 10 minutes old: ageMs === STALE_MS, not > STALE_MS → fresh (no indicator)
+    // 정확히 10분 지남: ageMs === STALE_MS, > STALE_MS 아님 → 신선 (표시 없음)
     test('no stale indicator at exactly 10 minutes', () => {
       setupActiveLocation();
       vi.mocked(useCoreWeather).mockReturnValue({
@@ -345,7 +349,7 @@ describe('FavoriteCard', () => {
       expect(screen.queryByText(/오래된 정보/i)).not.toBeInTheDocument();
     });
 
-    // exactly 60 minutes old: ageMs === VERY_STALE_MS, not > VERY_STALE_MS → stale, not very-stale
+    // 정확히 60분 지남: ageMs === VERY_STALE_MS, > VERY_STALE_MS 아님 → 오래됨, 매우 오래됨 아님
     test('shows stale (not very stale) indicator at exactly 60 minutes', () => {
       setupActiveLocation();
       vi.mocked(useCoreWeather).mockReturnValue({
@@ -362,7 +366,7 @@ describe('FavoriteCard', () => {
       expect(screen.queryByText('매우 오래된 정보')).not.toBeInTheDocument();
     });
 
-    // 9 minutes 59 seconds old: just under stale threshold → fresh
+    // 9분 59초 지남: 오래됨 임계값 바로 아래 → 신선
     test('no stale indicator at 9 minutes 59 seconds', () => {
       setupActiveLocation();
       vi.mocked(useCoreWeather).mockReturnValue({
@@ -498,8 +502,8 @@ describe('FavoritesPage', () => {
     });
     renderPage();
     expect(screen.getByText(/집/)).toBeInTheDocument();
-    // location name should NOT appear in the toast in place of the nickname
-    // (the name '서울' may appear in other contexts so only checking nickname presence is sufficient)
+    // 닉네임 대신 장소 이름이 토스트에 나타나면 안 된다
+    // ('서울' 이름은 다른 맥락에서 나타날 수 있으므로 닉네임 존재만 확인으로 충분하다)
   });
 
   test('clicking undo button calls undoRemove', async () => {

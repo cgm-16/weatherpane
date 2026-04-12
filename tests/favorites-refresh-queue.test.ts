@@ -39,7 +39,7 @@ describe('runRefreshQueue', () => {
     const fav = makeFav('A');
     const refetch = vi.fn().mockResolvedValue(undefined);
     const getQueryState = vi.fn().mockReturnValue({
-      dataUpdatedAt: Date.now() - 1_000, // 1s ago — fresh
+      dataUpdatedAt: Date.now() - 1_000, // 1초 전 — 신선
     });
     await runRefreshQueue([fav], { getQueryState, refetch }, 10 * 60_000);
     expect(refetch).not.toHaveBeenCalled();
@@ -49,7 +49,7 @@ describe('runRefreshQueue', () => {
     const fav = makeFav('B');
     const refetch = vi.fn().mockResolvedValue(undefined);
     const getQueryState = vi.fn().mockReturnValue({
-      dataUpdatedAt: Date.now() - 15 * 60_000, // 15m ago — stale
+      dataUpdatedAt: Date.now() - 15 * 60_000, // 15분 전 — 오래됨
     });
     await runRefreshQueue([fav], { getQueryState, refetch }, 10 * 60_000);
     expect(refetch).toHaveBeenCalledOnce();
@@ -71,7 +71,7 @@ describe('runRefreshQueue', () => {
       .fn()
       .mockRejectedValueOnce(new Error('network'))
       .mockResolvedValueOnce(undefined);
-    const getQueryState = vi.fn().mockReturnValue({ dataUpdatedAt: 0 }); // always stale
+    const getQueryState = vi.fn().mockReturnValue({ dataUpdatedAt: 0 }); // 항상 오래됨
     await runRefreshQueue(
       [favA, favB],
       { getQueryState, refetch },
@@ -94,7 +94,7 @@ describe('runRefreshQueue', () => {
         }, 10)
       );
     });
-    const getQueryState = vi.fn().mockReturnValue({ dataUpdatedAt: 0 }); // always stale
+    const getQueryState = vi.fn().mockReturnValue({ dataUpdatedAt: 0 }); // 항상 오래됨
     await runRefreshQueue(favs, { getQueryState, refetch }, 10 * 60_000);
     expect(maxConcurrent).toBeLessThanOrEqual(2);
     expect(refetch).toHaveBeenCalledTimes(3);
@@ -112,7 +112,7 @@ describe('useRefreshQueue hook', () => {
 
     const refetchSpy = vi.spyOn(qc, 'refetchQueries').mockResolvedValue();
 
-    // Make query appear stale (dataUpdatedAt = 0 = always stale)
+    // 쿼리를 오래된 상태로 만든다 (dataUpdatedAt = 0 = 항상 오래됨)
     vi.spyOn(qc, 'getQueryState').mockReturnValue({
       dataUpdatedAt: 0,
     } as unknown as QueryState<unknown>);
@@ -123,7 +123,7 @@ describe('useRefreshQueue hook', () => {
 
     await act(async () => {
       renderHook(() => useRefreshQueue([favA]), { wrapper });
-      // Allow mount effects to run
+      // 마운트 이펙트가 실행될 때까지 대기
       await new Promise((r) => setTimeout(r, 0));
     });
 
@@ -136,7 +136,7 @@ describe('useRefreshQueue hook', () => {
 
     const refetchSpy = vi.spyOn(qc, 'refetchQueries').mockResolvedValue();
 
-    // Make query appear fresh (dataUpdatedAt = now)
+    // 쿼리를 신선한 상태로 만든다 (dataUpdatedAt = now)
     vi.spyOn(qc, 'getQueryState').mockReturnValue({
       dataUpdatedAt: Date.now(),
     } as unknown as QueryState<unknown>);
