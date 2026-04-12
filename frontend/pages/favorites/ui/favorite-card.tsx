@@ -1,3 +1,4 @@
+import { useReducer, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useCoreWeather } from '~/features/weather-queries/use-core-weather';
 import { CORE_WEATHER_STALE_TIME } from '~/features/weather-queries/weather-query-options';
@@ -80,6 +81,13 @@ function CardSnapshot({
   hasRefreshError: boolean;
   onCardClick: () => void;
 }) {
+  // 시간이 지남에 따라 신선도 뱃지를 갱신하기 위해 1분마다 리렌더링한다
+  const [, tick] = useReducer((n: number) => n + 1, 0);
+  useEffect(() => {
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, [tick]);
+
   const staleness = getStaleness(weather.fetchedAt);
   // 갱신 실패 시 데이터가 신선해도 최소 'stale'로 표시
   const effectiveStaleness =
@@ -87,18 +95,11 @@ function CardSnapshot({
   const displayName = favorite.nickname ?? favorite.location.name;
 
   return (
-    <article
-      role="article"
-      tabIndex={0}
+    <button
+      type="button"
       aria-label={`${displayName} 날씨 보기`}
       onClick={onCardClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onCardClick();
-        }
-      }}
-      className="group relative flex h-44 cursor-pointer flex-col justify-between overflow-hidden rounded-[--radius-md] bg-card p-6 transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+      className="group relative flex h-44 w-full cursor-pointer flex-col justify-between overflow-hidden rounded-[--radius-md] bg-card p-6 text-left transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
     >
       <div className="flex items-start justify-between gap-2">
         <div>
@@ -136,7 +137,7 @@ function CardSnapshot({
           </div>
         </div>
       </div>
-    </article>
+    </button>
   );
 }
 

@@ -15,7 +15,7 @@ export function FavoritesPage() {
       <div className="mx-auto max-w-5xl px-6 pt-24 pb-32">
         <header className="mb-10">
           <h1 className="font-headline mb-2 text-5xl font-extrabold tracking-tighter text-foreground">
-            Saved Places
+            저장된 장소
           </h1>
           <p className="font-body font-medium text-muted-foreground opacity-70">
             자주 확인하는 장소를 한눈에.
