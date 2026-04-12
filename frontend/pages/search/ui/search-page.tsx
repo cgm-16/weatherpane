@@ -386,7 +386,10 @@ export function SearchPage() {
         ) : (
           <>
             {resolvedRecents.length > 0 && (
-              <section className="space-y-4 rounded-[calc(var(--radius-lg)+0.25rem)] bg-muted p-4 sm:p-5">
+              <section
+                aria-label="최근 지역"
+                className="space-y-4 rounded-[calc(var(--radius-lg)+0.25rem)] bg-muted p-4 sm:p-5"
+              >
                 <div className="space-y-2 px-1">
                   <h2
                     className="text-xl font-semibold text-foreground"
