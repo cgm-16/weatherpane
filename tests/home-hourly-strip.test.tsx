@@ -59,4 +59,14 @@ describe('HomeHourlyStrip', () => {
     render(<HomeHourlyStrip hourly={[entry]} timeZone="Asia/Seoul" />);
     expect(screen.getByText('오후 12시')).toBeInTheDocument();
   });
+
+  test('count prop이 있으면 해당 수만큼 항목을 표시한다', () => {
+    const manyHourly = Array.from({ length: 12 }, (_, i) =>
+      makeEntry(i, 18 + i)
+    );
+    render(
+      <HomeHourlyStrip hourly={manyHourly} timeZone="Asia/Seoul" count={12} />
+    );
+    expect(screen.getAllByRole('listitem')).toHaveLength(12);
+  });
 });
