@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
+import * as recentsModule from '../frontend/features/recents';
 
 const mockLocation = {
   kind: 'resolved' as const,
@@ -16,8 +17,11 @@ const mockLocation = {
 };
 
 // 각 테스트가 원하는 bootstrap 결과를 주입할 수 있도록 변경 가능한 레퍼런스를 둔다.
-let mockBootstrapResult: Record<string, unknown> = {};
+let mockBootstrapResult: Record<string, unknown> = { kind: 'loading' };
 
+vi.mock('../frontend/features/recents', () => ({
+  persistRecent: vi.fn(),
+}));
 vi.mock('../frontend/features/app-bootstrap/use-detail-bootstrap', () => ({
   useDetailBootstrap: () => mockBootstrapResult,
 }));
@@ -26,7 +30,8 @@ vi.mock('../frontend/features/weather-queries/use-weather-refresh', () => ({
 }));
 
 beforeEach(() => {
-  vi.restoreAllMocks();
+  mockBootstrapResult = { kind: 'loading' };
+  vi.mocked(recentsModule.persistRecent).mockClear();
 });
 
 describe('LocationPage — recents insertion on entry', () => {
@@ -48,9 +53,6 @@ describe('LocationPage — recents insertion on entry', () => {
       hasRefreshError: false,
     };
 
-    const recentsModule = await import('../frontend/features/recents');
-    const spy = vi.spyOn(recentsModule, 'persistRecent');
-
     const { LocationPage } =
       await import('../frontend/pages/location/ui/location-page');
 
@@ -61,8 +63,9 @@ describe('LocationPage — recents insertion on entry', () => {
     );
 
     await waitFor(() => {
-      expect(spy).toHaveBeenCalledWith(mockLocation);
+      expect(recentsModule.persistRecent).toHaveBeenCalledWith(mockLocation);
     });
+    expect(recentsModule.persistRecent).toHaveBeenCalledTimes(1);
   });
 
   test('calls persistRecent when bootstrap reaches stale-fallback state', async () => {
@@ -79,9 +82,6 @@ describe('LocationPage — recents insertion on entry', () => {
       aqi: null,
     };
 
-    const recentsModule = await import('../frontend/features/recents');
-    const spy = vi.spyOn(recentsModule, 'persistRecent');
-
     const { LocationPage } =
       await import('../frontend/pages/location/ui/location-page');
 
@@ -92,7 +92,25 @@ describe('LocationPage — recents insertion on entry', () => {
     );
 
     await waitFor(() => {
-      expect(spy).toHaveBeenCalledWith(mockLocation);
+      expect(recentsModule.persistRecent).toHaveBeenCalledWith(mockLocation);
     });
+    expect(recentsModule.persistRecent).toHaveBeenCalledTimes(1);
+  });
+
+  test('does NOT call persistRecent when bootstrap is loading', async () => {
+    // mockBootstrapResult이 이미 beforeEach에서 { kind: 'loading' }으로 설정됨
+
+    const { LocationPage } =
+      await import('../frontend/pages/location/ui/location-page');
+
+    render(
+      <MemoryRouter>
+        <LocationPage resolvedLocationId="aaa000000001" />
+      </MemoryRouter>
+    );
+
+    // 충분한 시간을 기다린 후 호출되지 않았음을 확인한다.
+    await new Promise((r) => setTimeout(r, 50));
+    expect(recentsModule.persistRecent).not.toHaveBeenCalled();
   });
 });
