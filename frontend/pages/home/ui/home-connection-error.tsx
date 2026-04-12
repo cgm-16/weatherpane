@@ -13,7 +13,7 @@ export function HomeConnectionError({ onRetry, onGoToSavedPlaces }: HomeConnecti
         <div className="mb-10 flex items-center gap-2 rounded-full bg-surface-container-high/40 px-4 py-2 backdrop-blur-md">
           <span className="h-2 w-2 animate-pulse rounded-full bg-outline-variant" />
           <span className="font-headline text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">
-            Offline Mode Active
+            오프라인 상태
           </span>
         </div>
 
