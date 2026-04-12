@@ -50,44 +50,47 @@ export function useSearchSelection() {
     if (resolvingId !== null) return;
     setResolvingId(result.catalogLocationId);
 
-    const entry = getCatalogEntryById(result.catalogLocationId);
-    const now = new Date().toISOString();
+    try {
+      const entry = getCatalogEntryById(result.catalogLocationId);
+      const now = new Date().toISOString();
 
-    const resolver = createCatalogLocationResolver({
-      geocode,
-      now: () => now,
-      unsupportedRouteContextRepository:
-        createUnsupportedRouteContextRepository(),
-    });
+      const resolver = createCatalogLocationResolver({
+        geocode,
+        now: () => now,
+        unsupportedRouteContextRepository:
+          createUnsupportedRouteContextRepository(),
+      });
 
-    const resolution = await resolver.resolveCatalogLocation({
-      catalogLocation: entry
-        ? buildCatalogLocationFromEntry(entry)
-        : {
-            catalogLocationId: result.catalogLocationId,
-            name: result.primaryLabel,
-            admin1: result.secondaryPath?.split('-')[0] ?? result.primaryLabel,
-            latitude: 0,
-            longitude: 0,
-          },
-      canonicalPath: result.canonicalPath,
-      overrideKey: entry?.overrideKey,
-    });
+      const resolution = await resolver.resolveCatalogLocation({
+        catalogLocation: entry
+          ? buildCatalogLocationFromEntry(entry)
+          : {
+              catalogLocationId: result.catalogLocationId,
+              name: result.primaryLabel,
+              admin1:
+                result.secondaryPath?.split('-')[0] ?? result.primaryLabel,
+              latitude: 0,
+              longitude: 0,
+            },
+        canonicalPath: result.canonicalPath,
+        overrideKey: entry?.overrideKey,
+      });
 
-    setResolvingId(null);
-
-    if (resolution.kind === 'resolved') {
-      const activeLocation: ActiveLocation = {
-        kind: 'resolved',
-        location: resolution.location,
-        source: 'search',
-        changedAt: now,
-      };
-      setActiveLocation(activeLocation);
-      prependRecent(resolution.location, now);
-      navigate(`/location/${resolution.location.catalogLocationId}`);
-    } else {
-      navigate(`/location/${resolution.token}`);
+      if (resolution.kind === 'resolved') {
+        const activeLocation: ActiveLocation = {
+          kind: 'resolved',
+          location: resolution.location,
+          source: 'search',
+          changedAt: now,
+        };
+        setActiveLocation(activeLocation);
+        prependRecent(resolution.location, now);
+        navigate(`/location/${result.catalogLocationId}`);
+      } else {
+        navigate(`/location/${resolution.token}`);
+      }
+    } finally {
+      setResolvingId(null);
     }
   }
 
