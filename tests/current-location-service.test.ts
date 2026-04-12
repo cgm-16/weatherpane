@@ -95,16 +95,18 @@ describe('createCurrentLocationService', () => {
         expect(options).toEqual({ timeout: 8_000 });
       }
     );
+    const reverseGeocode = vi.fn();
     const service = createCurrentLocationService({
       catalogEntries: [],
       geolocation: { getCurrentPosition },
       now: () => '2026-04-12T09:00:00+09:00',
-      reverseGeocode: vi.fn(),
+      reverseGeocode,
     });
 
     const result = await service.locateCurrentLocation();
 
     expect(getCurrentPosition).toHaveBeenCalledTimes(1);
+    expect(reverseGeocode).not.toHaveBeenCalled();
     expect(result).toEqual({
       kind: 'recovery-required',
       reason: 'timeout',
