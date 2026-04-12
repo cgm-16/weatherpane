@@ -26,11 +26,11 @@ const busanLocation: ResolvedLocation = {
   timezone: 'Asia/Seoul',
 };
 
-beforeEach(() => {
-  localStorage.clear();
-});
-
 describe('useFavorites', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   test('초기 상태에서 isFavorite는 false를 반환한다', () => {
     const { result } = renderHook(() => useFavorites());
     expect(result.current.isFavorite(seoulLocation.locationId)).toBe(false);
