@@ -162,11 +162,13 @@ function findBestCanonicalMatch(
         continue;
       }
 
-      if (!bestMatch || candidatePath.rank > bestMatch.rank) {
+      const effectiveRank = candidatePath.parts.filter(Boolean).length;
+
+      if (!bestMatch || effectiveRank > bestMatch.rank) {
         bestMatch = {
           candidate,
           entry,
-          rank: candidatePath.rank,
+          rank: effectiveRank,
         };
       }
 
@@ -214,9 +216,12 @@ export function createCurrentLocationService({
 
       const { latitude, longitude } = position.coords;
       const capturedAt = now();
-      const candidates = await reverseGeocode(latitude, longitude).catch(
-        () => [] as LocationGeocodeCandidate[]
-      );
+      let candidates: LocationGeocodeCandidate[];
+      try {
+        candidates = await reverseGeocode(latitude, longitude);
+      } catch {
+        candidates = [] as LocationGeocodeCandidate[];
+      }
 
       const bestMatch = findBestCanonicalMatch(candidates, lookup);
 
