@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Weatherpane | 404 - Lost in the Mist</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#f5f5f5",
+                        "outline-variant": "#e2e2e2",
+                        "surface": "#ffffff",
+                        "primary-fixed": "#ffdad6",
+                        "on-secondary-fixed-variant": "#ff385c",
+                        "on-error-container": "#410002",
+                        "tertiary-fixed-dim": "#00d084",
+                        "secondary-container": "#fce4ec",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-container-low": "#f7f7f7",
+                        "inverse-surface": "#313030",
+                        "surface-container-highest": "#eeeeee",
+                        "secondary": "#ff385c",
+                        "on-tertiary-fixed-variant": "#005234",
+                        "on-secondary": "#ffffff",
+                        "on-surface": "#222222",
+                        "tertiary-container": "#d0f8e5",
+                        "outline": "#79747e",
+                        "surface-variant": "#e7e0ec",
+                        "on-secondary-fixed": "#40000d",
+                        "tertiary-fixed": "#80f9bd",
+                        "on-primary-fixed": "#40000d",
+                        "background": "#ffffff",
+                        "on-secondary-container": "#ff385c",
+                        "surface-container": "#f0f0f0",
+                        "surface-bright": "#ffffff",
+                        "primary-fixed-dim": "#ffb2b6",
+                        "on-primary-fixed-variant": "#920029",
+                        "surface-tint": "#ff385c",
+                        "primary": "#ff385c",
+                        "on-background": "#222222",
+                        "primary-container": "#ff385c",
+                        "surface-container-high": "#e6e6e6",
+                        "inverse-on-surface": "#f4f0ef",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#ffb2b6",
+                        "on-surface-variant": "#49454f",
+                        "on-tertiary-container": "#002113",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "error": "#b3261e",
+                        "error-container": "#f9dedc",
+                        "secondary-fixed-dim": "#ffb2b6",
+                        "secondary-fixed": "#ffdada",
+                        "on-primary-container": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#008557"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e6e6e6;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff385c;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .rausch-gradient {
+            background: linear-gradient(135deg, #ff385c 0%, #e31c5f 100%);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fog-gradient {
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.6) 100%);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body overflow-hidden h-screen w-screen">
+<!-- SideNavBar (Persistent from SCREEN_107) -->
+<aside class="h-screen w-64 fixed left-0 top-0 glass-panel border-r border-outline-variant/10 flex flex-col py-8 px-4 z-50">
+<div class="mb-12 px-4">
+<h1 class="text-xl font-bold tracking-tighter text-[#ff385c]">Weatherpane</h1>
+<p class="text-xs text-on-surface-variant mt-1 uppercase tracking-widest font-semibold">Concierge</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-4 py-3 px-4 rounded-full transition-colors duration-200 text-on-surface-variant hover:text-on-surface hover:bg-surface-container" href="/">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Plus_Jakarta_Sans'] text-sm tracking-tight">Home</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-4 rounded-full transition-colors duration-200 text-on-surface-variant hover:text-on-surface hover:bg-surface-container" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="font-['Plus_Jakarta_Sans'] text-sm tracking-tight">Search</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-4 rounded-full transition-colors duration-200 text-on-surface-variant hover:text-on-surface hover:bg-surface-container" href="#">
+<span class="material-symbols-outlined">grade</span>
+<span class="font-['Plus_Jakarta_Sans'] text-sm tracking-tight">Favorites</span>
+</a>
+</nav>
+<div class="mt-auto pt-8 border-t border-outline-variant/15 px-4 flex items-center justify-between">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 relative h-screen w-[calc(100vw-16rem)] flex items-center justify-center overflow-hidden">
+<!-- Background Imagery (Misty Coastal Area) -->
+<div class="absolute inset-0 z-0">
+<img alt="Misty coastal cliffs" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUU5FbOYdehOWGJwQq4hIo1011l0-X__9NVB4ggSJbelG7xfoATZ41In4BS6dhxbgZsoT7S2mbPaZ57cPDpN4pNUtSzBg4tFShpKPqspEINOQh6juWaxTUPpegQZjOWYgwlLUeCA9U7O5-EAXm1gZ5SLhU1ubXmEmWIiLX1K22z6tqCcqwcZHyTdcwgumWq5VFGj2I1L2rpJA8uihmKl56oAxw0fZ26b2OtFA1ZOME4-YpBwmNCLacqMXNzyUB7s91p3vu-IZOjfXS"/>
+<div class="absolute inset-0 bg-white/30 backdrop-blur-[2px] fog-gradient"></div>
+</div>
+<!-- Central 50% Glassmorphism Card -->
+<section class="relative z-10 w-full max-w-2xl px-8">
+<div class="glass-panel rounded-lg p-12 md:p-16 text-center shadow-2xl">
+<div class="inline-flex items-center justify-center w-20 h-20 bg-[#ff385c]/10 rounded-full mb-8">
+<span class="material-symbols-outlined text-[#ff385c] text-4xl" style="font-variation-settings: 'FILL' 1;">foggy</span>
+</div>
+<h1 class="font-headline font-extrabold text-5xl md:text-6xl text-on-surface tracking-tighter mb-6">
+                    Lost in the Mist
+                </h1>
+<p class="font-body text-lg text-on-surface-variant leading-relaxed max-w-md mx-auto mb-10">
+                    As your personal travel concierge, we regret to inform you that this destination has drifted away in the fog. Let us guide you back to clearer skies.
+                    <span class="block mt-4 text-[10px] font-bold text-[#ff385c] tracking-[0.2em] uppercase">Atmospheric Error 404</span>
+</p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+<a class="rausch-gradient text-white font-bold px-10 py-4 rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 duration-200 flex items-center gap-2" href="/">
+<span class="material-symbols-outlined text-sm">home</span>
+                        Take me Home
+                    </a>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-bold px-10 py-4 rounded-full transition-all active:scale-95 duration-200">
+                        Check Forecast
+                    </button>
+</div>
+</div>
+<!-- Asymmetric Data Points (Editorial Flourish) -->
+</section>
+<!-- Aesthetic Foreground Elements (Mists/Clouds) -->
+<div class="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-surface to-transparent pointer-events-none"></div>
+</main>
+<!-- TopBar (Reflecting SCREEN_107 for consistency) -->
+<header class="fixed top-0 right-0 left-64 h-16 flex justify-end items-center px-8 z-40 bg-white/30 backdrop-blur-xl border-b border-outline-variant/10">
+<div class="flex items-center gap-6">
+<button class="text-[#ff385c] hover:opacity-80 transition-all flex items-center gap-1">
+<span class="material-symbols-outlined">location_on</span>
+<span class="text-sm font-medium">Unknown Coordinates</span>
+</button>
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button class="hover:bg-black/5 rounded-full p-2 transition-all"><span class="material-symbols-outlined">help_outline</span></button>
+<button class="hover:bg-black/5 rounded-full p-2 transition-all"><span class="material-symbols-outlined">settings</span></button>
+</div>
+</div>
+</header>
+</body></html>

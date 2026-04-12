@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,700;0,800;1,800&amp;family=Be+Vietnam+Pro:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed": "#ffdada",
+                    "on-error-container": "#93000a",
+                    "surface-container-high": "#eae7e7",
+                    "secondary-fixed-dim": "#c7c6c6",
+                    "secondary-container": "#e3e2e2",
+                    "on-error": "#ffffff",
+                    "on-tertiary-fixed": "#002113",
+                    "surface-container": "#f0eded",
+                    "primary-container": "#e21e4a",
+                    "on-secondary": "#ffffff",
+                    "tertiary": "#006a45",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed": "#e3e2e2",
+                    "surface-dim": "#dcd9d9",
+                    "primary": "#ba0036",
+                    "inverse-surface": "#303030",
+                    "on-tertiary-container": "#f6fff6",
+                    "inverse-primary": "#ffb2b6",
+                    "on-background": "#1b1c1c",
+                    "surface-variant": "#e5e2e1",
+                    "on-secondary-container": "#646464",
+                    "on-primary": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface": "#1b1c1c",
+                    "outline-variant": "#e5bdbe",
+                    "surface-container-highest": "#e5e2e1",
+                    "on-primary-fixed": "#40000d",
+                    "tertiary-fixed": "#80f9bd",
+                    "background": "#fcf9f8",
+                    "on-primary-container": "#fffbff",
+                    "error": "#ba1a1a",
+                    "surface-container-low": "#f6f3f2",
+                    "surface-bright": "#fcf9f8",
+                    "surface": "#fcf9f8",
+                    "on-tertiary-fixed-variant": "#005234",
+                    "outline": "#906f70",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "primary-fixed-dim": "#ffb2b6",
+                    "on-surface-variant": "#5c3f41",
+                    "secondary": "#5e5e5e",
+                    "on-secondary-fixed-variant": "#464747",
+                    "on-primary-fixed-variant": "#920029",
+                    "tertiary-fixed-dim": "#62dca3",
+                    "surface-tint": "#be0038",
+                    "inverse-on-surface": "#f3f0ef",
+                    "tertiary-container": "#008558"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Be Vietnam Pro"],
+                    "label": ["Be Vietnam Pro"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(252, 249, 248, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed-variant">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-[#fcf9f8]/60 dark:bg-[#1b1c1c]/60 backdrop-blur-xl shadow-[0px_4px_12px_rgba(27,28,28,0.04)]">
+<nav class="flex justify-between items-center px-8 h-20 w-full max-w-screen-2xl mx-auto">
+<div class="flex items-center gap-12">
+<span class="text-2xl font-black text-[#ba0036] dark:text-[#e21e4a] italic font-headline">Busan Sky</span>
+<div class="hidden md:flex items-center gap-8 font-headline font-bold text-lg tracking-tight">
+<a class="text-[#ba0036] font-bold border-b-2 border-[#ba0036]" href="#">Forecast</a>
+<a class="text-[#1b1c1c] dark:text-[#fcf9f8] opacity-70 hover:bg-[#f6f3f2] dark:hover:bg-[#1b1c1c] transition-colors px-2 py-1 rounded-md" href="#">Radar</a>
+<a class="text-[#1b1c1c] dark:text-[#fcf9f8] opacity-70 hover:bg-[#f6f3f2] dark:hover:bg-[#1b1c1c] transition-colors px-2 py-1 rounded-md" href="#">Air Quality</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-[#f6f3f2] rounded-full transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="p-2 hover:bg-[#f6f3f2] rounded-full transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">settings</span>
+</button>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-outline-variant/20">
+<img alt="User profile" data-alt="professional portrait of a person with friendly expression against a soft neutral background, clean minimalist style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDW5hFQAs7GDNouXgK3JEkutgKB7JCYa8luB50v4qiMrSFFEAYaJJExhU0-okv-ISM9nWNdZqM7k3x3JmUwvUrPp4mDAU9lYiqf6IsT4zypJD7Vk1hpkbk23I5PZKSBneV9oADu2BXru4I9-sXSytq4geS65ZsRUvIDH9UC-VQyCiijTvyU5fdyiub20Z-LOo7bh9W4mdyZVkuHkpKafMjrYloiA3-Avb5cH5bRKCd4_SHedc62W1r7t4KX2nExvSx1izp-KsaglmnI"/>
+</div>
+</div>
+</nav>
+</header>
+<!-- SideNavBar (Hidden on desktop as per Shell Visibility & Relevance context for detail pages, but mapped as requested) -->
+<aside class="hidden lg:flex fixed left-0 top-20 h-[calc(100vh-5rem)] w-64 flex-col py-8 gap-2 bg-[#fcf9f8] dark:bg-[#1b1c1c] font-['Be_Vietnam_Pro'] font-medium text-sm">
+<div class="px-6 mb-8">
+<h2 class="text-[#ba0036] font-black text-xl italic mb-1">Busan</h2>
+<p class="text-on-surface-variant opacity-70">Clear Sky 24°</p>
+</div>
+<a class="flex items-center gap-4 text-[#ba0036] dark:text-[#e21e4a] font-bold py-3 px-6 bg-[#f6f3f2] dark:bg-[#252626] rounded-r-full" href="#">
+<span class="material-symbols-outlined">cloud</span> Current
+        </a>
+<a class="flex items-center gap-4 text-[#1b1c1c] dark:text-[#fcf9f8] opacity-60 py-3 px-6 hover:text-[#ba0036] hover:translate-x-1 transition-all" href="#">
+<span class="material-symbols-outlined">calendar_month</span> Forecast
+        </a>
+<a class="flex items-center gap-4 text-[#1b1c1c] dark:text-[#fcf9f8] opacity-60 py-3 px-6 hover:text-[#ba0036] hover:translate-x-1 transition-all" href="#">
+<span class="material-symbols-outlined">radar</span> Radar
+        </a>
+<a class="flex items-center gap-4 text-[#1b1c1c] dark:text-[#fcf9f8] opacity-60 py-3 px-6 hover:text-[#ba0036] hover:translate-x-1 transition-all" href="#">
+<span class="material-symbols-outlined">location_on</span> Saved
+        </a>
+</aside>
+<!-- Main Content Canvas -->
+<main class="pt-20 min-h-screen lg:ml-64 bg-cover bg-center bg-fixed relative" data-alt="artistic architectural line drawing of Busan cityscape with Gwangan Bridge and LCT Tower over a soft cream textured background" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBWrCkQoD10AsuQkxbKz0U0gFtkrvNq5ixS5vqIiH1AW-NKwHWpoZwkROY73N6JJPyS98vzuZpbT_PuO3itBeDxcPLWZzFSRhDCjJFQw8DX9FJRBWhp6v1zb9Mljo3p49epETScGZjmsxzaFVffMZwCsoiBeAIWMwTPZuZkcARe45jVgBtPT2-k_xCVJhCoS1zLsrDoOuPsI4JDP8lUvHTqC829rOpZIp-v1ecVuOOprYwsYJPjB15UrO5L5LpTw-prjhmTTgtufIKa')">
+<!-- Background Overlay for legibility -->
+<div class="absolute inset-0 bg-surface/40 backdrop-blur-[2px]"></div>
+<div class="relative z-10 p-8 max-w-7xl mx-auto flex flex-col gap-8">
+<!-- Hero Weather Section -->
+<section class="flex flex-col md:flex-row justify-between items-end gap-8 py-12">
+<div class="flex flex-col gap-2">
+<span class="text-on-surface-variant font-medium tracking-widest uppercase text-xs">South Korea</span>
+<h1 class="text-7xl font-black font-headline text-on-surface leading-none tracking-tighter">Busan</h1>
+<div class="flex items-center gap-3 mt-4">
+<div class="px-4 py-1.5 bg-surface-container-high rounded-full text-sm font-medium text-on-surface-variant">
+                            Last updated 5 mins ago
+                        </div>
+<div class="px-4 py-1.5 bg-primary-fixed text-on-primary-fixed-variant rounded-full text-sm font-bold">
+                            Live
+                        </div>
+</div>
+</div>
+<div class="flex items-center gap-8">
+<div class="text-right">
+<div class="text-[120px] font-black font-headline text-primary leading-none tracking-tighter">19°</div>
+<div class="text-2xl font-medium text-on-surface-variant mt-[-10px]">Partly Cloudy</div>
+</div>
+<span class="material-symbols-outlined text-9xl text-primary-container" style="font-variation-settings: 'FILL' 1;">partly_cloudy_day</span>
+</div>
+</section>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Hourly Forecast (Glassmorphism) -->
+<div class="lg:col-span-8 glass-panel rounded-lg p-8 shadow-sm">
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-xl font-bold font-headline flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">schedule</span>
+                            Hourly Forecast
+                        </h3>
+<button class="text-primary font-bold text-sm hover:underline">Full 24h</button>
+</div>
+<div class="flex justify-between items-center overflow-x-auto pb-4 gap-8">
+<!-- Hour Item -->
+<div class="flex flex-col items-center gap-3 min-w-[60px]">
+<span class="text-sm font-medium text-on-surface-variant">Now</span>
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">partly_cloudy_day</span>
+<span class="text-xl font-bold font-headline">19°</span>
+</div>
+<!-- Hour Item -->
+<div class="flex flex-col items-center gap-3 min-w-[60px]">
+<span class="text-sm font-medium text-on-surface-variant">15:00</span>
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">light_mode</span>
+<span class="text-xl font-bold font-headline">21°</span>
+</div>
+<!-- Hour Item -->
+<div class="flex flex-col items-center gap-3 min-w-[60px]">
+<span class="text-sm font-medium text-on-surface-variant">16:00</span>
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">light_mode</span>
+<span class="text-xl font-bold font-headline">20°</span>
+</div>
+<!-- Hour Item -->
+<div class="flex flex-col items-center gap-3 min-w-[60px]">
+<span class="text-sm font-medium text-on-surface-variant">17:00</span>
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">cloud</span>
+<span class="text-xl font-bold font-headline">18°</span>
+</div>
+<!-- Hour Item -->
+<div class="flex flex-col items-center gap-3 min-w-[60px]">
+<span class="text-sm font-medium text-on-surface-variant">18:00</span>
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">cloud</span>
+<span class="text-xl font-bold font-headline">17°</span>
+</div>
+<!-- Hour Item -->
+<div class="flex flex-col items-center gap-3 min-w-[60px]">
+<span class="text-sm font-medium text-on-surface-variant">19:00</span>
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">bedtime</span>
+<span class="text-xl font-bold font-headline">16°</span>
+</div>
+<!-- Hour Item -->
+<div class="flex flex-col items-center gap-3 min-w-[60px]">
+<span class="text-sm font-medium text-on-surface-variant">20:00</span>
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">bedtime</span>
+<span class="text-xl font-bold font-headline">15°</span>
+</div>
+</div>
+</div>
+<!-- 3-Day Forecast -->
+<div class="lg:col-span-4 bg-surface-container-lowest rounded-lg p-8 shadow-sm flex flex-col justify-between">
+<h3 class="text-xl font-bold font-headline mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">calendar_today</span>
+                        3-Day Forecast
+                    </h3>
+<div class="flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<span class="font-bold w-16">Today</span>
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">partly_cloudy_day</span>
+<div class="flex gap-4 w-24 justify-end">
+<span class="font-bold">21°</span>
+<span class="text-on-surface-variant">14°</span>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-bold w-16">Tue</span>
+<span class="material-symbols-outlined text-on-surface-variant">rainy</span>
+<div class="flex gap-4 w-24 justify-end">
+<span class="font-bold">18°</span>
+<span class="text-on-surface-variant">12°</span>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-bold w-16">Wed</span>
+<span class="material-symbols-outlined text-on-surface-variant">light_mode</span>
+<div class="flex gap-4 w-24 justify-end">
+<span class="font-bold">22°</span>
+<span class="text-on-surface-variant">15°</span>
+</div>
+</div>
+</div>
+<button class="mt-8 w-full py-4 bg-secondary-container text-on-secondary-fixed rounded-sm font-bold text-sm hover:bg-surface-container-high transition-colors">
+                        7-Day Detailed Outlook
+                    </button>
+</div>
+<!-- Supplementary Data Cards -->
+<div class="lg:col-span-3 bg-surface-container-lowest rounded-lg p-6 shadow-sm border-l-4 border-primary">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-on-surface-variant">air</span>
+<span class="text-xs font-bold text-primary uppercase tracking-wider">Wind</span>
+</div>
+<div class="text-3xl font-black font-headline mb-1">12<span class="text-sm font-normal text-on-surface-variant ml-1">km/h</span></div>
+<p class="text-sm text-on-surface-variant">North-East Breeze</p>
+</div>
+<div class="lg:col-span-3 bg-surface-container-lowest rounded-lg p-6 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-on-surface-variant">humidity_percentage</span>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Humidity</span>
+</div>
+<div class="text-3xl font-black font-headline mb-1">64<span class="text-sm font-normal text-on-surface-variant ml-1">%</span></div>
+<p class="text-sm text-on-surface-variant">Dew point is 12°</p>
+</div>
+<div class="lg:col-span-3 bg-surface-container-lowest rounded-lg p-6 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-on-surface-variant">wb_sunny</span>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">UV Index</span>
+</div>
+<div class="text-3xl font-black font-headline mb-1">4<span class="text-sm font-normal text-on-surface-variant ml-1">Mod</span></div>
+<div class="w-full bg-secondary-container h-1 rounded-full mt-2">
+<div class="bg-primary h-1 rounded-full w-[40%]"></div>
+</div>
+</div>
+<div class="lg:col-span-3 bg-surface-container-lowest rounded-lg p-6 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-on-surface-variant">visibility</span>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Visibility</span>
+</div>
+<div class="text-3xl font-black font-headline mb-1">10<span class="text-sm font-normal text-on-surface-variant ml-1">km</span></div>
+<p class="text-sm text-on-surface-variant">Perfectly clear</p>
+</div>
+<!-- Interactive Map / Location Context -->
+<div class="lg:col-span-12 glass-panel rounded-lg overflow-hidden h-[300px] shadow-sm relative group">
+<img alt="Map of Busan" class="w-full h-full object-cover opacity-80" data-alt="stylized satellite map showing the coastline of Busan, South Korea, with Haeundae and Gwangalli beaches visible, overlayed with temperature thermal map colors" data-location="Busan" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKyUkg3T7LS-qlFHCB9ur_2L51f_yp4O1_G7z7u0USU7JmdbANRehpoNsLC53IQNpfy99iTNkhcdzN5kkJY5do8KIPHgQEMvLspwqDYEBKaWPWY_F_JvyJ2n5Ofvu_7EjRpZtoxiwEB6SUthklGvJdF74fN17BK28DmNlF-7PPzslLxK1_GTfpbTvs-dJxHuSb4kPyIzwi36F0mZAUqqQUH34uUMWXwDs-ELavF0OeiPz4h1kqNrwROgbSzQq611Dqi47AjH2_y8ML"/>
+<div class="absolute top-6 left-6 bg-surface-container-lowest p-4 rounded-md shadow-lg">
+<h4 class="font-bold font-headline text-sm">Nearby Activity</h4>
+<div class="flex items-center gap-2 mt-2">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<span class="text-xs font-medium">Haeundae Beach: 21°C</span>
+</div>
+</div>
+<div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/50 to-transparent flex justify-between items-end">
+<span class="text-white font-bold">Ocean Temperature: 17.5°C</span>
+<button class="bg-white/20 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs font-bold border border-white/30 hover:bg-white/30 transition-all">
+                            Expand Radar
+                        </button>
+</div>
+</div>
+</div>
+</div>
+<!-- FAB for Detail Actions -->
+<div class="fixed bottom-8 right-8 flex flex-col gap-4">
+<button class="w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-105 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+</button>
+</div>
+</main>
+<!-- Footer / Bottom Navigation for Mobile -->
+<footer class="md:hidden fixed bottom-0 w-full glass-panel h-16 flex items-center justify-around px-4 z-50">
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">cloud</span>
+<span class="text-[10px] font-bold">Now</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant opacity-60">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="text-[10px]">Forecast</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant opacity-60">
+<span class="material-symbols-outlined">radar</span>
+<span class="text-[10px]">Radar</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant opacity-60">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px]">Profile</span>
+</button>
+</footer>
+</body></html>

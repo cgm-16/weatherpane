@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#f0eded",
+                        "primary": "#ba0036",
+                        "on-background": "#1b1c1c",
+                        "inverse-on-surface": "#f3f0ef",
+                        "secondary-container": "#e3e2e2",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#eae7e7",
+                        "background": "#fcf9f8",
+                        "outline": "#906f70",
+                        "on-primary-container": "#fffbff",
+                        "surface-dim": "#dcd9d9",
+                        "inverse-surface": "#303030",
+                        "on-error": "#ffffff",
+                        "outline-variant": "#e5bdbe",
+                        "on-tertiary-fixed-variant": "#005234",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#fcf9f8",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#e5e2e1",
+                        "secondary-fixed": "#e3e2e2",
+                        "primary-fixed-dim": "#ffb2b6",
+                        "inverse-primary": "#ffb2b6",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#ffdada",
+                        "tertiary-fixed": "#80f9bd",
+                        "surface": "#fcf9f8",
+                        "on-surface-variant": "#5c3f41",
+                        "surface-variant": "#e5e2e1",
+                        "primary-container": "#e21e4a",
+                        "on-secondary-container": "#646464",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#f6f3f2",
+                        "tertiary": "#006a45",
+                        "on-surface": "#1b1c1c",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "surface-tint": "#be0038",
+                        "secondary": "#5e5e5e",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#920029",
+                        "on-primary-fixed": "#40000d",
+                        "tertiary-container": "#008558",
+                        "on-tertiary-fixed": "#002113",
+                        "on-secondary-fixed-variant": "#464747",
+                        "tertiary-fixed-dim": "#62dca3",
+                        "secondary-fixed-dim": "#c7c6c6",
+                        "on-tertiary-container": "#f6fff6",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Be Vietnam Pro"],
+                        "label": ["Be Vietnam Pro"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .weather-glass {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body text-on-surface antialiased overflow-hidden">
+<!-- Background Image -->
+<div class="fixed inset-0 z-0">
+<img class="w-full h-full object-cover brightness-[0.7] contrast-[1.1]" data-alt="cinematic blurry photo of a rainy Seoul street at night with neon signs reflecting in wet asphalt and soft bokeh lights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQYOhDMnwOYix88la5m1mHchsMI5KCtYznmhp_jkT9Pv6uDE1uDJ7lAH3rjl0FBK9iuoIsyg7hCtUEVM5Q8GFDW-KjK9ZsW-WpW4S16-KhJcAYeUS250U3V0KH6LIV2Q21Ueg-I1gEoCct2dD6UpnC5SRkxlx4-KEpVvJZQAJEiwRlnXIMYFaHUk_67lZdOHJjuKYzU0VOlaz3u_SuNExL4kdLrNzKzMeALagnk_JZjDR9gLwTTsZVe4OZ1YKpHZuxSM60kq8ATxcR"/>
+</div>
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-6 h-16 bg-zinc-950/50 backdrop-blur-[20px]">
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-[#ffb2b6] hover:bg-zinc-800/40 transition-colors active:scale-95 duration-150">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-['Plus_Jakarta_Sans'] font-bold text-lg tracking-tight text-[#ffb2b6]">Busan, South Korea</h1>
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-[#ffb2b6] hover:bg-zinc-800/40 transition-colors active:scale-95 duration-150">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="relative z-10 min-h-screen flex items-center justify-center px-6 pt-16 pb-20">
+<!-- Error Content Module -->
+<div class="weather-glass w-full max-w-md p-8 rounded-lg flex flex-col items-center text-center">
+<!-- Offline Indicator -->
+<div class="flex items-center gap-2 mb-10 px-4 py-2 rounded-full bg-surface-container-high/40 text-on-surface-variant backdrop-blur-md">
+<span class="w-2 h-2 rounded-full bg-outline-variant animate-pulse"></span>
+<span class="text-[11px] font-headline font-bold uppercase tracking-widest">Offline Mode Active</span>
+</div>
+<!-- Illustration Area -->
+<div class="relative mb-8">
+<div class="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary text-5xl" style="font-variation-settings: 'FILL' 0, 'wght' 200;">signal_disconnected</span>
+</div>
+<div class="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">error</span>
+</div>
+</div>
+<!-- Technical Writing -->
+<h2 class="font-headline text-3xl font-extrabold text-on-surface mb-4 leading-tight">
+                Connection Interrupted
+            </h2>
+<p class="font-body text-base text-on-surface-variant leading-relaxed mb-10 px-2">
+                We're having trouble reaching the horizon. Please check your signal and try again.
+            </p>
+<!-- Actions Container -->
+<div class="w-full space-y-4">
+<!-- Primary Action -->
+<button class="group w-full py-5 px-6 bg-primary hover:bg-primary-container text-on-primary rounded-sm font-headline font-bold transition-all duration-300 active:scale-95 shadow-lg flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-xl" data-icon="refresh">refresh</span>
+                    Retry Connection
+                </button>
+<!-- Secondary Action -->
+<button class="w-full py-4 px-6 bg-secondary-container hover:bg-surface-container-highest text-on-secondary-fixed rounded-sm font-headline font-semibold transition-all duration-300 active:scale-95 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-xl" data-icon="bookmarks">bookmarks</span>
+                    Go to Saved Places
+                </button>
+</div>
+<!-- Subtle Support Text -->
+<p class="mt-8 text-xs font-label text-on-surface-variant/60 uppercase tracking-widest font-medium">
+                Error Code: 504_GATEWAY_TIMEOUT
+            </p>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pb-safe h-20 bg-zinc-950/50 backdrop-blur-[20px] shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
+<!-- Home Tab -->
+<a class="flex flex-col items-center justify-center text-[#ff385c] py-2 group" href="#">
+<span class="material-symbols-outlined text-2xl transition-all group-active:scale-90" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-semibold uppercase tracking-wider mt-1">Home</span>
+</a>
+<!-- Search Tab -->
+<a class="flex flex-col items-center justify-center text-zinc-500 py-2 group hover:text-zinc-200" href="#">
+<span class="material-symbols-outlined text-2xl transition-all group-active:scale-90">search</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-semibold uppercase tracking-wider mt-1">Search</span>
+</a>
+<!-- Favorites Tab -->
+<a class="flex flex-col items-center justify-center text-zinc-500 py-2 group hover:text-zinc-200" href="#">
+<span class="material-symbols-outlined text-2xl transition-all group-active:scale-90">favorite</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-semibold uppercase tracking-wider mt-1">Favorites</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#121212",
+                        "outline-variant": "#333333",
+                        "surface": "#1a1a1a",
+                        "primary-fixed": "#ffdad6",
+                        "on-secondary-fixed-variant": "#ffb2b6",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#62dca3",
+                        "secondary-container": "#40000d",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-container-low": "#252525",
+                        "inverse-surface": "#f0f0f0",
+                        "surface-container-highest": "#444444",
+                        "secondary": "#ffb2b6",
+                        "on-tertiary-fixed-variant": "#80f9bd",
+                        "on-secondary": "#561d21",
+                        "on-surface": "#f0f0f0",
+                        "tertiary-container": "#005234",
+                        "outline": "#9c8e8e",
+                        "surface-variant": "#534343",
+                        "on-secondary-fixed": "#40000d",
+                        "tertiary-fixed": "#80f9bd",
+                        "on-primary-fixed": "#40000d",
+                        "background": "#1a1a1a",
+                        "on-secondary-container": "#ffdadc",
+                        "surface-container": "#2c2c2c",
+                        "surface-bright": "#333333",
+                        "primary-fixed-dim": "#ffb3b8",
+                        "on-primary-fixed-variant": "#ffdad6",
+                        "surface-tint": "#ff385c",
+                        "primary": "#ff385c",
+                        "on-background": "#f0f0f0",
+                        "primary-container": "#920029",
+                        "surface-container-high": "#3d3d3d",
+                        "inverse-on-surface": "#1a1a1a",
+                        "surface-container-lowest": "#000000",
+                        "inverse-primary": "#ff385c",
+                        "on-surface-variant": "#c9baba",
+                        "on-tertiary-container": "#b4f4cf",
+                        "on-error": "#690005",
+                        "on-primary": "#ffffff",
+                        "error": "#ffb4ab",
+                        "error-container": "#93000a",
+                        "secondary-fixed-dim": "#ffb2b6",
+                        "secondary-fixed": "#ffdada",
+                        "on-primary-container": "#ffdadc",
+                        "on-tertiary": "#003922",
+                        "tertiary": "#62dca3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary/20">
+<!-- SideNavBar Anchor -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-black/40 backdrop-blur-xl flex flex-col py-8 px-4 z-50 border-r border-outline-variant/20">
+<div class="mb-10 px-4">
+<h1 class="text-xl font-bold tracking-tighter text-primary">Weatherpane</h1>
+<p class="text-xs font-medium text-on-surface-variant/60 tracking-widest mt-1">기상창</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-4 px-4 py-3 rounded-full hover:bg-white/5 transition-colors duration-200 text-on-surface-variant hover:text-on-surface" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Plus_Jakarta_Sans'] text-sm tracking-tight">Home</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-full text-primary font-bold border-r-2 border-primary bg-primary/10 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="font-['Plus_Jakarta_Sans'] text-sm tracking-tight">Search</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-full hover:bg-white/5 transition-colors duration-200 text-on-surface-variant hover:text-on-surface" href="#">
+<span class="material-symbols-outlined">grade</span>
+<span class="font-['Plus_Jakarta_Sans'] text-sm tracking-tight">Favorites</span>
+</a>
+</nav>
+<div class="mt-auto px-4 flex items-center gap-4 pt-6 border-t border-outline-variant/20">
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="portrait of a professional man in a dark turtleneck looking thoughtfully into the camera with soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZCu7PyT5WSr2_15mFv7Wmw5399pxzFvNjAfydu1dDsx-YS0w1s924g_xdEaU71SBqk4Fu6NhNicAfiuiT6s7xZ8GAo-3cxrE2I7kdbhrUC1obBCF_w60eae8020ouog28kkIdvqcDk-NRIHvUMx1p1ShbP5HsFpHcFkbFZSchTErFWTlMvRUcnwmMGKff4-O20DCUBNTA_psaL-p5sJHb7zWNxIlfwxmZx9GGviSkvGdrMqJpvCfT_S1kBd2z7r5dGJ6-JWNf32Wi"/>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">settings</button>
+</div>
+</aside>
+<!-- TopNavBar Anchor -->
+<header class="fixed top-0 right-0 left-64 h-16 flex justify-between items-center px-8 z-40 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">cloud</span>
+<span class="font-['Plus_Jakarta_Sans'] text-base text-on-surface font-semibold">Explore Locations</span>
+</div>
+<div class="flex items-center gap-6">
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-white/5 p-2 rounded-full transition-all">location_on</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-white/5 p-2 rounded-full transition-all">settings</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-white/5 p-2 rounded-full transition-all">help_outline</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-64 pt-24 pb-12 px-12 min-h-screen bg-surface">
+<!-- Search Section -->
+<section class="max-w-5xl mx-auto mb-12">
+<div class="relative group">
+<div class="absolute inset-y-0 left-6 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-on-surface-variant text-2xl">search</span>
+</div>
+<input class="w-full bg-surface-container-low border border-outline-variant/20 rounded-full py-6 pl-16 pr-8 text-xl font-medium text-on-surface placeholder:text-on-surface-variant/40 focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Search city, district, or region..." type="text"/>
+<div class="absolute inset-y-2 right-2 flex items-center">
+<button class="bg-primary text-on-primary font-bold px-8 py-3 rounded-full hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20">
+                    Search
+                </button>
+</div>
+</div>
+</section>
+<!-- Search Content States -->
+<div class="max-w-5xl mx-auto space-y-12">
+<!-- Result State: Si-Gu-Dong Hierarchy -->
+<section>
+<h3 class="text-xs font-bold mb-6 text-primary uppercase tracking-[0.2em]">Search Results</h3>
+<div class="space-y-4">
+<!-- Result Item 1 -->
+<div class="glass-card rounded-lg p-6 flex items-center justify-between group hover:bg-white/[0.03] transition-all cursor-pointer">
+<div class="flex items-center gap-6">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-3xl text-primary">light_mode</span>
+</div>
+<div>
+<h4 class="text-xl font-bold text-on-surface">Seoul Metropolitan City, Yongsan-gu, Itaewon-dong</h4>
+<p class="text-on-surface-variant text-sm">서울특별시 용산구 이태원동</p>
+</div>
+</div>
+<div class="flex items-center gap-12">
+<div class="text-right">
+<p class="text-2xl font-bold text-on-surface">18°C</p>
+<p class="text-xs text-on-surface-variant uppercase tracking-tighter">Feels like 16°C</p>
+</div>
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 group-hover:bg-primary group-hover:text-white transition-all">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Result Item 2 -->
+<div class="glass-card rounded-lg p-6 flex items-center justify-between group hover:bg-white/[0.03] transition-all cursor-pointer">
+<div class="flex items-center gap-6">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-3xl text-on-surface-variant">cloudy</span>
+</div>
+<div>
+<h4 class="text-xl font-bold text-on-surface">Seoul Metropolitan City, Jung-gu, Myeong-dong</h4>
+<p class="text-on-surface-variant text-sm">서울특별시 중구 명동</p>
+</div>
+</div>
+<div class="flex items-center gap-12">
+<div class="text-right">
+<p class="text-2xl font-bold text-on-surface">15°C</p>
+<p class="text-xs text-on-surface-variant uppercase tracking-tighter">Overcast</p>
+</div>
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 group-hover:bg-primary group-hover:text-white transition-all">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Error State -->
+<section class="border-t border-outline-variant/10 pt-12">
+<div class="bg-error-container/20 border border-error/20 rounded-lg p-8 flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-error text-4xl mb-4">error_outline</span>
+<h4 class="text-xl font-bold text-error mb-2">Network Error</h4>
+<p class="text-on-surface-variant mb-6">We couldn't retrieve the latest weather data. Please check your connection.</p>
+<button class="flex items-center gap-2 bg-error text-on-error px-6 py-2 rounded-full font-bold hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-sm">refresh</span>
+                    Retry
+                </button>
+</div>
+</section>
+<!-- No Data State -->
+<section class="border-t border-outline-variant/10 pt-12">
+<div class="flex flex-col items-center justify-center py-20 text-center opacity-60">
+<span class="material-symbols-outlined text-6xl mb-4 text-on-surface-variant/40">search_off</span>
+<h4 class="text-xl font-bold text-on-surface">No Results Found</h4>
+<p class="text-on-surface-variant max-w-md mt-2">We couldn't find any locations matching your search. Try checking the spelling or use a broader term.</p>
+</div>
+</section>
+<!-- Popular Districts Asymmetric Bento -->
+<section class="pt-12">
+<div class="flex justify-between items-end mb-8">
+<div>
+<span class="text-primary font-bold tracking-widest text-xs uppercase">Trending Now</span>
+<h2 class="text-3xl font-bold mt-2 text-on-surface">Popular Districts</h2>
+</div>
+<button class="text-primary font-semibold hover:underline flex items-center gap-2">
+                    View all regions <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-12 gap-6 h-[500px]">
+<!-- Major Card -->
+<div class="col-span-7 relative group overflow-hidden rounded-lg shadow-xl">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="cinematic night view of Seoul skyline with neon lights and N Seoul Tower glowing in the distance" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSa06Hb5fe4pVO9fq8zD4G1A_u1JcB5Nh-q6DfjrUf79zu1mFEio-ZqEhLwyVUBCb0dFdcFltageGxxd4SJgvsIRiwUJS7NS7x7qsUM_ASA5MvDCqMlW1dkyfm6J5z4KSGMsekkgYnSU6RaDxDid6UGA3vocZGrAfHEkhSo5bNAKW_0ZfV3f5xaVUjVHfOqW88M4YqgKn17Vmwhs4GF8kWff4hbbACMIOS1cPbIDId-9GB4ELUK631GAbStHh7gUjikfSo3HaDm0Yl"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-10 flex flex-col justify-end">
+<span class="text-primary font-bold mb-2">Seoul Metropolitan City</span>
+<h3 class="text-4xl font-extrabold text-white leading-none">Gangnam-gu</h3>
+<p class="text-white/80 mt-4 max-w-sm line-clamp-2">The vibrant heart of Seoul with modern architecture and dynamic energy.</p>
+</div>
+</div>
+<div class="col-span-5 grid grid-rows-2 gap-6">
+<!-- Secondary Card 1 -->
+<div class="relative group overflow-hidden rounded-lg shadow-lg">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="serene beach in Busan at sunset with turquoise water and Haeundae buildings in background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiQbzX5R9g8yd3NdYA32Cm4qyH_5B_yK6bR-pTZbk_zhqlWIJ6QLubTPSSRXE0uhY6DpPfPMHHTwxeU7LU12tA6bwOr2G-zPY6XhRj_BV4vSgN-YPyah4yMEYaoeejJ-En631dkg9IIJNiqqoJLeikN1okocpo34edDMVMJEAidWYFTWmL_xUZrYEBakhy36zWpIySo9JmZhMTj9Yfond2-mNpvtuNQcea9sIjchsE8l6cf9x9wLTtDqxRvSTNeNK2v-8fsR0h9i9x"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent p-6 flex flex-col justify-end">
+<h3 class="text-2xl font-bold text-white">Haeundae-gu, Busan</h3>
+<div class="flex items-center gap-2 text-white/80 text-sm mt-1">
+<span class="material-symbols-outlined text-sm">thermostat</span>
+                                24°C Sunny
+                            </div>
+</div>
+</div>
+<!-- Secondary Card 2 -->
+<div class="relative group overflow-hidden rounded-lg shadow-lg">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="majestic Jeju island landscape with green volcanic craters and blue ocean under cloudy sky" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRE6IzThcZ3Q-hOx6prA-B_X9_7MXIZJpS6YJDnQ8_KL8DzW1trtmZ52YF90vIq2tNi4Ry6xbQLYaHvmZrsI3LiZkMWGzvY24saAX0IBFV21O5OoVIAYyQ2kCMw_JUu1eVPbVTPeEfBm-X2IDscaGf4L5cYzrKfdX8h3ClMAGjWf7unfNwunX9zk69tsSXuMY-1P0zuIm7pwbU4Q8nAW_lOj4xK0VEO1eHml2d-A0CBb40De6a8zrMm-rPR9Cz7yn1f6u0dnPZIvSD"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent p-6 flex flex-col justify-end">
+<h3 class="text-2xl font-bold text-white">Jeju-si, Jeju-do</h3>
+<div class="flex items-center gap-2 text-white/80 text-sm mt-1">
+<span class="material-symbols-outlined text-sm">water_drop</span>
+                                85% Humidity
+                            </div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer Decorative Gradient -->
+<div class="fixed bottom-0 right-0 w-1/3 h-1/2 bg-primary/10 blur-[120px] pointer-events-none z-0"></div>
+<div class="fixed top-1/4 left-1/4 w-1/4 h-1/4 bg-primary/5 blur-[100px] pointer-events-none z-0"></div>
+</body></html>

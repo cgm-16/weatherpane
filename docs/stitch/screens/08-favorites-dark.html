@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&amp;family=Be+Vietnam+Pro:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#121212",
+                    "on-primary-fixed": "#ffdada",
+                    "on-tertiary-container": "#f6fff6",
+                    "on-tertiary-fixed": "#80f9bd",
+                    "error-container": "#93000a",
+                    "primary-container": "#920029",
+                    "on-secondary-fixed-variant": "#c7c6c6",
+                    "inverse-on-surface": "#1b1c1c",
+                    "on-primary-container": "#ffdada",
+                    "on-surface-variant": "#d8bcbc",
+                    "on-primary-fixed-variant": "#ffb2b6",
+                    "primary-fixed-dim": "#ffb2b6",
+                    "surface": "#1b1c1c",
+                    "surface-container-low": "#242525",
+                    "secondary-container": "#464747",
+                    "on-surface": "#f3f0ef",
+                    "outline": "#a0898a",
+                    "tertiary-fixed-dim": "#62dca3",
+                    "on-error-container": "#ffdad6",
+                    "secondary-fixed-dim": "#c7c6c6",
+                    "inverse-surface": "#f3f0ef",
+                    "surface-container": "#303030",
+                    "surface-tint": "#ffb2b6",
+                    "on-secondary-container": "#e3e2e2",
+                    "surface-dim": "#1b1c1c",
+                    "surface-variant": "#5c3f41",
+                    "tertiary-fixed": "#80f9bd",
+                    "on-background": "#f3f0ef",
+                    "outline-variant": "#5c3f41",
+                    "surface-bright": "#3b3939",
+                    "on-error": "#690005",
+                    "inverse-primary": "#ba0036",
+                    "on-tertiary-fixed-variant": "#005234",
+                    "on-secondary-fixed": "#e3e2e2",
+                    "surface-container-highest": "#464747",
+                    "on-primary": "#69001b",
+                    "surface-container-high": "#3a3939",
+                    "primary-fixed": "#ffdada",
+                    "error": "#ffb4ab",
+                    "primary": "#ffb2b6",
+                    "on-secondary": "#303030",
+                    "on-tertiary": "#003923",
+                    "tertiary": "#62dca3",
+                    "tertiary-container": "#005234",
+                    "secondary-fixed": "#e3e2e2",
+                    "secondary": "#c7c6c6",
+                    "surface-container-lowest": "#0d0d0d"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Be Vietnam Pro"],
+                    "label": ["Be Vietnam Pro"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-module {
+            background: rgba(30, 30, 30, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .management-mode .drag-handle { display: flex; }
+        .management-mode .reorder-btns { display: flex; }
+        .management-mode .fav-icon { display: none; }
+        .drag-handle, .reorder-btns { display: none; }
+        
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body antialiased min-h-screen">
+<!-- TopAppBar Component -->
+<nav class="fixed top-0 w-full z-50 flex items-center justify-between px-6 h-16 bg-black/40 backdrop-blur-[20px] border-b border-white/5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="">cloud_queue</span>
+<span class="font-headline font-extrabold text-lg tracking-tight text-on-surface" style="">Weatherpane </span>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-4 py-1.5 rounded-full bg-primary/20 text-primary font-bold text-sm active:scale-95 transition-transform" onclick="document.body.classList.toggle('management-mode'); this.innerText = document.body.classList.contains('management-mode') ? 'Done' : 'Edit'" style="">
+            Edit
+        </button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 active:scale-95 transition-transform" style="">
+<span class="material-symbols-outlined text-on-surface" style="">search</span>
+</button>
+</div>
+</nav>
+<main class="pt-24 px-6 max-w-5xl mx-auto pb-32">
+<!-- Header Editorial Section -->
+<header class="mb-10">
+<h1 class="font-headline text-5xl font-extrabold tracking-tighter mb-2" style="">Saved Places</h1>
+<p class="text-on-surface-variant font-medium opacity-70" style="">Curated atmosphere for your favorite destinations.</p>
+</header>
+<!-- Favorites Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="favorites-grid">
+<!-- Card 1: Seoul -->
+<div class="group relative overflow-hidden rounded-lg glass-module h-72 flex flex-col justify-between p-6 transition-transform hover:scale-[1.02] duration-300">
+<div class="absolute inset-0 z-0">
+<img alt="" class="w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-opacity duration-500" data-alt="cinematic wide shot of n seoul tower at dusk with soft city lights and a warm hazy sky" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC82xK4C-inIPvI5HGsKGoxD_7bIBA_walh7FU6J7rWNz0c0lS2joigTfqcj2ylYyqpHaXcMKYIUHPHp0wB7YzI2-UnUQpIoYYtOpiXQpmuevNfvXLP952kweybQOCKVabgCZzkL8p2xt7KQ-DdXSwHmtjqNPvJJtBxfzVh9KrHQfHHwHVFwp9QPNMYaXvxWaj8qXPNW9N56L_6r5Mqur7h0K0zxN7OymutdmfMd7vJ9zRLsf8q-VJ5bCjY9NxIa0C-MTqx9GxNhJBd" style=""/>
+</div>
+<!-- Top Controls -->
+<div class="relative z-10 flex justify-between items-start">
+<div class="flex-1 mr-2">
+<div class="flex items-center gap-1 mb-1">
+<h3 class="font-headline font-bold text-2xl tracking-tight text-on-surface" style="">Seoul</h3>
+<div class="flex flex-col management-mode:flex hidden">
+<span class="material-symbols-outlined text-sm text-outline cursor-pointer hover:text-primary transition-colors" style="">edit</span>
+</div>
+</div>
+<div class="relative">
+<p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant/70" style="">Home Base</p>
+<span class="management-mode:inline hidden absolute right-0 top-0 text-[8px] font-medium text-outline" style="">9/15</span>
+</div>
+</div>
+<!-- Fav Icon (Hidden in management) -->
+<span class="fav-icon material-symbols-outlined text-primary" style='font-variation-settings: "FILL" 1;'>favorite</span>
+<!-- Management Handles -->
+<div class="flex flex-col gap-2 items-end">
+<div class="drag-handle items-center justify-center w-8 h-8 rounded-full bg-black/40 border border-white/10 cursor-grab active:cursor-grabbing">
+<span class="material-symbols-outlined text-on-surface opacity-50" style="">drag_handle</span>
+</div>
+<div class="reorder-btns flex flex-col gap-1">
+<button class="p-1 rounded bg-black/40 border border-white/10 hover:bg-black/60 transition-colors" style=""><span class="material-symbols-outlined text-xs" style="">keyboard_arrow_up</span></button>
+<button class="p-1 rounded bg-black/40 border border-white/10 hover:bg-black/60 transition-colors" style=""><span class="material-symbols-outlined text-xs" style="">keyboard_arrow_down</span></button>
+</div>
+</div>
+</div>
+<!-- Main Content -->
+<div class="relative z-10 flex flex-col">
+<div class="flex items-end justify-between">
+<span class="font-headline text-6xl font-extrabold text-on-surface leading-none" style="">24°</span>
+<span class="text-[10px] font-medium text-on-surface-variant opacity-60 mb-2" style="">Updated 5m ago</span>
+</div>
+<div class="flex gap-4 mt-2">
+<div class="bg-white/5 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5">
+<span class="text-[10px] font-bold text-on-surface/50" style="">H</span>
+<span class="text-xs font-bold text-on-surface" style="">28°</span>
+</div>
+<div class="bg-white/5 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5">
+<span class="text-[10px] font-bold text-on-surface/50" style="">L</span>
+<span class="text-xs font-bold text-on-surface" style="">18°</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2: Busan -->
+<div class="group relative overflow-hidden rounded-lg glass-module h-72 flex flex-col justify-between p-6 transition-transform hover:scale-[1.02] duration-300">
+<div class="absolute inset-0 z-0">
+<img alt="" class="w-full h-full object-cover opacity-15 group-hover:opacity-35 transition-opacity duration-500" data-alt="serene coastal view of haeundae beach busan with gentle waves and soft sunrise lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwxLwqRSZ5Odof5RQkXxyuMHQ9ljX4TA-wUiMTaPhZIwh3vOyFl7WTfNOgi8WRH-S8-bFUEg-TTsaKVBgG33RGc5HgycwjI78TpxoqIDHQTCGNSNhvvauAgIdPCL-0apVEM-ndbqoqSarSByBHjNa2UeFlT0RnOrsqUjtr0q8OZnynTlmvnjX-ePLVXKPx1qYNGl-0OwWvzU967nvT2mFzKfVTTqK_A37SR4ZSZUIh3KPcnyL7Iq2IF6sRlDwH6_nJPr7zC-vTI_AF" style=""/>
+</div>
+<div class="relative z-10 flex justify-between items-start">
+<div class="flex-1 mr-2">
+<div class="flex items-center gap-1 mb-1">
+<h3 class="font-headline font-bold text-2xl tracking-tight text-on-surface" style="">Busan</h3>
+<span class="material-symbols-outlined text-sm text-outline cursor-pointer hover:text-primary transition-colors management-mode:inline hidden" style="">edit</span>
+</div>
+<div class="relative">
+<p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant/70" style="">Beach Town</p>
+<span class="management-mode:inline hidden absolute right-0 top-0 text-[8px] font-medium text-outline" style="">10/15</span>
+</div>
+</div>
+<span class="fav-icon material-symbols-outlined text-primary" style='font-variation-settings: "FILL" 1;'>favorite</span>
+<div class="flex flex-col gap-2 items-end">
+<div class="drag-handle items-center justify-center w-8 h-8 rounded-full bg-black/40 border border-white/10 cursor-grab active:cursor-grabbing">
+<span class="material-symbols-outlined text-on-surface opacity-50" style="">drag_handle</span>
+</div>
+<div class="reorder-btns flex flex-col gap-1">
+<button class="p-1 rounded bg-black/40 border border-white/10 hover:bg-black/60 transition-colors" style=""><span class="material-symbols-outlined text-xs" style="">keyboard_arrow_up</span></button>
+<button class="p-1 rounded bg-black/40 border border-white/10 hover:bg-black/60 transition-colors" style=""><span class="material-symbols-outlined text-xs" style="">keyboard_arrow_down</span></button>
+</div>
+</div>
+</div>
+<div class="relative z-10 flex flex-col">
+<div class="flex items-end justify-between">
+<span class="font-headline text-6xl font-extrabold text-on-surface leading-none" style="">21°</span>
+<span class="text-[10px] font-medium text-on-surface-variant opacity-60 mb-2" style="">Updated 12m ago</span>
+</div>
+<div class="flex gap-4 mt-2">
+<div class="bg-white/5 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5">
+<span class="text-[10px] font-bold text-on-surface/50" style="">H</span>
+<span class="text-xs font-bold text-on-surface" style="">24°</span>
+</div>
+<div class="bg-white/5 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5">
+<span class="text-[10px] font-bold text-on-surface/50" style="">L</span>
+<span class="text-xs font-bold text-on-surface" style="">19°</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3: Gyeongju -->
+<div class="group relative overflow-hidden rounded-lg glass-module h-72 flex flex-col justify-between p-6 transition-transform hover:scale-[1.02] duration-300">
+<div class="absolute inset-0 z-0">
+<img alt="" class="w-full h-full object-cover opacity-15 group-hover:opacity-35 transition-opacity duration-500" data-alt="historic korean hanok rooftops in gyeongju at sunrise with soft golden light and mist" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuBA8SEmXiIqBLxBEYsLNBunGX2-M0yIcXVEjRiyj3KgjvFWVuAi8QyPeFulACvANPa_t1bjObMnG0T0mi6HnbvEYa6KJUIr8wOKLDMhB_nZRmjvw2BPgzUSJtBwa4NEVGxbRHPJhpotUrCPAwc7jJ6ha1IQNgLOFyVk95l-9iLred2zRaAgrEuUqndDLr_SsRXBy_m4sDBGwxTqkKZ4OKwiO0XSj49jsx9BLl8Bd2len6S083XHGMe3isO2PpzquVtzOSqr_6F2K_" style=""/>
+</div>
+<div class="relative z-10 flex justify-between items-start">
+<div class="flex-1 mr-2">
+<div class="flex items-center gap-1 mb-1">
+<h3 class="font-headline font-bold text-2xl tracking-tight text-on-surface" style="">Gyeongju</h3>
+<span class="material-symbols-outlined text-sm text-outline cursor-pointer hover:text-primary transition-colors management-mode:inline hidden" style="">edit</span>
+</div>
+<div class="relative">
+<p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant/70" style="">Historic Soul</p>
+<span class="management-mode:inline hidden absolute right-0 top-0 text-[8px] font-medium text-outline" style="">13/15</span>
+</div>
+</div>
+<span class="fav-icon material-symbols-outlined text-primary" style='font-variation-settings: "FILL" 1;'>favorite</span>
+<div class="flex flex-col gap-2 items-end">
+<div class="drag-handle items-center justify-center w-8 h-8 rounded-full bg-black/40 border border-white/10 cursor-grab active:cursor-grabbing">
+<span class="material-symbols-outlined text-on-surface opacity-50" style="">drag_handle</span>
+</div>
+<div class="reorder-btns flex flex-col gap-1">
+<button class="p-1 rounded bg-black/40 border border-white/10 hover:bg-black/60 transition-colors" style=""><span class="material-symbols-outlined text-xs" style="">keyboard_arrow_up</span></button>
+<button class="p-1 rounded bg-black/40 border border-white/10 hover:bg-black/60 transition-colors" style=""><span class="material-symbols-outlined text-xs" style="">keyboard_arrow_down</span></button>
+</div>
+</div>
+</div>
+<div class="relative z-10 flex flex-col">
+<div class="flex items-end justify-between">
+<span class="font-headline text-6xl font-extrabold text-on-surface leading-none" style="">22°</span>
+<span class="text-[10px] font-medium text-on-surface-variant opacity-60 mb-2" style="">Updated 1h ago</span>
+</div>
+<div class="flex gap-4 mt-2">
+<div class="bg-white/5 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5">
+<span class="text-[10px] font-bold text-on-surface/50" style="">H</span>
+<span class="text-xs font-bold text-on-surface" style="">26°</span>
+</div>
+<div class="bg-white/5 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5">
+<span class="text-[10px] font-bold text-on-surface/50" style="">L</span>
+<span class="text-xs font-bold text-on-surface" style="">14°</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 4: Jeju -->
+<div class="group relative overflow-hidden rounded-lg glass-module h-72 flex flex-col justify-between p-6 transition-transform hover:scale-[1.02] duration-300">
+<div class="absolute inset-0 z-0">
+<img alt="" class="w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-opacity duration-500" data-alt="lush green volcanic landscape of jeju island with hallasan mountain in the background under soft daylight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzl3h_JWZzAiYP1Zynrh1a7qjUg1wIN4Odl-uOfcLnxRBj7iDrWCeWvaKqh5vAgoXPHXwyZZxTyVkTtPNYH-qMs1yDXtSllh5HiIucxT4H0nOX0dhrGSXaHvb0JqgecvwSU9xFzpLOgYYt6CaJYzcPt1AQK20Bzr1Q9xEiX7PPPQWPWXZaqnP088WY6FUb_cwmLGyizd7HRFgyId-25WVlZbMDbzCWW98y-99UzcDim7QYsPkJXQDRyH8NgcRXYjdrScKqUH_9g-HS" style=""/>
+</div>
+<div class="relative z-10 flex justify-between items-start">
+<div class="flex-1 mr-2">
+<div class="flex items-center gap-1 mb-1">
+<h3 class="font-headline font-bold text-2xl tracking-tight text-on-surface" style="">Jeju</h3>
+<span class="material-symbols-outlined text-sm text-outline cursor-pointer hover:text-primary transition-colors management-mode:inline hidden" style="">edit</span>
+</div>
+<div class="relative">
+<p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant/70" style="">Island Escape</p>
+<span class="management-mode:inline hidden absolute right-0 top-0 text-[8px] font-medium text-outline" style="">13/15</span>
+</div>
+</div>
+<span class="fav-icon material-symbols-outlined text-primary" style='font-variation-settings: "FILL" 1;'>favorite</span>
+<div class="flex flex-col gap-2 items-end">
+<div class="drag-handle items-center justify-center w-8 h-8 rounded-full bg-black/40 border border-white/10 cursor-grab active:cursor-grabbing">
+<span class="material-symbols-outlined text-on-surface opacity-50" style="">drag_handle</span>
+</div>
+<div class="reorder-btns flex flex-col gap-1">
+<button class="p-1 rounded bg-black/40 border border-white/10 hover:bg-black/60 transition-colors" style=""><span class="material-symbols-outlined text-xs" style="">keyboard_arrow_up</span></button>
+<button class="p-1 rounded bg-black/40 border border-white/10 hover:bg-black/60 transition-colors" style=""><span class="material-symbols-outlined text-xs" style="">keyboard_arrow_down</span></button>
+</div>
+</div>
+</div>
+<div class="relative z-10 flex flex-col">
+<div class="flex items-end justify-between">
+<span class="font-headline text-6xl font-extrabold text-on-surface leading-none" style="">19°</span>
+<span class="text-[10px] font-medium text-on-surface-variant opacity-60 mb-2" style="">Updated 45m ago</span>
+</div>
+<div class="flex gap-4 mt-2">
+<div class="bg-white/5 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5">
+<span class="text-[10px] font-bold text-on-surface/50" style="">H</span>
+<span class="text-xs font-bold text-on-surface" style="">22°</span>
+</div>
+<div class="bg-white/5 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5">
+<span class="text-[10px] font-bold text-on-surface/50" style="">L</span>
+<span class="text-xs font-bold text-on-surface" style="">17°</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 5: Daegu -->
+<div class="group relative overflow-hidden rounded-lg glass-module h-72 flex flex-col justify-between p-6 transition-transform hover:scale-[1.02] duration-300">
+<div class="absolute inset-0 z-0">
+<img alt="" class="w-full h-full object-cover opacity-15 group-hover:opacity-35 transition-opacity duration-500" data-alt="bright sunny day in daegu city center with vibrant summer light and clear blue sky" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRY7f-zM0IFFi_U44_X7oKlHUMQZ6ze-BH7gG3HMq6U6DLWK6KjRg4Kd27Ju85DAWQlJFwXKT3JZTf45KvCzeMTFOfdRoYrT1P4_Ty1kiAW0mEbOBfxo6ElhWBUvw5zdm4NJ-HAB5qtsaMLh7dtAvuYJWj7msYZ0-ObYjd6YdJDbZWzjTO8RSOsrad5nuQUom_894YUekyWqHhrFHJKutx1rvXxSVaYES7y0kBZ3oyN2_lmLtugCj2GFVVcRgUUu_cD4epavP2jb2O" style=""/>
+</div>
+<div class="relative z-10 flex justify-between items-start">
+<div class="flex-1 mr-2">
+<div class="flex items-center gap-1 mb-1">
+<h3 class="font-headline font-bold text-2xl tracking-tight text-on-surface" style="">Daegu</h3>
+<span class="material-symbols-outlined text-sm text-outline cursor-pointer hover:text-primary transition-colors management-mode:inline hidden" style="">edit</span>
+</div>
+<div class="relative">
+<p class="text-[10px] font-bold tracking-[0.2em] uppercase text-on-surface-variant/70" style="">Warm Interior</p>
+<span class="management-mode:inline hidden absolute right-0 top-0 text-[8px] font-medium text-outline" style="">13/15</span>
+</div>
+</div>
+<span class="fav-icon material-symbols-outlined text-primary" style='font-variation-settings: "FILL" 1;'>favorite</span>
+<div class="flex flex-col gap-2 items-end">
+<div class="drag-handle items-center justify-center w-8 h-8 rounded-full bg-black/40 border border-white/10 cursor-grab active:cursor-grabbing">
+<span class="material-symbols-outlined text-on-surface opacity-50" style="">drag_handle</span>
+</div>
+<div class="reorder-btns flex flex-col gap-1">
+<button class="p-1 rounded bg-black/40 border border-white/10 hover:bg-black/60 transition-colors" style=""><span class="material-symbols-outlined text-xs" style="">keyboard_arrow_up</span></button>
+<button class="p-1 rounded bg-black/40 border border-white/10 hover:bg-black/60 transition-colors" style=""><span class="material-symbols-outlined text-xs" style="">keyboard_arrow_down</span></button>
+</div>
+</div>
+</div>
+<div class="relative z-10 flex flex-col">
+<div class="flex items-end justify-between">
+<span class="font-headline text-6xl font-extrabold text-on-surface leading-none" style="">27°</span>
+<span class="text-[10px] font-medium text-on-surface-variant opacity-60 mb-2" style="">Updated 2m ago</span>
+</div>
+<div class="flex gap-4 mt-2">
+<div class="bg-white/5 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5">
+<span class="text-[10px] font-bold text-on-surface/50" style="">H</span>
+<span class="text-xs font-bold text-on-surface" style="">31°</span>
+</div>
+<div class="bg-white/5 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5">
+<span class="text-[10px] font-bold text-on-surface/50" style="">L</span>
+<span class="text-xs font-bold text-on-surface" style="">21°</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Empty slot -->
+<div class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-outline-variant/30 rounded-lg group hover:bg-surface-container-low transition-colors cursor-pointer min-h-[18rem]">
+<span class="material-symbols-outlined text-4xl text-outline mb-4 group-hover:text-primary transition-colors" style="">add</span>
+<span class="font-headline font-bold text-sm text-outline-variant" style="">Add 6th location</span>
+<p class="text-[10px] text-outline opacity-50 mt-1 uppercase tracking-widest" style="">Limit reached at 6</p>
+</div>
+</div>
+<!-- Add New Location Prompt -->
+<a class="mt-12 flex flex-col items-center justify-center p-12 border-2 border-dashed border-outline-variant/30 rounded-lg group hover:bg-surface-container-low transition-colors cursor-pointer" href="{{DATA:SCREEN:SCREEN_9}}" style="">
+<span class="material-symbols-outlined text-4xl text-outline mb-4 group-hover:text-primary transition-colors" style="">explore</span>
+<span class="font-headline font-bold text-lg text-outline-variant" style="">Find a new favorite</span>
+</a>
+</main>
+<!-- BottomNavBar Component -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-6 pt-3 bg-black/60 backdrop-blur-[20px] rounded-t-[32px] shadow-[0px_-10px_24px_rgba(0,0,0,0.3)] border-t border-white/5">
+<a class="flex flex-col items-center justify-center text-on-surface/60 px-5 py-2 hover:text-primary transition-colors active:scale-90 transition-transform duration-200" href="{{DATA:SCREEN:SCREEN_11}}" style="">
+<span class="material-symbols-outlined mb-1" style="">home</span>
+<span class="font-label text-[10px] font-medium tracking-wide" style="">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface/60 px-5 py-2 hover:text-primary transition-colors active:scale-90 transition-transform duration-200" href="{{DATA:SCREEN:SCREEN_9}}" style="">
+<span class="material-symbols-outlined mb-1" style="">search</span>
+<span class="font-label text-[10px] font-medium tracking-wide" style="">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary bg-white/5 rounded-full px-5 py-2 active:scale-90 transition-transform duration-200" href="{{DATA:SCREEN:SCREEN_8}}" style="">
+<span class="material-symbols-outlined mb-1" style='font-variation-settings: "FILL" 1;'>favorite</span>
+<span class="font-label text-[10px] font-medium tracking-wide" style="">Favorites</span>
+</a>
+</nav>
+</body></html>

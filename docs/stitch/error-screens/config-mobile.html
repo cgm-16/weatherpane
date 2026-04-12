@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Weatherpane - Settings Update Needed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Be+Vietnam+Pro:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#f0eded",
+                        "primary": "#ba0036",
+                        "on-background": "#1b1c1c",
+                        "inverse-on-surface": "#f3f0ef",
+                        "secondary-container": "#e3e2e2",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#eae7e7",
+                        "background": "#fcf9f8",
+                        "outline": "#906f70",
+                        "on-primary-container": "#fffbff",
+                        "surface-dim": "#dcd9d9",
+                        "inverse-surface": "#303030",
+                        "on-error": "#ffffff",
+                        "outline-variant": "#e5bdbe",
+                        "on-tertiary-fixed-variant": "#005234",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#fcf9f8",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#e5e2e1",
+                        "secondary-fixed": "#e3e2e2",
+                        "primary-fixed-dim": "#ffb2b6",
+                        "inverse-primary": "#ffb2b6",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#ffdada",
+                        "tertiary-fixed": "#80f9bd",
+                        "surface": "#fcf9f8",
+                        "on-surface-variant": "#5c3f41",
+                        "surface-variant": "#e5e2e1",
+                        "primary-container": "#e21e4a",
+                        "on-secondary-container": "#646464",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#f6f3f2",
+                        "tertiary": "#006a45",
+                        "on-surface": "#1b1c1c",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "surface-tint": "#be0038",
+                        "secondary": "#5e5e5e",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#920029",
+                        "on-primary-fixed": "#40000d",
+                        "tertiary-fixed": "#80f9bd",
+                        "on-tertiary-fixed": "#002113",
+                        "on-secondary-fixed-variant": "#464747",
+                        "tertiary-fixed-dim": "#62dca3",
+                        "secondary-fixed-dim": "#c7c6c6",
+                        "on-tertiary-container": "#f6fff6",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Be Vietnam Pro"],
+                        "label": ["Be Vietnam Pro"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background-color: rgba(229, 226, 225, 0.5); /* surface-container-highest at 50% */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface overflow-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-6 h-16 bg-zinc-950/50 backdrop-blur-[20px]">
+<div class="flex items-center gap-4">
+<button class="text-[#ffb2b6] hover:bg-zinc-800/40 transition-colors rounded-full p-2 active:duration-150 scale-95">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="font-['Plus_Jakarta_Sans'] font-bold text-lg tracking-tight text-[#ffb2b6]">Busan, South Korea</h1>
+</div>
+<div class="flex items-center">
+<button class="text-[#ffb2b6] hover:bg-zinc-800/40 transition-colors rounded-full p-2 active:duration-150 scale-95">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</header>
+<!-- Main Canvas with Background Image -->
+<main class="relative h-screen w-full flex items-center justify-center px-6 pt-16 pb-20">
+<!-- Editorial Background -->
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover brightness-95" data-alt="Dreamy out-of-focus soft morning light hitting the lush green peaks of mountains in South Korea with ethereal misty valleys" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDApG2T4N1rn4-y9puFEDG1BfR1bi9MCuPxDulR2vSM5G8PyyUY_9vt_r3vGTxxQQZCYeumzyhYusIF1hWQAqFnvhBIFRh4DUkG_JAZmXNFyRjh62Xsly2mCoStpubX6AVA0WkxukfjmYQwD0s4cYuAf2ClinuAyTfaFpChNx3Bm-4NQFQUb65KZGdSPJZCCEekenfkgxVU7ykqL2-lMx1kvGqZtINJUSpjgDfKfQHqI6B-v3-7zsnUdK-5rj8qrEphPX4xsHQbejrH"/>
+<div class="absolute inset-0 bg-white/10 backdrop-blur-[2px]"></div>
+</div>
+<!-- Content Container -->
+<div class="relative z-10 w-full max-w-md flex flex-col items-center bg-white/50 backdrop-blur-[20px] p-8 rounded-xl shadow-2xl border border-white/20">
+<!-- Icon & Headline -->
+<div class="mb-8 text-center">
+<div class="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 glass-panel" style="background-color: rgba(255, 56, 92, 0.1);">
+<span class="material-symbols-outlined text-primary text-4xl" style="color: #ff385c; font-variation-settings: 'FILL' 1;">error</span>
+</div>
+<h2 class="font-headline font-extrabold text-3xl text-on-surface tracking-tight mb-3" style="color: #222222;">Settings Update Needed</h2>
+<p class="font-body text-on-surface-variant leading-relaxed text-balance px-4" style="color: #222222;">
+                    Your travel concierge needs a quick adjustment. It looks like an API key or location setting is missing.
+                </p>
+</div>
+<!-- Bento-style Fixes Grid -->
+<div class="w-full grid grid-cols-1 gap-3 mb-8">
+<!-- Fix Item 1 -->
+<div class="glass-panel p-4 rounded-lg flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="key">key</span>
+</div>
+<div class="flex-1">
+<p class="font-headline font-bold text-sm text-on-surface">Validate API Secret</p>
+<p class="font-body text-xs text-on-surface-variant opacity-80" style="color: #222222;">Refresh weather provider credentials</p>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+<!-- Fix Item 2 -->
+<div class="glass-panel p-4 rounded-lg flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="location_on">location_on</span>
+</div>
+<div class="flex-1">
+<p class="font-headline font-bold text-sm text-on-surface">Enable Permissions</p>
+<p class="font-body text-xs text-on-surface-variant opacity-80" style="color: #222222;">Allow precise location tracking</p>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+</div>
+<!-- Actions -->
+<div class="w-full space-y-3">
+<button class="w-full h-14 text-on-primary font-headline font-bold rounded-sm shadow-lg hover:bg-primary-container transition-all active:scale-95" style="background-color: #ff385c; color: white;">
+                    Open Settings
+                </button>
+<button class="w-full h-14 bg-secondary-container text-on-secondary-fixed font-headline font-bold rounded-sm hover:bg-surface-container-highest transition-all active:scale-95 border border-zinc-200">
+                    Try Again
+                </button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pb-safe h-20 bg-zinc-950/50 backdrop-blur-[20px] shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
+<!-- Home -->
+<a class="flex flex-col items-center justify-center text-zinc-500 py-2 hover:text-zinc-200 transition-all Active: scale-90 duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-semibold uppercase tracking-wider">Home</span>
+</a>
+<!-- Search -->
+<a class="flex flex-col items-center justify-center text-zinc-500 py-2 hover:text-zinc-200 transition-all Active: scale-90 duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="search">search</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-semibold uppercase tracking-wider">Search</span>
+</a>
+<!-- Favorites -->
+<a class="flex flex-col items-center justify-center text-[#ff385c] py-2 hover:text-zinc-200 transition-all Active: scale-90 duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-semibold uppercase tracking-wider">Favorites</span>
+</a>
+</nav>
+</body></html>

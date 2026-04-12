@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#fcf9f8",
+                    "on-primary-fixed": "#40000d",
+                    "on-tertiary-container": "#f6fff6",
+                    "on-tertiary-fixed": "#002113",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#e21e4a",
+                    "on-secondary-fixed-variant": "#464747",
+                    "inverse-on-surface": "#f3f0ef",
+                    "on-primary-container": "#fffbff",
+                    "on-surface-variant": "#5c3f41",
+                    "on-primary-fixed-variant": "#920029",
+                    "primary-fixed-dim": "#ffb2b6",
+                    "surface": "#fcf9f8",
+                    "surface-container-low": "#f6f3f2",
+                    "secondary-container": "#e3e2e2",
+                    "on-surface": "#1b1c1c",
+                    "outline": "#906f70",
+                    "tertiary-fixed-dim": "#62dca3",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed-dim": "#c7c6c6",
+                    "inverse-surface": "#303030",
+                    "surface-container": "#f0eded",
+                    "surface-tint": "#be0038",
+                    "on-secondary-container": "#646464",
+                    "surface-dim": "#dcd9d9",
+                    "surface-variant": "#e5e2e1",
+                    "tertiary-fixed": "#80f9bd",
+                    "on-background": "#1b1c1c",
+                    "outline-variant": "#e5bdbe",
+                    "surface-bright": "#fcf9f8",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#ffb2b6",
+                    "on-tertiary-fixed-variant": "#005234",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "surface-container-highest": "#e5e2e1",
+                    "on-primary": "#ffffff",
+                    "surface-container-high": "#eae7e7",
+                    "primary-fixed": "#ffdada",
+                    "error": "#ba1a1a",
+                    "primary": "#ba0036",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "tertiary": "#006a45",
+                    "tertiary-container": "#008558",
+                    "secondary-fixed": "#e3e2e2",
+                    "secondary": "#5e5e5e",
+                    "surface-container-lowest": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Be Vietnam Pro"],
+                    "label": ["Be Vietnam Pro"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .editorial-overlay {
+            background: linear-gradient(to bottom, rgba(27, 28, 28, 0.4) 0%, rgba(27, 28, 28, 0.2) 40%, rgba(252, 249, 248, 0.8) 90%);
+        }
+        .glass-module {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+<style>
+        body {
+          min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    /* Custom Scrollbar for Glass Aesthetic */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 9999px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 9999px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Light mode specific thumb if necessary, though glass works for both */
+    body:not(.dark) ::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.1);
+    }
+    body:not(.dark) ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.2);
+    }
+</style></head>
+<body class="bg-background text-on-surface font-body antialiased">
+<!-- Top Navigation -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-6 py-4 h-16 bg-white/50 backdrop-blur-xl border-b border-white/20">
+<a class="w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-md active:scale-95 transition-transform bg-black/5" href="{{DATA:SCREEN:SCREEN_11}}">
+<span class="material-symbols-outlined text-[#222222] drop-shadow-sm">arrow_back</span>
+</a>
+<div class="flex flex-col items-center">
+<h1 class="font-headline font-bold text-lg tracking-tight text-[#222222] drop-shadow-sm">Busan</h1>
+<span class="text-[10px] font-medium tracking-[0.2em] uppercase text-[#222222]/60 drop-shadow-sm">South Korea</span>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-md active:scale-95 transition-transform bg-black/5">
+<span class="material-symbols-outlined text-[#222222] drop-shadow-sm">more_horiz</span>
+</button>
+</header>
+<!-- Hero Section -->
+<main class="relative min-h-screen pb-32">
+<div class="absolute top-0 left-0 w-full h-[751px] z-0">
+<img alt="Busan Skyline" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMNPS3jM2Imlt5X7hJntm4wrqw8X94TnRnuuhyBA7a1RIDzhOwSfw6aUHeamhG5P4LigYZPKYhjB1XS4rPbJHLWUbMxhFpV9IrF53ZmveMD64jFv2TUEcgi5R9k38NjRj_gYRufSdYlm1Ew6sg7MiEEdmvhSYFijolQquqqjfrmjCs0KSFZHrHJjgHZ--6VFPCGHUYPsUAu9i8dxlOXi6S2pe7qVc5GSs9jSfgfpsJWtAxP9RR7AVObBeQQK90UE5FCrttfHzAYfqS"/>
+<div class="absolute inset-0 editorial-overlay"></div>
+</div>
+<!-- Atmospheric Current Condition -->
+<section class="relative z-10 pt-32 px-8 flex flex-col items-center text-center">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-white/90" style="font-variation-settings: 'FILL' 1;">cloudy_filled</span>
+<span class="font-label font-medium text-white/90 tracking-wide">Scattered Clouds</span>
+</div>
+<h2 class="font-headline font-extrabold text-[120px] leading-none text-white tracking-tighter mb-4">
+                19°
+            </h2>
+<div class="flex gap-4 mb-12">
+<div class="glass-module px-4 py-2 rounded-full flex items-center gap-2">
+<span class="text-white/60 text-xs font-medium">H</span>
+<span class="text-white font-semibold">22°</span>
+</div>
+<div class="glass-module px-4 py-2 rounded-full flex items-center gap-2">
+<span class="text-white/60 text-xs font-medium">L</span>
+<span class="text-white font-semibold">14°</span>
+</div>
+</div>
+<!-- Detailed Stats Bento Grid -->
+<div class="w-full grid grid-cols-2 gap-4 mt-8">
+<div class="glass-module p-6 rounded-lg flex flex-col items-start gap-4 text-left shadow-[0px_4px_12px_rgba(27,28,28,0.04)]">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-lg">air</span>
+<span class="font-label text-xs font-semibold uppercase tracking-wider">Wind</span>
+</div>
+<div>
+<div class="text-2xl font-headline font-bold">12 <span class="text-sm font-medium text-on-surface-variant">km/h</span></div>
+<div class="text-[10px] text-on-surface-variant/70 mt-1 uppercase tracking-widest font-bold">Northwest</div>
+</div>
+</div>
+<div class="glass-module p-6 rounded-lg flex flex-col items-start gap-4 text-left shadow-[0px_4px_12px_rgba(27,28,28,0.04)]">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-lg">humidity_mid</span>
+<span class="font-label text-xs font-semibold uppercase tracking-wider">Humidity</span>
+</div>
+<div>
+<div class="text-2xl font-headline font-bold">64%</div>
+<div class="text-[10px] text-on-surface-variant/70 mt-1 uppercase tracking-widest font-bold">Dew point 11°</div>
+</div>
+</div>
+<div class="glass-module p-6 rounded-lg flex flex-col items-start gap-4 text-left shadow-[0px_4px_12px_rgba(27,28,28,0.04)]">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-lg">wb_sunny</span>
+<span class="font-label text-xs font-semibold uppercase tracking-wider">UV Index</span>
+</div>
+<div>
+<div class="text-2xl font-headline font-bold">Moderate</div>
+<div class="text-[10px] text-on-surface-variant/70 mt-1 uppercase tracking-widest font-bold">Index 4 of 11</div>
+</div>
+</div>
+<div class="glass-module p-6 rounded-lg flex flex-col items-start gap-4 text-left shadow-[0px_4px_12px_rgba(27,28,28,0.04)]">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-lg">visibility</span>
+<span class="font-label text-xs font-semibold uppercase tracking-wider">Visibility</span>
+</div>
+<div>
+<div class="text-2xl font-headline font-bold">10 <span class="text-sm font-medium text-on-surface-variant">km</span></div>
+<div class="text-[10px] text-on-surface-variant/70 mt-1 uppercase tracking-widest font-bold">Clear View</div>
+</div>
+</div>
+</div>
+<!-- Hourly Forecast Section -->
+<div class="w-full mt-12 text-left">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline font-bold text-xl">Hourly Forecast</h3>
+<span class="text-primary font-label text-xs font-bold uppercase tracking-widest">Next 24h</span>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-4 -mx-8 px-8">
+<div class="flex-shrink-0 w-20 flex flex-col items-center gap-4 py-6 rounded-lg bg-primary-container text-on-primary-container shadow-lg">
+<span class="text-[10px] font-bold uppercase tracking-widest">Now</span>
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">cloudy</span>
+<span class="font-headline font-bold text-lg">19°</span>
+</div>
+<div class="flex-shrink-0 w-20 flex flex-col items-center gap-4 py-6 rounded-lg glass-module">
+<span class="text-[10px] font-bold text-on-surface-variant/60 uppercase tracking-widest">2PM</span>
+<span class="material-symbols-outlined text-3xl text-on-surface-variant">partly_cloudy_day</span>
+<span class="font-headline font-bold text-lg">21°</span>
+</div>
+<div class="flex-shrink-0 w-20 flex flex-col items-center gap-4 py-6 rounded-lg glass-module">
+<span class="text-[10px] font-bold text-on-surface-variant/60 uppercase tracking-widest">3PM</span>
+<span class="material-symbols-outlined text-3xl text-on-surface-variant">sunny</span>
+<span class="font-headline font-bold text-lg">22°</span>
+</div>
+<div class="flex-shrink-0 w-20 flex flex-col items-center gap-4 py-6 rounded-lg glass-module">
+<span class="text-[10px] font-bold text-on-surface-variant/60 uppercase tracking-widest">4PM</span>
+<span class="material-symbols-outlined text-3xl text-on-surface-variant">sunny</span>
+<span class="font-headline font-bold text-lg">22°</span>
+</div>
+<div class="flex-shrink-0 w-20 flex flex-col items-center gap-4 py-6 rounded-lg glass-module">
+<span class="text-[10px] font-bold text-on-surface-variant/60 uppercase tracking-widest">5PM</span>
+<span class="material-symbols-outlined text-3xl text-on-surface-variant">wb_twilight</span>
+<span class="font-headline font-bold text-lg">18°</span>
+</div>
+</div>
+</div>
+<!-- Daily Forecast -->
+<div class="w-full mt-12 text-left">
+<div class="flex items-center justify-between mb-8">
+<h3 class="font-headline font-bold text-xl text-on-surface">Daily Forecast</h3>
+</div>
+<div class="space-y-1">
+<div class="flex items-center justify-between py-6 px-4 glass-module rounded-lg">
+<span class="w-20 font-bold text-on-surface">Tomorrow</span>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">sunny</span>
+<span class="text-xs font-medium text-on-surface-variant/70">Clear</span>
+</div>
+<div class="flex gap-4 w-20 justify-end">
+<span class="font-bold">24°</span>
+<span class="font-medium text-on-surface-variant/50">16°</span>
+</div>
+</div>
+<div class="flex items-center justify-between py-6 px-4">
+<span class="w-20 font-bold text-on-surface">Wednesday</span>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">partly_cloudy_day</span>
+<span class="text-xs font-medium text-on-surface-variant/70">P. Cloudy</span>
+</div>
+<div class="flex gap-4 w-20 justify-end">
+<span class="font-bold">22°</span>
+<span class="font-medium text-on-surface-variant/50">15°</span>
+</div>
+</div>
+<div class="flex items-center justify-between py-6 px-4 glass-module rounded-lg">
+<span class="w-20 font-bold text-on-surface">Thursday</span>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">rainy</span>
+<span class="text-xs font-medium text-primary">Rain</span>
+</div>
+<div class="flex gap-4 w-20 justify-end">
+<span class="font-bold text-primary">18°</span>
+<span class="font-medium text-on-surface-variant/50">12°</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Dynamic Map Module -->
+<div class="w-full mt-12 h-64 rounded-lg overflow-hidden relative shadow-inner">
+<img alt="Busan Map" class="w-full h-full object-cover grayscale opacity-40" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8wNHlMbOoA7foyu4PKfsk5CaKjLMAaVETxEpxpkjoIBljbB1JtnBxv280EIoRNR78swTCpiGWlnoUwGJjm1QMwbRMP_d_S8SCkdcA83G7Stzns9Epelf4gkUBXEprXhzJR8L-R7pXnsnO8ELBv2H4KfxNCX2pferlsV18SFRZ5AZVPZVRET_Fxe9GExIk5VqtHPuNkQcJhKv76ThneXoY26rZVIXE4Rwf8QjLbE8cEmJbBcObmo3WMou9vtAJoIsLO_HJNSFuw6jq"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="bg-primary/90 text-white px-6 py-3 rounded-full font-bold flex items-center gap-3 shadow-2xl active:scale-95 transition-transform cursor-pointer">
+<span class="material-symbols-outlined">map</span>
+                        View Precipitation Map
+                    </div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-6 pt-3 backdrop-blur-xl border-t shadow-[0px_-10px_24px_rgba(27,28,28,0.04)] rounded-t-[32px] bg-white/50 dark:bg-stone-900/50 border-white/20">
+<a class="flex flex-col items-center justify-center text-[#1b1c1c]/60 dark:text-[#fcf9f8]/60 px-5 py-2 hover:text-[#ba0036] transition-colors active:scale-90" href="{{DATA:SCREEN:SCREEN_11}}">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium tracking-wide">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#ba0036] dark:text-[#e21e4a] bg-black/5 dark:bg-stone-800 rounded-full px-5 py-2 active:scale-90" href="{{DATA:SCREEN:SCREEN_9}}">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">search</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium tracking-wide">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#1b1c1c]/60 dark:text-[#fcf9f8]/60 px-5 py-2 hover:text-[#ba0036] transition-colors active:scale-90" href="{{DATA:SCREEN:SCREEN_8}}">
+<span class="material-symbols-outlined mb-1">favorite</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium tracking-wide">Favorites</span>
+</a>
+</nav>
+</body></html>

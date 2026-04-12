@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#e5bdbe",
+                        "on-secondary-fixed": "#40000d",
+                        "primary-fixed-dim": "#ffb2b6",
+                        "on-tertiary-fixed-variant": "#005234",
+                        "outline": "#ac8889",
+                        "error-container": "#93000a",
+                        "tertiary-container": "#1aa570",
+                        "surface-tint": "#ffb2b6",
+                        "inverse-on-surface": "#313030",
+                        "secondary": "#ffb2b6",
+                        "on-secondary-fixed-variant": "#871d2f",
+                        "on-primary-fixed-variant": "#920029",
+                        "tertiary-fixed-dim": "#62dca3",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#5b0016",
+                        "surface-container-highest": "#353535",
+                        "on-primary-fixed": "#40000d",
+                        "tertiary-fixed": "#80f9bd",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "surface-bright": "#393939",
+                        "surface-container-low": "#1c1b1b",
+                        "on-background": "#e5e2e1",
+                        "inverse-primary": "#be0038",
+                        "inverse-surface": "#e5e2e1",
+                        "on-tertiary-container": "#00311e",
+                        "secondary-fixed": "#ffdada",
+                        "surface-dim": "#131313",
+                        "primary": "#ffb2b6",
+                        "on-surface": "#e5e2e1",
+                        "outline-variant": "#5c3f41",
+                        "on-primary": "#68001a",
+                        "on-tertiary": "#003823",
+                        "surface-variant": "#353535",
+                        "on-secondary-container": "#ff9da3",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#ffdada",
+                        "on-secondary": "#67001a",
+                        "tertiary": "#62dca3",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-container": "#20201f",
+                        "primary-container": "#ff5169",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-container-high": "#2a2a2a",
+                        "secondary-fixed-dim": "#ffb2b6",
+                        "secondary-container": "#8a1f31",
+                        "on-error": "#690005"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }
+.bg-busan-sketch {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuDFXFXmBwf626gOSoANbCjUUpWKz8KaLrWY-MHh3f-5Q6CgOoSF8oVuex5lclQrrVLYptairq5BUG_EX-mgeCauuv07dtM8IK4HjBPTOwbmpx88zdkUhzPAJd3A58tgMnMbICHkl4kuz4k5zb1xD2piUotpJBkt2Tc8BHq3wJvgv-qCicQAXPg_XZInCcIbWlpavVrl9VPKdWOVEikx7Zt_xZuOxrHlE9WynK_Zxi3sKcs91N1nqIhsTsbJ735ji_sklWF2Rsn-sKst);
+    background-size: cover;
+    background-position: center
+    }
+.glass-panel {
+    background: rgba(53, 53, 53, 0.5);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px)
+    }</style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30">
+<!-- SideNavBar (Mandatory Shell) -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-[#131313] flex flex-col py-8 px-4 z-50">
+<div class="mb-12 px-4">
+<h1 class="text-xl font-bold tracking-tighter text-[#ffb2b6] font-headline">Weatherpane</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant/60 mt-1">기상청</p>
+</div>
+<div class="space-y-2 flex-grow">
+<!-- Home (Inactive) -->
+<a class="flex items-center gap-4 px-4 py-3 rounded-full text-[#e5bdbe] hover:text-[#e5e2e1] hover:bg-[#2a2a2a] transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-medium text-sm tracking-tight">Home</span>
+</a>
+<!-- Search (Active - context: Weather Detail for Busan) -->
+<a class="flex items-center gap-4 px-4 py-3 rounded-full text-[#ffb2b6] font-bold border-r-2 border-[#ffb2b6] bg-[#2a2a2a]/40" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="font-medium text-sm tracking-tight">Search</span>
+</a>
+<!-- Favorites (Inactive) -->
+<a class="flex items-center gap-4 px-4 py-3 rounded-full text-[#e5bdbe] hover:text-[#e5e2e1] hover:bg-[#2a2a2a] transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">grade</span>
+<span class="font-medium text-sm tracking-tight">Favorites</span>
+</a>
+</div>
+<div class="px-4 pt-8 mt-auto flex items-center justify-between">
+<div class="flex items-center gap-3">
+<img alt="User profile" class="w-8 h-8 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWgQe_ZwvBE2PG7CCg_ICbbBKCNKZ_tSkvZeSVQYbwfBGZ5rBwK-364Gq2r2ZWDnzNSb9bTiIhPcDsush-cR_MREo_dAqRXpVwLjZBoAAEjXZT3F-_mJEISEGlCV6Hme6fKDyQZPXmQfW7HsPx4dHG-V7rVgrGlTktd1EestHwjdyIMI7o7e9j2Y0IgCb-kVVjpX-a02o-XK9YArqsXtfZn33oz3zUbNHSstIZYunYPCZgD2g5C1uX1AphEMq9xjQJwW7V_AIWFmoC"/>
+<span class="text-xs font-semibold text-on-surface">Curator</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">settings</span>
+</div>
+</nav>
+<!-- TopNavBar (Mandatory Shell) -->
+<header class="fixed top-0 right-0 left-64 h-16 flex justify-between items-center px-8 z-40 bg-[#353535]/50 backdrop-blur-xl shadow-xl shadow-black/20">
+<div class="flex items-center bg-surface-container-low/40 rounded-full px-4 py-1.5 min-w-[320px]">
+<span class="material-symbols-outlined text-on-surface-variant text-sm mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-on-surface-variant/50 w-full" placeholder="Search other cities..." type="text"/>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-all cursor-pointer">
+<span class="material-symbols-outlined text-[20px]">location_on</span>
+<span class="text-sm font-medium">Busan, KR</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-all">help_outline</span>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-all">settings</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 min-h-screen relative overflow-hidden bg-busan-sketch" data-alt="minimalist architectural sketch of Busan Haeundae beach skyline and Diamond Bridge at night with deep navy and charcoal tones">
+<!-- Overlay for contrast -->
+<div class="absolute inset-0 bg-gradient-to-br from-background via-background/80 to-transparent"></div>
+<div class="relative z-10 p-10 max-w-7xl mx-auto grid grid-cols-12 gap-8">
+<!-- Hero Weather Section -->
+<section class="col-span-12 lg:col-span-8 space-y-8">
+<div class="flex flex-col md:flex-row md:items-end gap-6">
+<div class="flex flex-col">
+<span class="text-primary font-bold tracking-[0.2em] text-xs mb-2 uppercase">Current Conditions</span>
+<h2 class="text-7xl font-extrabold tracking-tighter text-on-surface font-headline">Busan</h2>
+<p class="text-on-surface-variant text-sm mt-1">Last updated 5 mins ago</p>
+</div>
+<div class="flex items-center gap-4 ml-auto pb-2">
+<div class="text-[120px] font-thin leading-none text-on-surface tracking-tighter">19°</div>
+<div class="flex flex-col mb-4">
+<span class="material-symbols-outlined text-primary text-5xl" style="font-variation-settings: 'FILL' 1;">partly_cloudy_night</span>
+<span class="text-lg font-medium text-on-surface-variant">Clear Night</span>
+</div>
+</div>
+</div>
+<!-- Hourly Forecast (Bento Style) -->
+<div class="glass-panel p-8 rounded-lg">
+<div class="flex justify-between items-center mb-8">
+<h3 class="text-lg font-bold tracking-tight">Hourly Forecast</h3>
+<span class="text-xs text-primary font-bold uppercase tracking-widest">Next 24 Hours</span>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+<!-- Hour Card 1 -->
+<div class="flex-shrink-0 w-24 p-4 rounded-xl bg-surface-container/40 flex flex-col items-center gap-3 border border-outline-variant/10">
+<span class="text-xs font-semibold text-on-surface-variant">20:00</span>
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">nightlight</span>
+<span class="text-lg font-bold">18°</span>
+</div>
+<!-- Hour Card 2 -->
+<div class="flex-shrink-0 w-24 p-4 rounded-xl bg-primary-container text-on-primary-container flex flex-col items-center gap-3 shadow-lg shadow-primary/20">
+<span class="text-xs font-bold">Now</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">partly_cloudy_night</span>
+<span class="text-lg font-bold">19°</span>
+</div>
+<!-- Hour Card 3 -->
+<div class="flex-shrink-0 w-24 p-4 rounded-xl bg-surface-container/40 flex flex-col items-center gap-3 border border-outline-variant/10">
+<span class="text-xs font-semibold text-on-surface-variant">22:00</span>
+<span class="material-symbols-outlined text-primary">cloudy_filled</span>
+<span class="text-lg font-bold">17°</span>
+</div>
+<!-- Hour Card 4 -->
+<div class="flex-shrink-0 w-24 p-4 rounded-xl bg-surface-container/40 flex flex-col items-center gap-3 border border-outline-variant/10">
+<span class="text-xs font-semibold text-on-surface-variant">23:00</span>
+<span class="material-symbols-outlined text-primary">cloudy_filled</span>
+<span class="text-lg font-bold">16°</span>
+</div>
+<!-- Hour Card 5 -->
+<div class="flex-shrink-0 w-24 p-4 rounded-xl bg-surface-container/40 flex flex-col items-center gap-3 border border-outline-variant/10">
+<span class="text-xs font-semibold text-on-surface-variant">00:00</span>
+<span class="material-symbols-outlined text-primary">bedtime</span>
+<span class="text-lg font-bold">15°</span>
+</div>
+<!-- Hour Card 6 -->
+<div class="flex-shrink-0 w-24 p-4 rounded-xl bg-surface-container/40 flex flex-col items-center gap-3 border border-outline-variant/10">
+<span class="text-xs font-semibold text-on-surface-variant">01:00</span>
+<span class="material-symbols-outlined text-primary">bedtime</span>
+<span class="text-lg font-bold">15°</span>
+</div>
+</div>
+</div>
+<!-- Detailed Specs Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="surface-container p-6 rounded-lg flex flex-col gap-4 border border-outline-variant/5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">air</span>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Wind</span>
+</div>
+<div>
+<span class="text-2xl font-bold">12</span>
+<span class="text-sm text-on-surface-variant ml-1">km/h</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-primary w-1/3 h-full"></div>
+</div>
+</div>
+<div class="surface-container p-6 rounded-lg flex flex-col gap-4 border border-outline-variant/5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">humidity_percentage</span>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Humidity</span>
+</div>
+<div>
+<span class="text-2xl font-bold">64</span>
+<span class="text-sm text-on-surface-variant ml-1">%</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-primary w-2/3 h-full"></div>
+</div>
+</div>
+<div class="surface-container p-6 rounded-lg flex flex-col gap-4 border border-outline-variant/5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">light_mode</span>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">UV Index</span>
+</div>
+<div>
+<span class="text-2xl font-bold">0</span>
+<span class="text-sm text-on-surface-variant ml-1">Low</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-primary w-[2%] h-full"></div>
+</div>
+</div>
+<div class="surface-container p-6 rounded-lg flex flex-col gap-4 border border-outline-variant/5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">visibility</span>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Visibility</span>
+</div>
+<div>
+<span class="text-2xl font-bold">10</span>
+<span class="text-sm text-on-surface-variant ml-1">km</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-primary w-full h-full"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Side Detail Panel (3-Day Forecast & Map) -->
+<aside class="col-span-12 lg:col-span-4 space-y-6">
+<!-- Map Mini -->
+<div class="rounded-lg overflow-hidden h-64 bg-surface-container-highest relative group">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="dark stylized topographic map of Busan coastline with neon pink markers indicating weather stations" data-location="Busan" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBzLy4UYnu2yogGLEITB5ZpLmdyKA5qNPWlUe8h1zoH9D4Pr9pxYsUFg3Oq0FCh0hsqmPzvie4c1XWaw2oxcv91R3OU8Z_64Ort0ELHOxlZbN6tpmSur0tJBAm_68KeJXBDVUGQ7a4zyKscNJagASm3xokggXWzL7ljPnhTQkcpPpLgYBuIV-VrBPi0HgU_5nCChBS_blA-v2n3gd5L3mK1OdG4g563Ff-WjNfVAFMAN0pFGoFhmrJx7ycfdMboE2Ksg2Vjjq1m56E"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">my_location</span>
+<span class="font-bold text-white shadow-sm">View Full Radar</span>
+</div>
+</div>
+</div>
+<!-- 3-Day Forecast -->
+<div class="glass-panel p-6 rounded-lg space-y-6">
+<h3 class="text-lg font-bold tracking-tight">3-Day Forecast</h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+<div class="w-20 font-semibold">Tomorrow</div>
+<span class="material-symbols-outlined text-primary">wb_sunny</span>
+<div class="flex gap-4">
+<span class="font-bold">22°</span>
+<span class="text-on-surface-variant">14°</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+<div class="w-20 font-semibold">Wed</div>
+<span class="material-symbols-outlined text-primary">cloud</span>
+<div class="flex gap-4">
+<span class="font-bold">20°</span>
+<span class="text-on-surface-variant">15°</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+<div class="w-20 font-semibold">Thu</div>
+<span class="material-symbols-outlined text-primary">rainy</span>
+<div class="flex gap-4">
+<span class="font-bold">17°</span>
+<span class="text-on-surface-variant">12°</span>
+</div>
+</div>
+</div>
+<button class="w-full py-4 rounded-full bg-surface-container-high hover:bg-primary/10 transition-all font-bold text-sm tracking-wide uppercase border border-outline-variant/20">
+                        View 10-Day Forecast
+                    </button>
+</div>
+<!-- Lifestyle Advice Bento -->
+<div class="surface-container p-6 rounded-lg space-y-4 border border-outline-variant/10">
+<h3 class="text-sm font-bold uppercase tracking-widest text-primary">Nightly Guide</h3>
+<div class="flex items-start gap-4">
+<div class="p-3 bg-primary/10 rounded-full">
+<span class="material-symbols-outlined text-primary">checkroom</span>
+</div>
+<div>
+<p class="text-sm font-semibold">Light jacket recommended</p>
+<p class="text-xs text-on-surface-variant mt-1">Temperature dropping to 15°C by midnight.</p>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<!-- Contextual FAB (Hidden on detail page according to instructions, but logic check applied) -->
+</body></html>

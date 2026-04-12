@@ -1,0 +1,245 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#fcf9f8",
+                    "on-primary-fixed": "#40000d",
+                    "on-tertiary-container": "#f6fff6",
+                    "on-tertiary-fixed": "#002113",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#e21e4a",
+                    "on-secondary-fixed-variant": "#464747",
+                    "inverse-on-surface": "#f3f0ef",
+                    "on-primary-container": "#fffbff",
+                    "on-surface-variant": "#5c3f41",
+                    "on-primary-fixed-variant": "#920029",
+                    "primary-fixed-dim": "#ffb2b6",
+                    "surface": "#fcf9f8",
+                    "surface-container-low": "#f6f3f2",
+                    "secondary-container": "#e3e2e2",
+                    "on-surface": "#1b1c1c",
+                    "outline": "#906f70",
+                    "tertiary-fixed-dim": "#62dca3",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed-dim": "#c7c6c6",
+                    "inverse-surface": "#303030",
+                    "surface-container": "#f0eded",
+                    "surface-tint": "#be0038",
+                    "on-secondary-container": "#646464",
+                    "surface-dim": "#dcd9d9",
+                    "surface-variant": "#e5e2e1",
+                    "tertiary-fixed": "#80f9bd",
+                    "on-background": "#1b1c1c",
+                    "outline-variant": "#e5bdbe",
+                    "surface-bright": "#fcf9f8",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#ffb2b6",
+                    "on-tertiary-fixed-variant": "#005234",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "surface-container-highest": "#e5e2e1",
+                    "on-primary": "#ffffff",
+                    "surface-container-high": "#eae7e7",
+                    "primary-fixed": "#ffdada",
+                    "error": "#ba1a1a",
+                    "primary": "#ba0036",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "tertiary": "#006a45",
+                    "tertiary-container": "#008558",
+                    "secondary-fixed": "#e3e2e2",
+                    "secondary": "#5e5e5e",
+                    "surface-container-lowest": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Be Vietnam Pro"],
+                    "label": ["Be Vietnam Pro"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #fcf9f8;
+        }
+        .editorial-shadow {
+            box-shadow: 0px 2px 4px rgba(27,28,28,0.04), 0px 4px 12px rgba(27,28,28,0.04), 0px 10px 24px rgba(27,28,28,0.04);
+        }
+        .glass-module {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-[884px] pb-32 antialiased">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-6 py-4 h-16 bg-white/50 backdrop-blur-[20px] border-b border-white/20">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#ba0036]" style="">wb_sunny</span>
+<h1 class="font-headline font-bold text-lg tracking-tight text-[#1b1c1c]" style="">Weatherpane&nbsp;</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 active:scale-95 transition-transform" style="">
+<span class="material-symbols-outlined text-[#ba0036]" style="">search</span>
+</button>
+</header>
+<main class="pt-24 px-6 max-w-2xl mx-auto">
+<!-- Search Header Section -->
+<section class="mb-12">
+<h2 class="font-headline text-4xl font-extrabold tracking-tight mb-8 text-on-surface" style="">Explore<br>Locations</h2>
+<!-- Search Bar -->
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-5 text-on-surface-variant" style="">search</span>
+<input class="w-full bg-white/50 backdrop-blur-[20px] rounded-full py-5 pl-14 pr-6 border border-white/20 focus:ring-2 focus:ring-primary/20 text-on-surface placeholder:text-on-surface-variant/50 font-body transition-all" placeholder="Search districts in Korea..." type="text">
+</div>
+</section>
+<!-- Suggested/Recent Locations Bento -->
+<section class="mb-12">
+<div class="flex justify-between items-end mb-6">
+<h3 class="font-headline text-xl font-bold" style="">Popular Districts</h3>
+<span class="font-label text-xs font-bold uppercase tracking-widest text-primary" style="">View map</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<a class="relative h-48 rounded-lg overflow-hidden group cursor-pointer block" href="{{DATA:SCREEN:SCREEN_13}}" style=""><img class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8uNZhJDDpiKhFVrlQeekcxHnCbm7JRAmZCDowYMBdERPh6CaayD5m61ZvRt4X3g4JOQTtPHLrWeU-ph38T-OkFR4Masr-xccPMCJc8SvyElqLiSht2hfDPQM5ve2i-WV_nRcPCjGYNNwanDnPObKswDkfJHfJl2IXrT_Ce6om6VhIFhwZHgVa8hFv3Z02fSyIsn4csUfF4n1Bwbi7yLWOEy2Ry-R4vk9-2Q4UWUDAHp5k8ggvO1q-XF6070NN6BffZUzZFFBQB2rL" style=""><div class="absolute inset-0 bg-gradient-to-t from-on-surface/80 via-transparent to-transparent"></div><div class="absolute bottom-4 left-4"><p class="font-headline text-white font-bold text-lg" style="">Yongsan-gu</p><p class="font-body text-white/80 text-xs" style="">Clear • 18°</p></div></a>
+<a class="relative h-48 rounded-lg overflow-hidden group cursor-pointer block" href="{{DATA:SCREEN:SCREEN_13}}" style=""><img class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6sPyEDc_6VWsazyjunmrdVlvTRggOPInO4-2QdvAR62dHJ9ezt95WAUoDErlJ1iyFX3Z-cfJl8xze8adlRVbMdmorTB49qXOOE33y_xbtcn-fD_yu08J43W6GtuFol5ui_O1wmdpJfesS8IFf_aPvY6EFpjmrLYtpSN4anIABc4etzy116wWMJOQtomtjayxW-5I8oyXOjKD7UQSEf6aSL3lhsG90wvdvD0owsWYY6ynT9MwMs5NJ4chGsbxQvjcjmAH_bk2DlK0E" style=""><div class="absolute inset-0 bg-gradient-to-t from-on-surface/80 via-transparent to-transparent"></div><div class="absolute bottom-4 left-4"><p class="font-headline text-white font-bold text-lg" style="">Gangnam</p><p class="font-body text-white/80 text-xs" style="">Partly Cloudy • 21°</p></div></a>
+</div>
+</section>
+<!-- Search Results -->
+<section class="mb-12">
+<h3 class="font-headline text-xl font-bold mb-6" style="">Search Results</h3>
+<div class="space-y-3">
+<!-- Result Item 1: Si Hierarchy -->
+<a class="group flex items-center justify-between p-5 rounded-lg glass-module border border-white/20 hover:bg-white/70 transition-colors cursor-pointer" href="{{DATA:SCREEN:SCREEN_13}}" style="">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="">domain</span>
+</div>
+<div>
+<div class="flex items-center gap-1 mb-0.5">
+<span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-primary/10 text-primary" style="">Si (시)</span>
+</div>
+<p class="font-headline font-bold text-on-surface text-lg leading-tight" style="">서울특별시</p>
+<p class="font-body text-sm text-on-surface-variant" style="">Seoul Metropolitan City</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" style="">arrow_forward_ios</span>
+</a>
+<!-- Result Item 2: Gu Hierarchy -->
+<a class="group flex items-center justify-between p-5 rounded-lg glass-module border border-white/20 hover:bg-white/70 transition-colors cursor-pointer" href="{{DATA:SCREEN:SCREEN_13}}" style="">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" style="">location_city</span>
+</div>
+<div>
+<div class="flex items-center gap-1 mb-0.5">
+<span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-black/5 text-on-surface-variant" style="">Seoul</span>
+<span class="text-on-surface-variant/40 text-[10px]" style="">•</span>
+<span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-primary/10 text-primary" style="">Gu (구)</span>
+</div>
+<p class="font-headline font-bold text-on-surface text-lg leading-tight" style="">종로구</p>
+<p class="font-body text-sm text-on-surface-variant" style="">Jongno-gu</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" style="">arrow_forward_ios</span>
+</a>
+<!-- Result Item 3: Dong Hierarchy -->
+<a class="group flex items-center justify-between p-5 rounded-lg glass-module border border-white/20 hover:bg-white/70 transition-colors cursor-pointer" href="{{DATA:SCREEN:SCREEN_13}}" style="">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" style="">map</span>
+</div>
+<div>
+<div class="flex items-center gap-1 mb-0.5">
+<span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-black/5 text-on-surface-variant" style="">Seoul</span>
+<span class="text-on-surface-variant/40 text-[10px]" style="">•</span>
+<span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-black/5 text-on-surface-variant" style="">Jongno</span>
+<span class="text-on-surface-variant/40 text-[10px]" style="">•</span>
+<span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-primary/10 text-primary" style="">Dong (동)</span>
+</div>
+<p class="font-headline font-bold text-on-surface text-lg leading-tight" style="">청운동</p>
+<p class="font-body text-sm text-on-surface-variant" style="">Cheongun-dong</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" style="">arrow_forward_ios</span>
+</a>
+<!-- Result Item 4: No Data State -->
+<div class="flex items-center justify-between p-5 rounded-lg glass-module border border-dashed border-outline-variant/50 bg-surface-container-low/30">
+<div class="flex items-center gap-4 opacity-60">
+<div class="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" style="">location_off</span>
+</div>
+<div>
+<p class="font-headline font-bold text-on-surface-variant" style="">독도리</p>
+<p class="font-body text-xs text-error font-medium" style="">Information for this location is not provided</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant/40" style="">block</span>
+</div>
+</div>
+</section>
+<!-- Error & Retry State -->
+<section class="mb-12">
+<div class="p-8 rounded-lg bg-error-container/20 border border-error/10 text-center">
+<span class="material-symbols-outlined text-error text-3xl mb-3" style="">cloud_off</span>
+<h4 class="font-headline font-bold text-on-error-container mb-2" style="">Search failed to connect</h4>
+<p class="font-body text-sm text-on-error-container/70 mb-5" style="">Please check your internet connection or try searching again.</p>
+<button class="inline-flex items-center gap-2 bg-white px-6 py-2.5 rounded-full border border-error/20 text-error font-label text-sm font-bold shadow-sm active:scale-95 transition-transform" style="">
+<span class="material-symbols-outlined text-sm" style="">refresh</span>
+Retry Search
+</button>
+</div>
+</section>
+<!-- Aesthetic Footer Text -->
+<p class="text-center mt-12 font-body text-[10px] text-on-surface-variant/40 tracking-[0.2em] uppercase font-bold" style="">Weatherpane • South Korea Atmospheric Data</p>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-6 pt-3 bg-white/50 backdrop-blur-[20px] rounded-t-[32px] shadow-[0px_-10px_24px_rgba(27,28,28,0.04)] border-t border-white/20">
+<a class="flex flex-col items-center justify-center text-[#1b1c1c]/60 px-5 py-2 hover:text-[#ba0036] transition-colors active:scale-90 duration-200" href="{{DATA:SCREEN:SCREEN_11}}" style="">
+<span class="material-symbols-outlined mb-1" style="">home</span>
+<span class="font-body text-[10px] font-medium tracking-wide" style="">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#ba0036] bg-black/5 rounded-full px-5 py-2 active:scale-90 duration-200" href="{{DATA:SCREEN:SCREEN_9}}" style="">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: &quot;FILL&quot; 1;">search</span>
+<span class="font-body text-[10px] font-medium tracking-wide" style="">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#1b1c1c]/60 px-5 py-2 hover:text-[#ba0036] transition-colors active:scale-90 duration-200" href="{{DATA:SCREEN:SCREEN_8}}" style="">
+<span class="material-symbols-outlined mb-1" style="">favorite</span>
+<span class="font-body text-[10px] font-medium tracking-wide" style="">Favorites</span>
+</a>
+</nav>
+</body></html>
