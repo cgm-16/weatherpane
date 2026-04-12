@@ -12,10 +12,9 @@ import { createRecentsRepository } from '~/shared/lib/storage/repositories/locat
 import type { SearchCatalogResult } from '~/entities/location/model/search';
 import type {
   ActiveLocation,
-  RecentLocation,
+  CatalogLocation,
   ResolvedLocation,
 } from '~/entities/location/model/types';
-import type { CatalogLocation } from '~/entities/location/model/types';
 import type { CatalogEntry } from '~/entities/location/model/catalog';
 
 function buildCatalogLocationFromEntry(entry: CatalogEntry): CatalogLocation {
@@ -34,7 +33,7 @@ function prependRecent(location: ResolvedLocation, now: string) {
   const repo = createRecentsRepository();
   const existing = repo.getAll();
   const filtered = existing.filter(
-    (r): r is RecentLocation =>
+    (r) =>
       r.location.kind !== 'resolved' ||
       r.location.catalogLocationId !== location.catalogLocationId
   );
@@ -52,10 +51,11 @@ export function useSearchSelection() {
     setResolvingId(result.catalogLocationId);
 
     const entry = getCatalogEntryById(result.catalogLocationId);
+    const now = new Date().toISOString();
 
     const resolver = createCatalogLocationResolver({
       geocode,
-      now: () => new Date().toISOString(),
+      now: () => now,
       unsupportedRouteContextRepository:
         createUnsupportedRouteContextRepository(),
     });
@@ -77,7 +77,6 @@ export function useSearchSelection() {
     setResolvingId(null);
 
     if (resolution.kind === 'resolved') {
-      const now = new Date().toISOString();
       const activeLocation: ActiveLocation = {
         kind: 'resolved',
         location: resolution.location,
