@@ -1,6 +1,8 @@
 // useDetailBootstrap으로 상세 페이지 렌더링을 조율합니다.
+import { useEffect, useRef } from 'react';
 import { useWeatherRefresh } from '~/features/weather-queries/use-weather-refresh';
 import { useDetailBootstrap } from '~/features/app-bootstrap/use-detail-bootstrap';
+import { persistRecent } from '~/features/recents';
 import { DetailDashboard } from './detail-dashboard';
 import { LocationUnsupported } from './location-unsupported';
 import { LocationNotFound } from './location-not-found';
@@ -14,6 +16,18 @@ interface LocationPageProps {
 export function LocationPage({ resolvedLocationId }: LocationPageProps) {
   const bootstrap = useDetailBootstrap(resolvedLocationId);
   const refresh = useWeatherRefresh();
+
+  // Detail 진입 시 최근 지역에 추가 (data 또는 stale-fallback 상태에서만, 위치당 한 번)
+  const addedLocationRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      (bootstrap.kind === 'data' || bootstrap.kind === 'stale-fallback') &&
+      addedLocationRef.current !== bootstrap.location.locationId
+    ) {
+      addedLocationRef.current = bootstrap.location.locationId;
+      persistRecent(bootstrap.location);
+    }
+  });
 
   if (bootstrap.kind === 'unsupported') {
     return <LocationUnsupported />;
