@@ -228,4 +228,25 @@ describe('DetailDashboard 콘텐츠 렌더링', () => {
     renderDashboard({ weather: weatherNoDew });
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);
   });
+
+  test('hourly 데이터가 있으면 시간별 예보 섹션이 표시된다', () => {
+    const makeHourlyEntry = (utcHour: number) => {
+      const at = new Date('2025-01-01T00:00:00.000Z');
+      at.setUTCHours(utcHour, 0, 0, 0);
+      return {
+        at: at.toISOString(),
+        temperatureC: 20,
+        popPct: 0,
+        condition: dashboardCondition,
+      };
+    };
+    const hourlyWeather: CoreWeather = {
+      ...dashboardWeather,
+      hourly: Array.from({ length: 6 }, (_, i) => makeHourlyEntry(i)),
+    };
+    renderDashboard({ weather: hourlyWeather });
+    expect(
+      screen.getByRole('region', { name: /시간별 예보/ })
+    ).toBeInTheDocument();
+  });
 });
