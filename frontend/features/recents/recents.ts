@@ -19,14 +19,18 @@ export function persistRecent(
   location: ResolvedLocation | RawGpsFallbackLocation,
   options: PersistRecentOptions = {}
 ): void {
-  const repo = createRecentsRepository(options);
-  const current = repo.getAll();
-  const filtered = current.filter(
-    (r) => r.location.locationId !== location.locationId
-  );
-  const next = [
-    { location, lastOpenedAt: new Date().toISOString() },
-    ...filtered,
-  ].slice(0, MAX_RECENTS);
-  repo.replaceAll(next);
+  try {
+    const repo = createRecentsRepository(options);
+    const current = repo.getAll();
+    const filtered = current.filter(
+      (r) => r.location.locationId !== location.locationId
+    );
+    const next = [
+      { location, lastOpenedAt: new Date().toISOString() },
+      ...filtered,
+    ].slice(0, MAX_RECENTS);
+    repo.replaceAll(next);
+  } catch (error) {
+    console.warn('[recents] 최근 지역 저장 실패', error);
+  }
 }

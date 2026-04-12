@@ -1,4 +1,4 @@
-import { useId, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useState, type KeyboardEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { useSearchSelection } from '../../../features/search';
@@ -139,16 +139,23 @@ export function SearchPage() {
   const { selectResult, resolvingId, selectionError, retrySelection } =
     useSearchSelection();
   const { setActiveLocation } = useActiveLocation();
-  const [resolvedRecents] = useState<
+  // SSR/클라이언트 수화 불일치 방지: 서버는 localStorage에 접근할 수 없으므로
+  // 초기값은 빈 배열로 두고 마운트 후 클라이언트에서만 읽는다.
+  // 빈 의존성 배열로 마운트 시 1회만 실행되므로 무한 루프 없음.
+  const [resolvedRecents, setResolvedRecents] = useState<
     Array<RecentLocation & { location: ResolvedLocation }>
-  >(() =>
-    createRecentsRepository()
-      .getAll()
-      .filter(
-        (r): r is RecentLocation & { location: ResolvedLocation } =>
-          r.location.kind === 'resolved'
-      )
-  );
+  >([]);
+  useEffect(() => {
+    // eslint-disable-next-line @eslint-react/set-state-in-effect
+    setResolvedRecents(
+      createRecentsRepository()
+        .getAll()
+        .filter(
+          (r): r is RecentLocation & { location: ResolvedLocation } =>
+            r.location.kind === 'resolved'
+        )
+    );
+  }, []);
   const optionBaseId = useId();
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') ?? '';
