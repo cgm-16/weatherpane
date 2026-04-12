@@ -30,10 +30,15 @@ function formatHour(at: string, timeZone: string): string {
 interface HomeHourlyStripProps {
   hourly: CoreWeatherHourlyEntry[];
   timeZone: string;
+  count?: number;
 }
 
-export function HomeHourlyStrip({ hourly, timeZone }: HomeHourlyStripProps) {
-  const entries = hourly.slice(0, 6);
+export function HomeHourlyStrip({
+  hourly,
+  timeZone,
+  count = 6,
+}: HomeHourlyStripProps) {
+  const entries = hourly.slice(0, count);
 
   return (
     <ul
