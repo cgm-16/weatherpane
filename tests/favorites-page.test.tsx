@@ -204,6 +204,9 @@ describe('FavoriteCard', () => {
     );
     renderCard(seoulFav);
     expect(screen.getByText(/오프라인/i)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /다시 시도/i })
+    ).not.toBeInTheDocument();
   });
 
   test('renders weather snapshot when data is fresh', () => {
@@ -302,5 +305,69 @@ describe('FavoriteCard', () => {
     );
     renderCard(seoulFav);
     expect(screen.queryByRole('article')).toBeNull();
+  });
+
+  describe('staleness thresholds', () => {
+    // Freeze time so boundary calculations are exact and deterministic.
+    // getStaleness uses strict > comparison: age must exceed the threshold to cross it.
+    const FROZEN_NOW = new Date('2024-01-01T12:00:00.000Z').getTime();
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(FROZEN_NOW);
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    // exactly 10 minutes old: ageMs === STALE_MS, not > STALE_MS → fresh (no indicator)
+    test('no stale indicator at exactly 10 minutes', () => {
+      setupActiveLocation();
+      vi.mocked(useCoreWeather).mockReturnValue({
+        data: {
+          ...freshWeatherData,
+          fetchedAt: new Date(FROZEN_NOW - 10 * 60_000).toISOString(),
+        },
+        isLoading: false,
+        isError: false,
+        refetch: vi.fn(),
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      renderCard(seoulFav);
+      expect(screen.queryByText(/오래된 정보/i)).not.toBeInTheDocument();
+    });
+
+    // exactly 60 minutes old: ageMs === VERY_STALE_MS, not > VERY_STALE_MS → stale, not very-stale
+    test('shows stale (not very stale) indicator at exactly 60 minutes', () => {
+      setupActiveLocation();
+      vi.mocked(useCoreWeather).mockReturnValue({
+        data: {
+          ...freshWeatherData,
+          fetchedAt: new Date(FROZEN_NOW - 60 * 60_000).toISOString(),
+        },
+        isLoading: false,
+        isError: false,
+        refetch: vi.fn(),
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      renderCard(seoulFav);
+      expect(screen.getByText('오래된 정보')).toBeInTheDocument();
+      expect(screen.queryByText('매우 오래된 정보')).not.toBeInTheDocument();
+    });
+
+    // 9 minutes 59 seconds old: just under stale threshold → fresh
+    test('no stale indicator at 9 minutes 59 seconds', () => {
+      setupActiveLocation();
+      vi.mocked(useCoreWeather).mockReturnValue({
+        data: {
+          ...freshWeatherData,
+          fetchedAt: new Date(FROZEN_NOW - (10 * 60_000 - 1)).toISOString(),
+        },
+        isLoading: false,
+        isError: false,
+        refetch: vi.fn(),
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      renderCard(seoulFav);
+      expect(screen.queryByText(/오래된 정보/i)).not.toBeInTheDocument();
+    });
   });
 });
