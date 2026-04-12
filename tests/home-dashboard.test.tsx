@@ -114,6 +114,15 @@ describe('HomeDashboard 콘텐츠 렌더링', () => {
     expect(screen.getByText(/56%/)).toBeInTheDocument();
   });
 
+  test('humidityPct가 없으면 "—"을 표시한다', () => {
+    const weatherNoHumidity: CoreWeather = {
+      ...weather,
+      current: { temperatureC: 18, condition },
+    };
+    renderDashboard({ weather: weatherNoHumidity });
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
   test('상세 보기 링크가 /location/KR-Seoul로 연결된다', () => {
     renderDashboard();
     expect(screen.getByRole('link', { name: /상세 보기/ })).toHaveAttribute(
@@ -172,6 +181,19 @@ describe('HomeDashboard 즐겨찾기', () => {
     expect(
       screen.getByRole('button', { name: /즐겨찾기 해제/ })
     ).toBeInTheDocument();
+  });
+
+  test('즐겨찾기가 최대 6개이면 버튼이 비활성화된다', () => {
+    vi.mocked(useFavorites).mockReturnValue({
+      favorites: [],
+      isFavorite: () => false,
+      toggleFavorite: vi.fn(),
+      atMaxFavorites: true,
+    });
+    renderDashboard();
+    expect(
+      screen.getByRole('button', { name: /즐겨찾기 추가/ })
+    ).toBeDisabled();
   });
 
   test('즐겨찾기 버튼 클릭 시 toggleFavorite이 호출된다', async () => {
