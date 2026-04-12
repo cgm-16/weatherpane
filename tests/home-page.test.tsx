@@ -84,7 +84,7 @@ describe('HomePage 상태별 렌더링', () => {
     ).toBeInTheDocument();
   });
 
-  test('stale-fallback → 오프라인 표시와 기온을 표시한다', () => {
+  test('stale-fallback → 오프라인 표시와 기온, 최고·최저 기온을 표시한다', () => {
     const now = new Date().toISOString();
     vi.mocked(useHomeBootstrap).mockReturnValue({
       kind: 'stale-fallback',
@@ -105,9 +105,14 @@ describe('HomePage 상태별 렌더링', () => {
     renderPage();
     expect(screen.getByText(/오프라인 상태/)).toBeInTheDocument();
     expect(screen.getByText(/17/)).toBeInTheDocument();
+    expect(screen.getByText(/22°/)).toBeInTheDocument();
+    expect(screen.getByText(/10°/)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /마지막 업데이트 시각/ })
+    ).toBeInTheDocument();
   });
 
-  test('data → 기온을 표시한다', () => {
+  test('data → 기온과 AQI 카테고리를 표시한다', () => {
     vi.mocked(useHomeBootstrap).mockReturnValue({
       kind: 'data',
       location: loc,
