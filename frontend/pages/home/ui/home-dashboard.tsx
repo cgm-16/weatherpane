@@ -79,7 +79,7 @@ export function HomeDashboard({
             disabled={!canFavorite || (!favorited && atMaxFavorites)}
             onClick={() => {
               if (!canFavorite) return;
-              if (location.kind === 'resolved') persistRecent(location);
+              persistRecent(location);
               if (favorited) {
                 removeFavorite(location.locationId);
               } else {
@@ -112,30 +112,49 @@ export function HomeDashboard({
         </div>
       )}
 
-      {/* 메인 요약 카드 — 탭 시 상세 페이지로 이동 */}
-      <Link
-        to={canFavorite ? `/location/${location.catalogLocationId}` : ''}
-        className="mx-4 mt-3 flex flex-col items-center gap-2 rounded-[--radius-md] bg-card px-6 py-8"
-        aria-label={`${location.name}: ${Math.round(weather.current.temperatureC)}° ${weather.current.condition.text}, 날씨 상세 보기`}
-      >
-        <p className="font-display text-7xl font-extrabold text-foreground">
-          {Math.round(weather.current.temperatureC)}°
-        </p>
-        <p className="font-body text-base text-muted-foreground">
-          {weather.current.condition.text}
-        </p>
-        <div className="flex gap-4">
-          <span className="font-body text-sm text-muted-foreground">
-            H {Math.round(weather.today.maxC)}°
+      {/* 메인 요약 카드 — 탭 시 상세 페이지로 이동 (raw-GPS는 비대화형) */}
+      {canFavorite ? (
+        <Link
+          to={`/location/${location.catalogLocationId}`}
+          className="mx-4 mt-3 flex flex-col items-center gap-2 rounded-[--radius-md] bg-card px-6 py-8"
+          aria-label={`${location.name}: ${Math.round(weather.current.temperatureC)}° ${weather.current.condition.text}, 날씨 상세 보기`}
+        >
+          <p className="font-display text-7xl font-extrabold text-foreground">
+            {Math.round(weather.current.temperatureC)}°
+          </p>
+          <p className="font-body text-base text-muted-foreground">
+            {weather.current.condition.text}
+          </p>
+          <div className="flex gap-4">
+            <span className="font-body text-sm text-muted-foreground">
+              H {Math.round(weather.today.maxC)}°
+            </span>
+            <span className="font-body text-sm text-muted-foreground">
+              L {Math.round(weather.today.minC)}°
+            </span>
+          </div>
+          <span className="mt-2 rounded-full bg-primary px-4 py-1 font-body text-sm font-semibold text-primary-foreground">
+            상세 보기
           </span>
-          <span className="font-body text-sm text-muted-foreground">
-            L {Math.round(weather.today.minC)}°
-          </span>
+        </Link>
+      ) : (
+        <div className="mx-4 mt-3 flex flex-col items-center gap-2 rounded-[--radius-md] bg-card px-6 py-8">
+          <p className="font-display text-7xl font-extrabold text-foreground">
+            {Math.round(weather.current.temperatureC)}°
+          </p>
+          <p className="font-body text-base text-muted-foreground">
+            {weather.current.condition.text}
+          </p>
+          <div className="flex gap-4">
+            <span className="font-body text-sm text-muted-foreground">
+              H {Math.round(weather.today.maxC)}°
+            </span>
+            <span className="font-body text-sm text-muted-foreground">
+              L {Math.round(weather.today.minC)}°
+            </span>
+          </div>
         </div>
-        <span className="mt-2 rounded-full bg-primary px-4 py-1 font-body text-sm font-semibold text-primary-foreground">
-          상세 보기
-        </span>
-      </Link>
+      )}
 
       {/* 6시간 시간별 미리보기 — resolved 위치만 timezone을 가짐 */}
       {canFavorite && weather.hourly.length > 0 && (
