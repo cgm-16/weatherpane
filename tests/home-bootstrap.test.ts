@@ -299,14 +299,13 @@ describe('useHomeBootstrap', () => {
     vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
     vi.mocked(useCoreWeather).mockReturnValue(successQuery(weather));
     // AQI 쿼리: data는 있지만 갱신 실패 (백그라운드 리페치 오류)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(useAqi).mockReturnValue({
       isPending: false,
       isLoading: false,
       isFetching: false,
       data: aqi,
       isError: true,
-    } as any);
+    } as unknown as ReturnType<typeof useAqi>);
     const { result } = renderHook(() => useHomeBootstrap());
     expect(result.current.kind).toBe('data');
     if (result.current.kind === 'data') {
