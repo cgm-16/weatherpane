@@ -117,6 +117,7 @@ function renderSearchRoute(initialEntry = '/search') {
 
   return {
     router,
+    storage,
     user: userEvent.setup(),
   };
 }
@@ -528,7 +529,7 @@ describe('search default state — recents and popular', () => {
 
   test('clicking a recent location navigates to its detail route', async () => {
     seedRecents([makeRecentLocation('5f5def784f91', '청운동', '서울특별시')]);
-    const { router } = renderSearchRoute();
+    const { router, storage } = renderSearchRoute();
 
     const btn = await screen.findByRole('button', { name: /청운동/ });
     await userEvent.setup().click(btn);
@@ -537,5 +538,11 @@ describe('search default state — recents and popular', () => {
       expect(router.state.location.pathname).toBe('/location/5f5def784f91');
     });
     expect(router.state.historyAction).toBe('PUSH');
+
+    const stored = storage.getItem(storageKeys.activeLocation);
+    expect(stored).not.toBeNull();
+    const parsed = JSON.parse(stored!);
+    expect(parsed.data.source).toBe('recent');
+    expect(parsed.data.location.catalogLocationId).toBe('5f5def784f91');
   });
 });
