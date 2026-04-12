@@ -1,6 +1,8 @@
 import { useId, useState, type KeyboardEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
+import { useSearchSelection } from '../../../features/search';
+
 import { POPULAR_LOCATIONS } from '../../../entities/location/data/popular-locations';
 import {
   getCatalogLocationResultsByCanonicalPath,
@@ -25,11 +27,13 @@ function SearchResultOption({
   result,
   id,
   isHighlighted,
+  isResolving,
   onSelect,
 }: {
   result: SearchCatalogResult;
   id: string;
   isHighlighted: boolean;
+  isResolving: boolean;
   onSelect: (result: SearchCatalogResult) => void;
 }) {
   return (
@@ -38,11 +42,14 @@ function SearchResultOption({
       aria-label={buildAccessibleResultLabel(result)}
       aria-selected={isHighlighted}
       className={cn(
-        'min-h-[5.5rem] cursor-pointer rounded-[var(--radius-md)] bg-card px-4 py-4 shadow-[var(--shadow-float)] transition-colors',
-        isHighlighted ? 'bg-accent text-accent-foreground' : 'text-foreground'
+        'min-h-[5.5rem] rounded-[var(--radius-md)] bg-card px-4 py-4 shadow-[var(--shadow-float)] transition-colors',
+        isResolving ? 'cursor-wait' : 'cursor-pointer',
+        isHighlighted && !isResolving
+          ? 'bg-accent text-accent-foreground'
+          : 'text-foreground'
       )}
       role="option"
-      onClick={() => onSelect(result)}
+      onClick={() => !isResolving && onSelect(result)}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
@@ -59,7 +66,7 @@ function SearchResultOption({
           ) : null}
         </div>
         <p className="text-xs font-medium tracking-[0.18em] text-muted-foreground uppercase">
-          선택
+          {isResolving ? '…' : '선택'}
         </p>
       </div>
     </li>
@@ -94,6 +101,7 @@ function PopularLocationButton({
 
 export function SearchPage() {
   const navigate = useNavigate();
+  const { selectResult, resolvingId } = useSearchSelection();
   const optionBaseId = useId();
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') ?? '';
@@ -145,10 +153,6 @@ export function SearchPage() {
         replace: true,
       }
     );
-  }
-
-  function selectResult(result: SearchCatalogResult) {
-    navigate(`/location/${result.catalogLocationId}`);
   }
 
   function handleInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -266,6 +270,7 @@ export function SearchPage() {
                 </div>
                 <ul
                   aria-label="검색 결과"
+                  aria-busy={resolvingId !== null}
                   data-visible-result-limit={visibleResultLimit}
                   className="grid max-h-[36rem] gap-3 overflow-y-auto pr-1"
                   id="search-results"
@@ -279,6 +284,7 @@ export function SearchPage() {
                       key={result.catalogLocationId}
                       id={`${optionBaseId}-option-${index}`}
                       isHighlighted={index === highlightedIndex}
+                      isResolving={resolvingId === result.catalogLocationId}
                       result={result}
                       onSelect={selectResult}
                     />
