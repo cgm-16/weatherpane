@@ -14,7 +14,11 @@ import { RouterProvider, createMemoryRouter, useParams } from 'react-router';
 import { vi, afterEach, describe, expect, test } from 'vitest';
 
 import SearchRoute from '../app/routes/search';
-import { storageKeys } from '../frontend/shared/lib/storage/storage-keys';
+import {
+  storageKeys,
+  storageSchemaVersion,
+} from '../frontend/shared/lib/storage/storage-keys';
+import type { RecentLocation } from '../frontend/entities/location/model/types';
 import { createMemoryStorage } from './storage/test-storage';
 import { ActiveLocationProvider } from '../frontend/features/app-bootstrap/active-location-context';
 import { useWeatherProvider } from '../frontend/shared/api/weather-provider';
@@ -32,7 +36,37 @@ vi.mock('../frontend/shared/api/weather-provider', async (importActual) => {
 
 afterEach(() => {
   vi.resetAllMocks();
+  localStorage.clear();
 });
+
+function seedRecents(recents: RecentLocation[]): void {
+  localStorage.setItem(
+    storageKeys.recents,
+    JSON.stringify({ version: storageSchemaVersion, data: recents })
+  );
+}
+
+function makeRecentLocation(
+  catalogLocationId: string,
+  name: string,
+  admin1: string,
+  admin2?: string
+): RecentLocation {
+  return {
+    location: {
+      kind: 'resolved',
+      locationId: `loc_${catalogLocationId}`,
+      catalogLocationId,
+      name,
+      admin1,
+      ...(admin2 ? { admin2 } : {}),
+      latitude: 37.5,
+      longitude: 127.0,
+      timezone: 'Asia/Seoul',
+    },
+    lastOpenedAt: new Date().toISOString(),
+  };
+}
 
 function LocationStub() {
   const { resolvedLocationId } = useParams();
@@ -427,5 +461,81 @@ describe('search result selection', () => {
     });
 
     resolveGeocode([]);
+  });
+});
+
+describe('search default state — recents and popular', () => {
+  test('shows only 인기 지역 when recents are empty', async () => {
+    renderSearchRoute();
+
+    expect(
+      await screen.findByRole('heading', { name: '인기 지역' })
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('heading', { name: '최근 지역' })
+    ).not.toBeInTheDocument();
+  });
+
+  test('shows 최근 지역 above 인기 지역 when recents exist', async () => {
+    seedRecents([makeRecentLocation('5f5def784f91', '청운동', '서울특별시')]);
+    renderSearchRoute();
+
+    const recentsHeading = await screen.findByRole('heading', {
+      name: '최근 지역',
+    });
+    const popularHeading = screen.getByRole('heading', { name: '인기 지역' });
+
+    expect(recentsHeading).toBeVisible();
+    expect(popularHeading).toBeVisible();
+    expect(
+      recentsHeading.compareDocumentPosition(popularHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
+
+  test('shows each recent location by name in the recents section', async () => {
+    seedRecents([
+      makeRecentLocation('5f5def784f91', '청운동', '서울특별시'),
+      makeRecentLocation('aabbccddeeff', '역삼동', '서울특별시', '강남구'),
+    ]);
+    renderSearchRoute();
+
+    // 최근 지역 섹션 내 버튼으로 검증하여 인기 지역의 동명 항목과 구분
+    const recentsSection = await screen.findByRole('heading', {
+      name: '최근 지역',
+    });
+    const sectionEl = recentsSection.closest('section')!;
+    expect(within(sectionEl).getByText('청운동')).toBeVisible();
+    expect(within(sectionEl).getByText('역삼동')).toBeVisible();
+  });
+
+  test('hides both 최근 지역 and 인기 지역 when query is active', async () => {
+    seedRecents([makeRecentLocation('5f5def784f91', '청운동', '서울특별시')]);
+    const { user } = renderSearchRoute();
+    const input = await screen.findByRole('searchbox', { name: '지역 검색' });
+
+    await user.type(input, '종로');
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('heading', { name: '최근 지역' })
+      ).not.toBeInTheDocument();
+    });
+    expect(
+      screen.queryByRole('heading', { name: '인기 지역' })
+    ).not.toBeInTheDocument();
+  });
+
+  test('clicking a recent location navigates to its detail route', async () => {
+    seedRecents([makeRecentLocation('5f5def784f91', '청운동', '서울특별시')]);
+    const { router } = renderSearchRoute();
+
+    const btn = await screen.findByRole('button', { name: /청운동/ });
+    await userEvent.setup().click(btn);
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/location/5f5def784f91');
+    });
+    expect(router.state.historyAction).toBe('PUSH');
   });
 });
