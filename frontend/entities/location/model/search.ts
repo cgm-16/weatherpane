@@ -176,3 +176,14 @@ export function getCatalogLocationResultsByCanonicalPath(
     return entry ? [mapCatalogEntryToSearchResult(entry)] : [];
   });
 }
+
+export function getCatalogEntryById(
+  catalogLocationId: string,
+  catalog: LocationCatalog = defaultCatalog
+): CatalogEntry | null {
+  return (
+    catalog.entries.find(
+      (entry) => entry.catalogLocationId === catalogLocationId
+    ) ?? null
+  );
+}
