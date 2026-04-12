@@ -7,10 +7,21 @@ import { MemoryRouter } from 'react-router';
 vi.mock('../frontend/features/app-bootstrap/use-home-bootstrap', () => ({
   useHomeBootstrap: vi.fn(),
 }));
-vi.mock('@tanstack/react-query', async (orig) => {
-  const real = await orig<typeof import('@tanstack/react-query')>();
-  return { ...real, useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })) };
-});
+
+// useWeatherRefresh replaces useQueryClient in home-page.tsx
+vi.mock('../frontend/features/weather-queries/use-weather-refresh', () => ({
+  useWeatherRefresh: vi.fn(() => vi.fn()),
+}));
+
+// HomeDashboard uses useFavorites
+vi.mock('../frontend/features/favorites/use-favorites', () => ({
+  useFavorites: vi.fn(() => ({
+    favorites: [],
+    isFavorite: vi.fn(() => false),
+    toggleFavorite: vi.fn(),
+    atMaxFavorites: false,
+  })),
+}));
 
 import { useHomeBootstrap } from '../frontend/features/app-bootstrap/use-home-bootstrap';
 import { HomePage } from '../frontend/pages/home/ui/home-page';
@@ -27,7 +38,11 @@ const loc = {
 };
 
 function renderPage() {
-  return render(<MemoryRouter><HomePage /></MemoryRouter>);
+  return render(
+    <MemoryRouter>
+      <HomePage />
+    </MemoryRouter>
+  );
 }
 
 describe('HomePage 상태별 렌더링', () => {
@@ -46,16 +61,27 @@ describe('HomePage 상태별 렌더링', () => {
   test('config-error → Settings Update Needed 제목을 표시한다', () => {
     vi.mocked(useHomeBootstrap).mockReturnValue({
       kind: 'config-error',
-      error: { code: 'INVALID_PROVIDER_MODE', field: 'VITE_WEATHER_PROVIDER_MODE', message: '값이 설정되지 않았습니다' },
+      error: {
+        code: 'INVALID_PROVIDER_MODE',
+        field: 'VITE_WEATHER_PROVIDER_MODE',
+        message: '값이 설정되지 않았습니다',
+      },
     });
     renderPage();
-    expect(screen.getByRole('heading', { name: 'Settings Update Needed' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Settings Update Needed' })
+    ).toBeInTheDocument();
   });
 
   test('recoverable-error → Retry Connection 버튼을 표시한다', () => {
-    vi.mocked(useHomeBootstrap).mockReturnValue({ kind: 'recoverable-error', location: loc });
+    vi.mocked(useHomeBootstrap).mockReturnValue({
+      kind: 'recoverable-error',
+      location: loc,
+    });
     renderPage();
-    expect(screen.getByRole('button', { name: /Retry Connection/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Retry Connection/ })
+    ).toBeInTheDocument();
   });
 
   test('stale-fallback → 오프라인 표시와 기온을 표시한다', () => {
@@ -64,9 +90,15 @@ describe('HomePage 상태별 렌더링', () => {
       kind: 'stale-fallback',
       location: loc,
       weather: {
-        locationId: 'loc_test', fetchedAt: now, observedAt: now,
-        temperatureC: 17, conditionCode: 'CLEAR', conditionText: '맑음',
-        todayMinC: 10, todayMaxC: 22, source: { provider: 'mock' },
+        locationId: 'loc_test',
+        fetchedAt: now,
+        observedAt: now,
+        temperatureC: 17,
+        conditionCode: 'CLEAR',
+        conditionText: '맑음',
+        todayMinC: 10,
+        todayMaxC: 22,
+        source: { provider: 'mock' },
       },
       aqi: null,
     });
@@ -75,7 +107,7 @@ describe('HomePage 상태별 렌더링', () => {
     expect(screen.getByText(/17/)).toBeInTheDocument();
   });
 
-  test('data → 기온과 AQI 카테고리를 표시한다', () => {
+  test('data → 기온을 표시한다', () => {
     vi.mocked(useHomeBootstrap).mockReturnValue({
       kind: 'data',
       location: loc,
@@ -88,8 +120,17 @@ describe('HomePage 상태별 렌더링', () => {
         current: {
           temperatureC: 18,
           condition: {
-            code: 'CLEAR', text: '맑음', isDay: true, visualBucket: 'clear',
-            textMapping: { conditionCode: 'CLEAR', isDay: true, precipitationKind: 'none', cloudCoverPct: 5, intensity: 'none' },
+            code: 'CLEAR',
+            text: '맑음',
+            isDay: true,
+            visualBucket: 'clear',
+            textMapping: {
+              conditionCode: 'CLEAR',
+              isDay: true,
+              precipitationKind: 'none',
+              cloudCoverPct: 5,
+              intensity: 'none',
+            },
           },
         },
         today: { minC: 10, maxC: 22 },
@@ -106,7 +147,8 @@ describe('HomePage 상태별 렌더링', () => {
       },
     });
     renderPage();
-    expect(screen.getByText(/18/)).toBeInTheDocument();
-    expect(screen.getByText(/fair/i)).toBeInTheDocument();
+    expect(screen.getByText(/18°/)).toBeInTheDocument();
+    // AQI category label is Korean: 'fair' maps to '보통'
+    expect(screen.getByText('보통')).toBeInTheDocument();
   });
 });
