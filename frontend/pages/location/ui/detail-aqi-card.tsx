@@ -9,15 +9,20 @@ const aqiCategoryLabel: Record<string, string> = {
   'very-poor': '매우 나쁨',
 };
 
-// 사용자에게 표시할 오염물질 순서와 한국어 레이블
-const POLLUTANTS: Array<{ key: keyof Aqi['pollutants']; label: string }> = [
-  { key: 'pm25', label: 'PM2.5 (초미세먼지)' },
-  { key: 'pm10', label: 'PM10 (미세먼지)' },
-  { key: 'o3', label: 'O₃ (오존)' },
-  { key: 'no2', label: 'NO₂ (이산화질소)' },
-  { key: 'so2', label: 'SO₂ (이산화황)' },
-  { key: 'co', label: 'CO (일산화탄소)' },
-  { key: 'nh3', label: 'NH₃ (암모니아)' },
+// 사용자에게 표시할 오염물질 순서, 한국어 레이블, 단위
+// CO는 OpenWeatherMap AQI API에서 mg/m³로 제공됩니다. 나머지는 μg/m³입니다.
+const POLLUTANTS: Array<{
+  key: keyof Aqi['pollutants'];
+  label: string;
+  unit: string;
+}> = [
+  { key: 'pm25', label: 'PM2.5 (초미세먼지)', unit: 'μg/m³' },
+  { key: 'pm10', label: 'PM10 (미세먼지)', unit: 'μg/m³' },
+  { key: 'o3', label: 'O₃ (오존)', unit: 'μg/m³' },
+  { key: 'no2', label: 'NO₂ (이산화질소)', unit: 'μg/m³' },
+  { key: 'so2', label: 'SO₂ (이산화황)', unit: 'μg/m³' },
+  { key: 'co', label: 'CO (일산화탄소)', unit: 'mg/m³' },
+  { key: 'nh3', label: 'NH₃ (암모니아)', unit: 'μg/m³' },
 ];
 
 interface DetailAqiCardProps {
@@ -87,13 +92,13 @@ export function DetailAqiCard({ aqi }: DetailAqiCardProps) {
             </div>
             <ul className="space-y-3">
               {POLLUTANTS.filter(({ key }) => aqi.pollutants[key] != null).map(
-                ({ key, label }) => (
+                ({ key, label, unit }) => (
                   <li key={key} className="flex items-center justify-between">
                     <span className="font-body text-sm text-muted-foreground">
                       {label}
                     </span>
                     <span className="font-body text-sm font-semibold text-foreground">
-                      {aqi.pollutants[key]} μg/m³
+                      {aqi.pollutants[key]} {unit}
                     </span>
                   </li>
                 )
