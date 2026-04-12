@@ -20,7 +20,7 @@ function CardSkeleton() {
   return (
     <div
       data-testid="card-skeleton"
-      className="h-44 animate-pulse rounded-[var(--radius-md)] bg-card p-6"
+      className="h-44 animate-pulse rounded-[--radius-md] bg-card p-6"
     >
       <div className="mb-4 h-6 w-1/2 rounded-full bg-muted" />
       <div className="mb-2 h-12 w-1/3 rounded-full bg-muted" />
@@ -40,7 +40,7 @@ function CardError({
   onRetry: () => void;
 }) {
   return (
-    <div className="flex h-44 flex-col items-center justify-center gap-3 rounded-[var(--radius-md)] bg-card p-6 text-center">
+    <div className="flex h-44 flex-col items-center justify-center gap-3 rounded-[--radius-md] bg-card p-6 text-center">
       <span className="material-symbols-outlined text-3xl text-muted-foreground opacity-50">
         {isOffline ? 'wifi_off' : 'cloud_off'}
       </span>
@@ -88,8 +88,17 @@ function CardSnapshot({
 
   return (
     <article
+      role="article"
+      tabIndex={0}
+      aria-label={`${displayName} 날씨 보기`}
       onClick={onCardClick}
-      className="group relative flex h-44 cursor-pointer flex-col justify-between overflow-hidden rounded-[var(--radius-md)] bg-card p-6 transition-colors hover:bg-accent"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onCardClick();
+        }
+      }}
+      className="group relative flex h-44 cursor-pointer flex-col justify-between overflow-hidden rounded-[--radius-md] bg-card p-6 transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
     >
       <div className="flex items-start justify-between gap-2">
         <div>
