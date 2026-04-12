@@ -44,4 +44,16 @@ describe('HomeHourlyStrip', () => {
     render(<HomeHourlyStrip hourly={[]} />);
     expect(screen.queryAllByRole('listitem')).toHaveLength(0);
   });
+
+  test('자정(0시)은 "오전 12시"로 표시한다', () => {
+    const entry = makeEntry(0, 15);
+    render(<HomeHourlyStrip hourly={[entry]} />);
+    expect(screen.getByText('오전 12시')).toBeInTheDocument();
+  });
+
+  test('정오(12시)는 "오후 12시"로 표시한다', () => {
+    const entry = makeEntry(12, 20);
+    render(<HomeHourlyStrip hourly={[entry]} />);
+    expect(screen.getByText('오후 12시')).toBeInTheDocument();
+  });
 });

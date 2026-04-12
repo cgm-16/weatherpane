@@ -7,6 +7,8 @@ function conditionIcon(entry: CoreWeatherHourlyEntry): string {
   if (visualBucket === 'cloudy') return 'cloud';
   if (visualBucket === 'rainy') return 'rainy';
   if (visualBucket === 'snowy') return 'ac_unit';
+  // TypeScript가 새 bucket 추가를 정적으로 검사하도록 보장한다.
+  visualBucket satisfies never;
   return 'thermostat';
 }
 
@@ -14,11 +16,10 @@ function conditionIcon(entry: CoreWeatherHourlyEntry): string {
 function formatHour(at: string): string {
   const date = new Date(at);
   const hour = date.getHours();
-  return hour < 12
-    ? `오전 ${hour}시`
-    : hour === 12
-      ? '오후 12시'
-      : `오후 ${hour - 12}시`;
+  if (hour === 0) return '오전 12시';
+  if (hour < 12) return `오전 ${hour}시`;
+  if (hour === 12) return '오후 12시';
+  return `오후 ${hour - 12}시`;
 }
 
 interface HomeHourlyStripProps {
@@ -29,7 +30,11 @@ export function HomeHourlyStrip({ hourly }: HomeHourlyStripProps) {
   const entries = hourly.slice(0, 6);
 
   return (
-    <ul className="flex gap-2 overflow-x-auto py-1" role="list">
+    <ul
+      className="flex gap-2 overflow-x-auto py-1"
+      role="list"
+      aria-label="시간별 날씨 예보"
+    >
       {entries.map((entry) => (
         <li
           key={entry.at}
