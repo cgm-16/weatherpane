@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { useFavorites } from '~/features/favorites/use-favorites';
-import { HomeHourlyStrip } from '~/pages/home/ui/home-hourly-strip';
+import { HourlyStrip } from '~/shared/ui/hourly-strip';
 import { DetailAqiCard } from './detail-aqi-card';
 import { DetailUvCard } from './detail-uv-card';
 import type { ResolvedLocation } from '~/entities/location/model/types';
@@ -105,7 +105,7 @@ export function DetailDashboard({
       {/* 12시간 시간별 예보 */}
       {weather.hourly.length > 0 && (
         <section className="px-4 pt-4" aria-label="시간별 예보">
-          <HomeHourlyStrip
+          <HourlyStrip
             hourly={weather.hourly}
             timeZone={location.timezone}
             count={12}
