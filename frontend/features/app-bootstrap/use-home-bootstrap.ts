@@ -20,7 +20,7 @@ export type HomeBootstrapState =
   | { kind: 'no-location' }
   | { kind: 'config-error'; error: ConfigError }
   | { kind: 'loading' }
-  | { kind: 'data'; location: ResolvedLocation; weather: CoreWeather; aqi: Aqi }
+  | { kind: 'data'; location: ResolvedLocation; weather: CoreWeather; aqi: Aqi; isRefreshing: boolean; hasRefreshError: boolean }
   | { kind: 'stale-fallback'; location: ResolvedLocation; weather: PersistedWeatherSnapshot; aqi: PersistedAqiSnapshot | null }
   | { kind: 'recoverable-error'; location: ResolvedLocation };
 
@@ -63,7 +63,17 @@ export function useHomeBootstrap(): HomeBootstrapState {
   }
 
   if (weatherQuery.data && aqiQuery.data) {
-    return { kind: 'data', location, weather: weatherQuery.data, aqi: aqiQuery.data };
+    return {
+      kind: 'data',
+      location,
+      weather: weatherQuery.data,
+      aqi: aqiQuery.data,
+      isRefreshing: weatherQuery.isFetching || aqiQuery.isFetching,
+      hasRefreshError:
+        (weatherQuery.isError || aqiQuery.isError) &&
+        !weatherQuery.isFetching &&
+        !aqiQuery.isFetching,
+    };
   }
 
   // fetch 실패 → 스냅샷 폴백 시도 (날씨 또는 AQI 중 하나라도 실패하면 진입합니다)

@@ -79,6 +79,8 @@ describe('HomePage 상태별 렌더링', () => {
     vi.mocked(useHomeBootstrap).mockReturnValue({
       kind: 'data',
       location: loc,
+      isRefreshing: false,
+      hasRefreshError: false,
       weather: {
         locationId: 'loc_test',
         fetchedAt: new Date().toISOString(),
