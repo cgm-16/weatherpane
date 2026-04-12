@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router';
 import { useCoreWeather } from '~/features/weather-queries/use-core-weather';
+import { CORE_WEATHER_STALE_TIME } from '~/features/weather-queries/weather-query-options';
 import { useActiveLocation } from '~/features/app-bootstrap/active-location-context';
 import type { FavoriteLocation } from '~/entities/location/model/types';
 import type { CoreWeather } from '~/entities/weather/model/core-weather';
 
-const STALE_MS = 10 * 60_000;
 const VERY_STALE_MS = 60 * 60_000;
 
 type Staleness = 'fresh' | 'stale' | 'very-stale';
@@ -12,7 +12,7 @@ type Staleness = 'fresh' | 'stale' | 'very-stale';
 function getStaleness(fetchedAt: string): Staleness {
   const ageMs = Date.now() - new Date(fetchedAt).getTime();
   if (ageMs > VERY_STALE_MS) return 'very-stale';
-  if (ageMs > STALE_MS) return 'stale';
+  if (ageMs > CORE_WEATHER_STALE_TIME) return 'stale';
   return 'fresh';
 }
 
