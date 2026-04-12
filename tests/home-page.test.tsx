@@ -71,7 +71,7 @@ describe('HomePage 상태별 렌더링', () => {
       aqi: null,
     });
     renderPage();
-    expect(screen.getByText(/Offline Mode Active/i)).toBeInTheDocument();
+    expect(screen.getByText(/오프라인 상태/)).toBeInTheDocument();
     expect(screen.getByText(/17/)).toBeInTheDocument();
   });
 
