@@ -91,6 +91,7 @@ describe('useHomeBootstrap', () => {
           latitude: 37,
           longitude: 127,
           capturedAt: '2026-04-12T10:00:00Z',
+          fallbackReason: 'canonicalization-failed' as const,
         },
         source: 'current-location' as const,
         changedAt: '2026-04-12T10:00:00Z',
