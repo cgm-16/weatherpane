@@ -54,7 +54,8 @@ test('최근 방문 지역은 재로드 후에도 유지되며 인기 지역 위
   await expect(page.getByRole('heading', { name: '최근 지역' })).toBeVisible();
 
   // 방문한 위치가 최근 지역에 표시됨
-  await expect(page.getByText('청운동').first()).toBeVisible();
+  const recentsRegion = page.getByRole('region', { name: '최근 지역' });
+  await expect(recentsRegion.getByText('청운동')).toBeVisible();
 
   // 인기 지역 섹션도 여전히 표시됨
   await expect(page.getByRole('heading', { name: '인기 지역' })).toBeVisible();
@@ -69,5 +70,7 @@ test('최근 방문 지역은 재로드 후에도 유지되며 인기 지역 위
   // 재로드 후에도 최근 지역이 유지됨
   await page.reload();
   await expect(page.getByRole('heading', { name: '최근 지역' })).toBeVisible();
-  await expect(page.getByText('청운동').first()).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: '최근 지역' }).getByText('청운동')
+  ).toBeVisible();
 });
