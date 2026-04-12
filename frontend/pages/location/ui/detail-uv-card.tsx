@@ -36,7 +36,7 @@ export function DetailUvCard({ uvIndex }: DetailUvCardProps) {
         {uvIndex != null && (
           <>
             <p className="font-body text-xs text-muted-foreground">
-              {uvCategory(uvIndex).label}
+              {category!.label}
             </p>
             <button
               type="button"

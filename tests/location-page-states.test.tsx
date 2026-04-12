@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { LocationUnsupported } from '../frontend/pages/location/ui/location-unsupported';
@@ -24,6 +24,10 @@ vi.mock('../frontend/features/favorites/use-favorites', () => ({
     atMaxFavorites: false,
   })),
 }));
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 describe('LocationUnsupported', () => {
   test('지원 불가 메시지를 표시한다', () => {

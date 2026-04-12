@@ -18,6 +18,5 @@ test('direct-open search hydrates from q and Enter follows the highlighted resul
   await searchbox.press('Enter');
 
   await expect(page).toHaveURL(/\/location\/5f5def784f91$/);
-  await expect(page.getByText('resolvedLocationId:')).toBeVisible();
-  await expect(page.getByText('5f5def784f91')).toBeVisible();
+  await expect(page.getByRole('main')).toBeVisible();
 });

@@ -10,7 +10,7 @@ const aqiCategoryLabel: Record<string, string> = {
 };
 
 // 사용자에게 표시할 오염물질 순서, 한국어 레이블, 단위
-// CO는 OpenWeatherMap AQI API에서 mg/m³로 제공됩니다. 나머지는 μg/m³입니다.
+// OpenWeatherMap AQI API는 모든 오염물질(CO 포함)을 μg/m³ 단위로 제공합니다.
 const POLLUTANTS: Array<{
   key: keyof Aqi['pollutants'];
   label: string;
@@ -21,7 +21,7 @@ const POLLUTANTS: Array<{
   { key: 'o3', label: 'O₃ (오존)', unit: 'μg/m³' },
   { key: 'no2', label: 'NO₂ (이산화질소)', unit: 'μg/m³' },
   { key: 'so2', label: 'SO₂ (이산화황)', unit: 'μg/m³' },
-  { key: 'co', label: 'CO (일산화탄소)', unit: 'mg/m³' },
+  { key: 'co', label: 'CO (일산화탄소)', unit: 'μg/m³' },
   { key: 'nh3', label: 'NH₃ (암모니아)', unit: 'μg/m³' },
 ];
 
