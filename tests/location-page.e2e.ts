@@ -10,7 +10,7 @@ const seoulActiveLocation = JSON.stringify({
   data: {
     kind: 'resolved',
     source: 'search',
-    changedAt: new Date().toISOString(),
+    changedAt: '2026-04-12T00:00:00.000Z',
     location: {
       kind: 'resolved',
       locationId: 'loc_KR-Seoul',

@@ -30,7 +30,10 @@ export function LocationUnsupported() {
             to="/search"
             className="font-headline flex w-full items-center justify-center gap-2 rounded-[--radius-sm] bg-primary px-6 py-4 font-bold text-primary-foreground"
           >
-            <span className="material-symbols-outlined text-[20px]">
+            <span
+              aria-hidden="true"
+              className="material-symbols-outlined text-[20px]"
+            >
               search
             </span>
             검색으로 돌아가기
@@ -39,7 +42,10 @@ export function LocationUnsupported() {
             to="/"
             className="flex w-full items-center justify-center gap-2 rounded-[--radius-sm] bg-muted px-6 py-4 font-body text-foreground"
           >
-            <span className="material-symbols-outlined text-[20px]">
+            <span
+              aria-hidden="true"
+              className="material-symbols-outlined text-[20px]"
+            >
               my_location
             </span>
             현재 위치로 돌아가기
@@ -48,7 +54,12 @@ export function LocationUnsupported() {
             to="/"
             className="flex w-full items-center justify-center gap-2 rounded-[--radius-sm] bg-muted px-6 py-4 font-body text-foreground"
           >
-            <span className="material-symbols-outlined text-[20px]">home</span>
+            <span
+              aria-hidden="true"
+              className="material-symbols-outlined text-[20px]"
+            >
+              home
+            </span>
             홈으로
           </Link>
         </div>
