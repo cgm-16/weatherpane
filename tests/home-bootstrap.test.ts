@@ -184,4 +184,35 @@ describe('useHomeBootstrap', () => {
     const { result } = renderHook(() => useHomeBootstrap());
     expect(result.current.kind).toBe('recoverable-error');
   });
+
+  test('날씨 성공 + AQI 실패 + 유효 날씨 스냅샷 → stale-fallback을 반환한다', () => {
+    const fresh = new Date(Date.now() - 60_000).toISOString();
+    const ws = {
+      locationId: 'loc_test', fetchedAt: fresh, observedAt: fresh,
+      temperatureC: 17, conditionCode: 'CLEAR', conditionText: '맑음',
+      todayMinC: 10, todayMaxC: 22, source: { provider: 'mock' },
+    };
+    vi.mocked(createWeatherSnapshotRepository).mockReturnValue({ get: vi.fn(() => ws), set: vi.fn(), remove: vi.fn(), clear: vi.fn() });
+    vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
+    vi.mocked(useCoreWeather).mockReturnValue(successQuery({
+      locationId: 'loc_test', fetchedAt: fresh, observedAt: fresh,
+      current: { temperatureC: 18, condition: { code: 'CLEAR', text: '맑음', isDay: true, visualBucket: 'clear', textMapping: { conditionCode: 'CLEAR', isDay: true, precipitationKind: 'none', cloudCoverPct: 5, intensity: 'none' } } },
+      today: { minC: 10, maxC: 22 }, hourly: [], source: { provider: 'mock' },
+    } as CoreWeather));
+    vi.mocked(useAqi).mockReturnValue(errorQuery());
+    const { result } = renderHook(() => useHomeBootstrap());
+    expect(result.current.kind).toBe('stale-fallback');
+  });
+
+  test('날씨 성공 + AQI 실패 + 스냅샷 없음 → recoverable-error를 반환한다', () => {
+    vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
+    vi.mocked(useCoreWeather).mockReturnValue(successQuery({
+      locationId: 'loc_test', fetchedAt: new Date().toISOString(), observedAt: new Date().toISOString(),
+      current: { temperatureC: 18, condition: { code: 'CLEAR', text: '맑음', isDay: true, visualBucket: 'clear', textMapping: { conditionCode: 'CLEAR', isDay: true, precipitationKind: 'none', cloudCoverPct: 5, intensity: 'none' } } },
+      today: { minC: 10, maxC: 22 }, hourly: [], source: { provider: 'mock' },
+    } as CoreWeather));
+    vi.mocked(useAqi).mockReturnValue(errorQuery());
+    const { result } = renderHook(() => useHomeBootstrap());
+    expect(result.current.kind).toBe('recoverable-error');
+  });
 });

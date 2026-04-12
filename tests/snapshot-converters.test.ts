@@ -62,6 +62,7 @@ describe('aqiToSnapshot', () => {
     const s = aqiToSnapshot(mockAqi);
     expect(s.locationId).toBe('loc_abc');
     expect(s.fetchedAt).toBe('2026-04-12T10:00:00Z');
+    expect(s.observedAt).toBe('2026-04-12T09:45:00Z');
   });
   test('summary.aqi를 평탄화한다', () => {
     expect(aqiToSnapshot(mockAqi).aqi).toBe(2);

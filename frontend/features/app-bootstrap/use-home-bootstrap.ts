@@ -1,5 +1,5 @@
 // 홈 페이지의 핵심 부트스트랩 오케스트레이터.
-// startup precedence → 쿼리 → 스냅샷 쓰기 → fallback vs error 분기를 한 곳에서 처리합니다.
+// 시작 우선순위 → 쿼리 → 스냅샷 쓰기 → 폴백/에러 분기를 한 곳에서 처리합니다.
 import { useEffect } from 'react';
 import { useActiveLocation } from './active-location-context';
 import { useCoreWeather } from '~/features/weather-queries/use-core-weather';
@@ -66,8 +66,8 @@ export function useHomeBootstrap(): HomeBootstrapState {
     return { kind: 'data', location, weather: weatherQuery.data, aqi: aqiQuery.data };
   }
 
-  // fetch 실패 → 스냅샷 폴백 시도
-  if (weatherQuery.isError) {
+  // fetch 실패 → 스냅샷 폴백 시도 (날씨 또는 AQI 중 하나라도 실패하면 진입합니다)
+  if (weatherQuery.isError || aqiQuery.isError) {
     const weatherSnapshot = createWeatherSnapshotRepository().get(location.locationId);
     const aqiSnapshot = createAqiSnapshotRepository().get(location.locationId);
 

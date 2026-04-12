@@ -1,12 +1,14 @@
 import { expect, test } from '@playwright/test';
 
-test('boots the home placeholder shell', async ({ page }) => {
+test('위치 없이 홈 진입 시 검색 안내 화면을 표시한다', async ({ page }) => {
+  // localStorage를 비워 위치가 없는 상태를 보장합니다.
   await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
 
   await expect(
-    page.getByRole('heading', { name: 'Weatherpane' })
+    page.getByRole('heading', { name: '위치를 선택하세요' })
   ).toBeVisible();
-  await expect(page.getByText('Home placeholder')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Search' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Favorites' })).toBeVisible();
+  await expect(page.getByRole('link', { name: '지역 검색' })).toBeVisible();
+  await expect(page.getByRole('link', { name: '지역 검색' })).toHaveAttribute('href', '/search');
 });
