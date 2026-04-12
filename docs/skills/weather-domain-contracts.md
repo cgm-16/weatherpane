@@ -26,6 +26,7 @@
 - Refetch on focus only when stale; do not refetch on every window focus
 - Weather snapshot fallback cutoff: 24 hours — snapshots older than 24h must not be shown as current data
 - AQI snapshot fallback cutoff: 12 hours
+- Authoritative cutoff helpers: `frontend/features/app-bootstrap/snapshot-cutoff.ts` — `isWeatherSnapshotFresh` and `isAqiSnapshotFresh` are the single source of truth for these cutoffs; do not hardcode the values elsewhere
 
 ## Execution checklist
 
