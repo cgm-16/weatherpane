@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
+import type { CoreWeather } from '../frontend/entities/weather/model/core-weather';
+import type { Aqi } from '../frontend/entities/aqi/model/aqi';
 
 vi.mock('../frontend/features/app-bootstrap/active-location-context', () => ({
   useActiveLocation: vi.fn(),
@@ -123,16 +125,16 @@ describe('useHomeBootstrap', () => {
 
   test('두 쿼리가 성공하면 data를 반환한다', () => {
     const now = new Date().toISOString();
-    const weather = {
+    const weather: CoreWeather = {
       locationId: 'loc_test', fetchedAt: now, observedAt: now,
       current: { temperatureC: 18, condition: { code: 'CLEAR', text: '맑음', isDay: true, visualBucket: 'clear', textMapping: { conditionCode: 'CLEAR', isDay: true, precipitationKind: 'none', cloudCoverPct: 5, intensity: 'none' } } },
       today: { minC: 10, maxC: 22 }, hourly: [], source: { provider: 'mock' },
-    } as any;
-    const aqi = {
+    };
+    const aqi: Aqi = {
       locationId: 'loc_test', fetchedAt: now, observedAt: now,
       summary: { aqi: 2, category: 'fair' }, pollutants: { co: 200, no2: 10, o3: 50, pm10: 25, pm25: 15, so2: 3 },
       source: { provider: 'mock' },
-    } as any;
+    };
     vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
     vi.mocked(useCoreWeather).mockReturnValue(successQuery(weather));
     vi.mocked(useAqi).mockReturnValue(successQuery(aqi));

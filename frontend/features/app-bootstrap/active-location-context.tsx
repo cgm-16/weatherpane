@@ -22,6 +22,7 @@ interface ActiveLocationProviderProps {
 export function ActiveLocationProvider({ children, storage }: ActiveLocationProviderProps) {
   const repo = createActiveLocationRepository(storage ? { storage } : {});
 
+  // eslint-disable-next-line @eslint-react/use-state -- 내부 setter는 storage 동기화 래퍼(setActiveLocation)와 명칭 충돌 방지를 위해 별도 명명
   const [activeLocation, setActiveLocationState] = useState<ActiveLocation | null>(
     () => repo.get()
   );
