@@ -81,6 +81,9 @@ function CardSnapshot({
   onCardClick: () => void;
 }) {
   const staleness = getStaleness(weather.fetchedAt);
+  // 갱신 실패 시 데이터가 신선해도 최소 'stale'로 표시
+  const effectiveStaleness =
+    hasRefreshError && staleness === 'fresh' ? 'stale' : staleness;
   const displayName = favorite.nickname ?? favorite.location.name;
 
   return (
@@ -100,7 +103,7 @@ function CardSnapshot({
           )}
         </div>
         {(hasRefreshError || staleness !== 'fresh') && (
-          <StaleIndicator staleness={staleness} />
+          <StaleIndicator staleness={effectiveStaleness} />
         )}
       </div>
 
