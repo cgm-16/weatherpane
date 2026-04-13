@@ -230,6 +230,8 @@ describe('createCatalogLocationResolver', () => {
     if (result.kind === 'resolved') {
       expect(result.location.latitude).toBe(37.5633);
       expect(result.location.longitude).toBe(127.0371);
+      // OWM가 영문 state를 반환해도 admin1은 카탈로그의 한국어 값을 사용해야 합니다.
+      expect(result.location.admin1).toBe('서울특별시');
     }
   });
 
