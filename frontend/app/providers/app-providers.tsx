@@ -11,6 +11,7 @@ import type { ConfigError } from '~/shared/lib/env-config';
 import { WeatherProviderContext } from '~/shared/api/weather-provider';
 import { ActiveLocationProvider } from '~/features/app-bootstrap/active-location-context';
 import { ThemeProvider } from '~/shared/hooks/use-theme';
+import { SketchManifestProvider, loadSessionManifest } from '~/entities/asset';
 
 // 시작 시 한 번만 파싱되며 런타임 중 환경 변수 변경에 반응하지 않습니다.
 const configResult = parseAppConfig();
@@ -31,12 +32,18 @@ type AppProvidersProps = {
 
 export function AppProviders({ children }: AppProvidersProps) {
   const [queryClient] = useState(() => new QueryClient());
+  // 세션 시작 시 한 번만 스케치 매니페스트를 로드한다. 다음 세션용 원격 갱신은 비동기로 기록된다.
+  const [sketchManifest] = useState(() => loadSessionManifest());
 
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <WeatherProviderContext value={weatherProvider}>
-          <ActiveLocationProvider>{children}</ActiveLocationProvider>
+          <ActiveLocationProvider>
+            <SketchManifestProvider manifest={sketchManifest}>
+              {children}
+            </SketchManifestProvider>
+          </ActiveLocationProvider>
         </WeatherProviderContext>
       </QueryClientProvider>
     </ThemeProvider>
