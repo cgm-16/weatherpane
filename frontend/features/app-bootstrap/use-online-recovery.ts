@@ -7,14 +7,20 @@ import { refreshLocation } from '~/features/weather-queries/refresh-location';
 export function useOnlineRecovery(): void {
   const queryClient = useQueryClient();
   const { activeLocation } = useActiveLocation();
-  const wasOfflineRef = useRef(!navigator.onLine);
+  const wasOfflineRef = useRef(
+    typeof navigator !== 'undefined' ? !navigator.onLine : false
+  );
+  const locationId =
+    activeLocation?.kind === 'resolved'
+      ? activeLocation.location.locationId
+      : null;
 
   useEffect(() => {
     function handleOnline() {
       if (wasOfflineRef.current) {
         wasOfflineRef.current = false;
-        if (activeLocation?.kind === 'resolved') {
-          refreshLocation(queryClient, activeLocation.location.locationId);
+        if (locationId) {
+          refreshLocation(queryClient, locationId);
         }
       }
     }
@@ -30,5 +36,5 @@ export function useOnlineRecovery(): void {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [queryClient, activeLocation]);
+  }, [queryClient, locationId]);
 }
