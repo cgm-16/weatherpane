@@ -1,0 +1,41 @@
+# Storybook React Router Vite plugin investigation
+
+## 2026-04-10
+
+- User reported: `pnpm storybook` fails with `Error: The React Router Vite plugin requires the use of a Vite config file`.
+- Investigation goal: reproduce the failure, identify which config path loads the React Router Vite plugin during Storybook startup, and propose repo-appropriate fixes.
+- Constraints:
+  - analysis first, no speculative fixes
+  - keep scope on Storybook/Vite/React Router wiring
+  - prefer minimal repo-local changes if implementation is requested later
+- Relevant prior repo memory:
+  - no existing `.memory-*.local.md` note mentioned Storybook, Vite config loading, or React Router plugin behavior
+- Reproduction:
+  - `pnpm storybook` prompted for a different port because `6006` is occupied locally, so it did not reach the failing build path
+  - `pnpm build-storybook` reproduced the reported failure during preview build
+  - exact failing error:
+    - `Error: The React Router Vite plugin requires the use of a Vite config file`
+- Source trace:
+  - app Vite config includes `reactRouter()` in `vite.config.ts`
+  - Storybook builder loads the user Vite config, then overwrites the effective config with `configFile: false`
+  - React Router's Vite plugin throws in `configResolved` when `resolvedViteConfig.configFile` is falsy
+- Evidence:
+  - `vite.config.ts` line 7 includes `reactRouter()`
+  - `@storybook/builder-vite/dist/index.js` lines 1429-1441 load the config and then set `configFile: !1`
+  - `@react-router/dev/dist/vite.js` lines 3654-3661 throw when `configFile` is missing
+- Current story scope:
+  - `stories/` does not import or use React Router APIs
+  - this makes "exclude React Router Vite plugin from Storybook" the most direct fix for the current state
+- Implementation notes:
+  - initial `viteFinal` attempt filtered only top-level plugin objects and did not fix the build
+  - root cause refinement: `reactRouter()` returns a nested array of Vite plugins, so Storybook still received React Router plugins after the first filter
+  - final fix in `.storybook/main.ts`:
+    - flatten nested plugin arrays
+    - filter any plugin whose `name` starts with `react-router`
+  - regression coverage added in `.storybook/main.test.ts`
+  - Storybook-local Vitest config added in `.storybook/vitest.config.ts` because the repo-wide `vitest.config.ts` only includes story files for the `storybook` project
+- Verification:
+  - `pnpm exec vitest run --config .storybook/vitest.config.ts` -> pass
+  - `pnpm build-storybook` -> pass
+  - `pnpm typecheck` -> still fails, but due pre-existing branch issues in `eslint.config.ts`
+  - `pnpm lint` -> still fails, but due broad existing branch issues including generated `.react-router/types/*` and `build/*`
