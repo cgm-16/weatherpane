@@ -112,9 +112,5 @@ When uncertain:
 - Exceptions: `AGENTS.md`, `docs/agents/*`, and `docs/skills/*` must be written in English. Files under `docs/legacy/*` may remain in their original language.
 - All TypeScript/JavaScript source files follow the Korean comment rule, including build scripts under `scripts/`.
 - `docs/` and its subfolders (except `docs/legacy/`) MUST be kept current with the codebase; do not leave outdated content after related changes.
-- `docs/legacy/` contains archived historical documents that may be outdated by design.
-- `docs/agents/` contains prompt plans and LLM-facing operational documents, and these files should be written in English.
-- Archive to `docs/legacy/` only when superseded or no longer operational, while preserving original filenames and relative topic grouping.
-- Every `docs/legacy/` document MUST include YAML front matter keys `archived_on`, `archive_reason`, and `replaced_by`; allowed `archive_reason` values are `superseded`, `no_longer_operational`, `historical_reference`.
-- `replaced_by` is required when `archive_reason: superseded`, and optional otherwise.
-- Use `$docs-governance` for docs update/archive procedure and verification checks.
+- `docs/agents/` contains prompt plans and LLM-facing operational documents, written in English.
+- Archive superseded docs to `docs/legacy/` with YAML front matter (`archived_on`, `archive_reason`, `replaced_by`). Use `$docs-governance` for procedure.
