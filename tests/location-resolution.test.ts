@@ -192,6 +192,47 @@ describe('createCatalogLocationResolver', () => {
     );
   });
 
+  test('queries OWM with leaf name and resolves depth-2 location via ExactLeaf match', async () => {
+    const catalogLocation = createCatalogLocation({
+      catalogLocationId: '9ce2db746e57',
+      name: '성동구',
+      admin1: '서울특별시',
+      admin2: '성동구',
+      latitude: 0,
+      longitude: 0,
+    });
+    const geocodeMock = vi.fn().mockResolvedValue([
+      {
+        // OWM가 state를 영어로 반환하는 경우를 재현하여 ExactLeaf 경로를 검증
+        countryCode: 'KR',
+        name: '성동구',
+        admin1: 'Seoul',
+        latitude: 37.5633,
+        longitude: 127.0371,
+      },
+    ]);
+    const repository = createUnsupportedRouteContextRepository({
+      storage: createMemoryStorage(),
+    });
+    const resolver = createCatalogLocationResolver({
+      geocode: geocodeMock,
+      now: () => '2026-04-14T09:00:00+09:00',
+      unsupportedRouteContextRepository: repository,
+    });
+
+    const result = await resolver.resolveCatalogLocation({
+      catalogLocation,
+      canonicalPath: '서울특별시-성동구',
+    });
+
+    expect(geocodeMock).toHaveBeenCalledWith('성동구');
+    expect(result.kind).toBe('resolved');
+    if (result.kind === 'resolved') {
+      expect(result.location.latitude).toBe(37.5633);
+      expect(result.location.longitude).toBe(127.0371);
+    }
+  });
+
   test('returns unsupported results without creating resolved locations', async () => {
     const catalogLocation = createCatalogLocation({
       admin1: '부산광역시',
