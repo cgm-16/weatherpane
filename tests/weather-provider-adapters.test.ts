@@ -175,6 +175,26 @@ describe('realWeatherProvider', () => {
       ]);
     });
 
+    test('응답에 local_names.ko가 있으면 영문 name 대신 한국어 이름을 사용한다', async () => {
+      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'test-key');
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        Response.json([
+          {
+            name: 'Seoul',
+            local_names: { ko: '서울특별시', en: 'Seoul' },
+            state: 'Seoul',
+            country: 'KR',
+            lat: 37.5665,
+            lon: 126.978,
+          },
+        ])
+      );
+
+      const candidates = await realWeatherProvider.geocode('서울특별시');
+
+      expect(candidates[0].name).toBe('서울특별시');
+    });
+
     test('올바른 URL로 API를 호출한다', async () => {
       vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'my-api-key');
       const fetchSpy = vi

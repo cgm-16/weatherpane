@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 // navigator.onLine과 window online/offline 이벤트를 추적합니다.
 export function useOnlineStatus(): { isOnline: boolean } {
   const [isOnline, setIsOnline] = useState(
-    () => typeof navigator !== 'undefined' && navigator.onLine
+    () => typeof navigator === 'undefined' || navigator.onLine
   );
 
   useEffect(() => {
