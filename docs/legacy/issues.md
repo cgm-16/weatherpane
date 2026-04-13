@@ -1,3 +1,9 @@
+---
+archived_on: 2026-04-13
+archive_reason: 구현 완료. 모든 이슈가 종료됨. 이슈 추적은 GitHub Issues에서 계속된다.
+replaced_by: GitHub Issues
+---
+
 # Weatherpane Issues Breakdown
 
 This file maps the implementation plan into issue-sized units.  
