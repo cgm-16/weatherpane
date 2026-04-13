@@ -209,9 +209,7 @@ export function createCatalogLocationResolver({
         };
       }
 
-      const geocodeCandidates = await geocode(
-        buildCatalogLocationPath(catalogLocation, canonicalPath)
-      );
+      const geocodeCandidates = await geocode(catalogLocation.name);
       const bestCandidate = pickBestGeocodeCandidate(
         buildCatalogLocationPath(catalogLocation, canonicalPath),
         catalogLocation.name,
