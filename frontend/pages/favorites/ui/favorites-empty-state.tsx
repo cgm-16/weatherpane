@@ -3,9 +3,7 @@ import { Link } from 'react-router';
 export function FavoritesEmptyState() {
   return (
     <div className="flex flex-col items-center justify-center gap-6 py-24 text-center">
-      <span className="material-symbols-outlined text-5xl text-muted-foreground opacity-40">
-        favorite_border
-      </span>
+      <span className="material-symbols-outlined text-5xl text-muted-foreground opacity-40"></span>
       <div className="flex flex-col gap-1">
         <p className="font-headline text-xl font-bold text-foreground">
           즐겨찾기가 비어있습니다
