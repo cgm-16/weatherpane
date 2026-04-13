@@ -67,6 +67,7 @@
     "lint-staged": "^16.4.0",
     "playwright": "^1.59.1",
     "prettier": "3.8.1",
+    "sharp": "^0.34.5",
     "storybook": "^10.3.5",
     "storybook-addon-remix-react-router": "^6.1.0",
     "tailwindcss": "4.2.2",
