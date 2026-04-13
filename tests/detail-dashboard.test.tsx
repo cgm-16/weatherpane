@@ -21,6 +21,8 @@ vi.mock('../frontend/features/favorites/use-favorites', () => ({
     undoEntry: null,
     undoRemove: vi.fn(),
     atMaxFavorites: false,
+    updateNickname: vi.fn(),
+    reorderFavorites: vi.fn(),
   })),
 }));
 
@@ -274,6 +276,8 @@ describe('DetailDashboard 즐겨찾기', () => {
       undoEntry: null,
       undoRemove: vi.fn(),
       atMaxFavorites: false,
+      updateNickname: vi.fn(),
+      reorderFavorites: vi.fn(),
     });
     renderDashboard();
     await user.click(screen.getByRole('button', { name: /즐겨찾기 추가/ }));
@@ -291,6 +295,8 @@ describe('DetailDashboard 즐겨찾기', () => {
       undoEntry: null,
       undoRemove: vi.fn(),
       atMaxFavorites: false,
+      updateNickname: vi.fn(),
+      reorderFavorites: vi.fn(),
     });
     renderDashboard();
     await user.click(screen.getByRole('button', { name: /즐겨찾기 해제/ }));
@@ -316,6 +322,8 @@ describe('DetailDashboard 즐겨찾기', () => {
       },
       undoRemove: vi.fn(),
       atMaxFavorites: false,
+      updateNickname: vi.fn(),
+      reorderFavorites: vi.fn(),
     });
     renderDashboard();
     expect(screen.getByRole('status')).toBeInTheDocument();

@@ -422,6 +422,8 @@ describe('FavoritesPage', () => {
       addFavorite: vi.fn(),
       removeFavorite: vi.fn(),
       atMaxFavorites: false,
+      updateNickname: vi.fn(),
+      reorderFavorites: vi.fn(),
     });
     renderPage();
     expect(
@@ -452,6 +454,8 @@ describe('FavoritesPage', () => {
       addFavorite: vi.fn(),
       removeFavorite: vi.fn(),
       atMaxFavorites: false,
+      updateNickname: vi.fn(),
+      reorderFavorites: vi.fn(),
     });
     renderPage();
     expect(screen.getAllByTestId('card-skeleton')).toHaveLength(2);
@@ -466,6 +470,8 @@ describe('FavoritesPage', () => {
       addFavorite: vi.fn(),
       removeFavorite: vi.fn(),
       atMaxFavorites: false,
+      updateNickname: vi.fn(),
+      reorderFavorites: vi.fn(),
     });
     renderPage();
     expect(
@@ -482,6 +488,8 @@ describe('FavoritesPage', () => {
       addFavorite: vi.fn(),
       removeFavorite: vi.fn(),
       atMaxFavorites: false,
+      updateNickname: vi.fn(),
+      reorderFavorites: vi.fn(),
     });
     renderPage();
     expect(screen.getByText(/서울/)).toBeInTheDocument();
@@ -499,6 +507,8 @@ describe('FavoritesPage', () => {
       addFavorite: vi.fn(),
       removeFavorite: vi.fn(),
       atMaxFavorites: false,
+      updateNickname: vi.fn(),
+      reorderFavorites: vi.fn(),
     });
     renderPage();
     expect(screen.getByText(/집/)).toBeInTheDocument();
@@ -517,6 +527,8 @@ describe('FavoritesPage', () => {
       addFavorite: vi.fn(),
       removeFavorite: vi.fn(),
       atMaxFavorites: false,
+      updateNickname: vi.fn(),
+      reorderFavorites: vi.fn(),
     });
     renderPage();
     await user.click(screen.getByRole('button', { name: /실행 취소/i }));

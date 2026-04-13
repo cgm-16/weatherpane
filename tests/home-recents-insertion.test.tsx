@@ -19,6 +19,8 @@ vi.mock('../frontend/features/favorites/use-favorites', () => ({
     undoEntry: null,
     undoRemove: vi.fn(),
     atMaxFavorites: false,
+    updateNickname: vi.fn(),
+    reorderFavorites: vi.fn(),
   })),
 }));
 
