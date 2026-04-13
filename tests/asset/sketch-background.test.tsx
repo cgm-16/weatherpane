@@ -105,6 +105,54 @@ describe('SketchBackground', () => {
     expect(final).toHaveClass('hidden');
   });
 
+  test('key가 바뀌면 에러 상태가 초기화된다', () => {
+    const overrideSrc = 'https://cdn.example/override.webp';
+    const override: SketchManifest = Object.freeze({
+      ...BASELINE_MANIFEST,
+      [expectedKey]: overrideSrc,
+    }) as SketchManifest;
+
+    const { container, rerender } = render(
+      <SketchManifestProvider manifest={override}>
+        <SketchBackground location={seoul} condition={clearDay} />
+      </SketchManifestProvider>
+    );
+
+    // override 실패 → baseline 실패 → hidden
+    const first = container.querySelector('img');
+    expect(first).not.toBeNull();
+    fireEvent.error(first!);
+    const second = container.querySelector('img');
+    fireEvent.error(second!);
+    expect(container.querySelector('img')).toHaveClass('hidden');
+
+    // 부산으로 위치를 변경 → 새 키에 대해 에러 상태가 초기화되어야 한다
+    const busan: ResolvedLocation = {
+      kind: 'resolved',
+      locationId: 'loc_busan',
+      catalogLocationId: 'KR-Busan',
+      name: '부산',
+      admin1: '부산광역시',
+      latitude: 35.18,
+      longitude: 129.08,
+      timezone: 'Asia/Seoul',
+    };
+    const busanKey = selectSketchKey(busan, clearDay);
+    expect(busanKey).not.toBe(expectedKey);
+
+    rerender(
+      <SketchManifestProvider manifest={override}>
+        <SketchBackground location={busan} condition={clearDay} />
+      </SketchManifestProvider>
+    );
+
+    const afterRerender = container.querySelector('img');
+    expect(afterRerender).not.toBeNull();
+    expect(afterRerender).not.toHaveClass('hidden');
+    expect(afterRerender).toHaveAttribute('data-sketch-key', busanKey);
+    expect(afterRerender).toHaveAttribute('src', BASELINE_MANIFEST[busanKey]);
+  });
+
   test('프로바이더 바깥에서 useSketchManifest 사용 시 문서화된 에러를 던진다', () => {
     // 콘솔 에러 억제는 생략: vitest가 throw를 잡아낸다.
     expect(() => render(<ProbeManifest />)).toThrow(/useSketchManifest/);

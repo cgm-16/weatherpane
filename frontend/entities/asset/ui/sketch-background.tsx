@@ -7,6 +7,7 @@ import type {
   ResolvedLocation,
 } from '../../location/model/types';
 import type { WeatherCondition } from '../../weather/model/core-weather';
+import type { SemanticKey } from '../model/keys';
 import { BASELINE_MANIFEST } from '../model/manifest';
 import { selectSketchKey } from '../model/selector';
 
@@ -26,28 +27,31 @@ export function SketchBackground({
   sizeHint,
 }: SketchBackgroundProps) {
   const manifest = useSketchManifest();
-  const key = selectSketchKey(location, condition);
+  const sketchKey = selectSketchKey(location, condition);
 
   // override가 없으면 baseline으로, 그것도 없으면 undefined.
-  const overrideSrc = manifest[key];
-  const baselineSrc = BASELINE_MANIFEST[key];
+  const overrideSrc = manifest[sketchKey];
+  const baselineSrc = BASELINE_MANIFEST[sketchKey];
   const initialSrc = overrideSrc ?? baselineSrc;
 
   // 한 번의 재시도만 허용: override → baseline → 포기(hidden).
   // attempt 0: override(또는 baseline 단일) / attempt 1: baseline / attempt 2: 포기
-  const [attempt, setAttempt] = useState<0 | 1 | 2>(0);
+  // React 19 setter-during-render 패턴: key가 바뀌면 에러 상태를 초기화한다.
+  const [state, setState] = useState<{ key: SemanticKey; attempt: 0 | 1 | 2 }>({
+    key: sketchKey,
+    attempt: 0,
+  });
+  if (state.key !== sketchKey) {
+    setState({ key: sketchKey, attempt: 0 });
+  }
+  const attempt = state.key === sketchKey ? state.attempt : 0;
 
   if (initialSrc === undefined) {
     // 키가 매니페스트에 전혀 없으면 레이아웃을 깨지 않기 위해 아무것도 렌더링하지 않는다.
     return null;
   }
 
-  let currentSrc: string | undefined = initialSrc;
-  if (attempt === 1) {
-    currentSrc = baselineSrc;
-  } else if (attempt === 2) {
-    currentSrc = baselineSrc;
-  }
+  const currentSrc = attempt === 0 ? initialSrc : baselineSrc;
 
   const hasOverrideRetry =
     overrideSrc !== undefined &&
@@ -57,11 +61,11 @@ export function SketchBackground({
   function handleError() {
     if (attempt === 0 && hasOverrideRetry) {
       // override 실패 → baseline으로 스왑
-      setAttempt(1);
+      setState({ key: sketchKey, attempt: 1 });
       return;
     }
     // baseline도 실패(또는 override 재시도 대상 아님) → 포기
-    setAttempt(2);
+    setState({ key: sketchKey, attempt: 2 });
   }
 
   const baseClass = 'pointer-events-none select-none';
@@ -78,7 +82,7 @@ export function SketchBackground({
       alt=""
       loading="lazy"
       decoding="async"
-      data-sketch-key={key}
+      data-sketch-key={sketchKey}
       data-size-hint={sizeHint ?? 'hero'}
       className={composedClass}
       onError={handleError}
