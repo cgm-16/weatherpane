@@ -154,7 +154,7 @@ function CardSnapshot({
         {(hasRefreshError || staleness !== 'fresh') && !isEditMode && (
           <StaleIndicator staleness={effectiveStaleness} />
         )}
-        {isEditMode && (
+        {editProps && (
           <>
             {/* 드래그 핸들 */}
             <div
@@ -167,11 +167,11 @@ function CardSnapshot({
             </div>
             {/* 위로/아래로 버튼 */}
             <div className="flex flex-col gap-1">
-              {!editProps!.isFirst && (
+              {!editProps.isFirst && (
                 <button
                   type="button"
                   aria-label={`즐겨찾기 ${cardName} 위로 이동`}
-                  onClick={editProps!.onMoveUp}
+                  onClick={editProps.onMoveUp}
                   className="flex h-7 w-7 items-center justify-center rounded bg-muted text-foreground transition-colors hover:bg-accent"
                 >
                   <span className="material-symbols-outlined text-sm">
@@ -179,11 +179,11 @@ function CardSnapshot({
                   </span>
                 </button>
               )}
-              {!editProps!.isLast && (
+              {!editProps.isLast && (
                 <button
                   type="button"
                   aria-label={`즐겨찾기 ${cardName} 아래로 이동`}
-                  onClick={editProps!.onMoveDown}
+                  onClick={editProps.onMoveDown}
                   className="flex h-7 w-7 items-center justify-center rounded bg-muted text-foreground transition-colors hover:bg-accent"
                 >
                   <span className="material-symbols-outlined text-sm">
