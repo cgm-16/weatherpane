@@ -14,6 +14,7 @@ import { SketchManifestProvider, loadSessionManifest } from '~/entities/asset';
 import { HomeConfigError } from '~/pages/home/ui/home-config-error';
 import { isProduction } from '~/shared/lib/runtime-env';
 import { AppEffects } from './app-effects';
+import { DevProviderToggle } from '~/shared/ui/dev-provider-toggle';
 
 // 시작 시 한 번만 파싱되며 런타임 중 환경 변수 변경에 반응하지 않습니다.
 const configResult = parseAppConfig();
@@ -54,6 +55,7 @@ export function AppProviders({ children }: AppProvidersProps) {
             <SketchManifestProvider manifest={sketchManifest}>
               <AppEffects />
               {children}
+              <DevProviderToggle currentMode={resolvedMode} />
             </SketchManifestProvider>
           </ActiveLocationProvider>
         </WeatherProviderContext>
