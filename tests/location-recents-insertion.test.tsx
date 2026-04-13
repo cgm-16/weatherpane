@@ -38,6 +38,18 @@ beforeEach(() => {
   vi.mocked(recentsModule.persistRecent).mockClear();
 });
 
+async function renderLocationPage(resolvedLocationId: string) {
+  const { LocationPage } =
+    await import('../frontend/pages/location/ui/location-page');
+  render(
+    <SketchManifestProvider manifest={BASELINE_MANIFEST}>
+      <MemoryRouter>
+        <LocationPage resolvedLocationId={resolvedLocationId} />
+      </MemoryRouter>
+    </SketchManifestProvider>
+  );
+}
+
 describe('LocationPage — recents insertion on entry', () => {
   test('calls persistRecent when bootstrap reaches data state', async () => {
     mockBootstrapResult = {
@@ -57,16 +69,7 @@ describe('LocationPage — recents insertion on entry', () => {
       hasRefreshError: false,
     };
 
-    const { LocationPage } =
-      await import('../frontend/pages/location/ui/location-page');
-
-    render(
-      <SketchManifestProvider manifest={BASELINE_MANIFEST}>
-        <MemoryRouter>
-          <LocationPage resolvedLocationId="aaa000000001" />
-        </MemoryRouter>
-      </SketchManifestProvider>
-    );
+    await renderLocationPage('aaa000000001');
 
     await waitFor(() => {
       expect(recentsModule.persistRecent).toHaveBeenCalledWith(mockLocation);
@@ -88,14 +91,7 @@ describe('LocationPage — recents insertion on entry', () => {
       aqi: null,
     };
 
-    const { LocationPage } =
-      await import('../frontend/pages/location/ui/location-page');
-
-    render(
-      <MemoryRouter>
-        <LocationPage resolvedLocationId="aaa000000001" />
-      </MemoryRouter>
-    );
+    await renderLocationPage('aaa000000001');
 
     await waitFor(() => {
       expect(recentsModule.persistRecent).toHaveBeenCalledWith(mockLocation);
@@ -106,14 +102,7 @@ describe('LocationPage — recents insertion on entry', () => {
   test('does NOT call persistRecent when bootstrap is loading', async () => {
     // mockBootstrapResult이 이미 beforeEach에서 { kind: 'loading' }으로 설정됨
 
-    const { LocationPage } =
-      await import('../frontend/pages/location/ui/location-page');
-
-    render(
-      <MemoryRouter>
-        <LocationPage resolvedLocationId="aaa000000001" />
-      </MemoryRouter>
-    );
+    await renderLocationPage('aaa000000001');
 
     // 비동기 이펙트가 안정화될 때까지 기다린 후 호출되지 않았음을 확인한다.
     await waitFor(() =>

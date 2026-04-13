@@ -4,12 +4,15 @@ import { isSemanticKey, type SemanticKey } from './keys';
 
 export type SketchManifest = Readonly<Record<SemanticKey, string>>;
 
-// 런타임 assert: JSON의 모든 키가 유효한 SemanticKey 여야 한다.
+// 런타임 assert: JSON의 모든 키가 유효한 SemanticKey이고 값이 공백 없는 비어있지 않은 문자열이어야 한다.
 function freezeManifest(raw: Record<string, string>): SketchManifest {
   const entries: Array<[SemanticKey, string]> = [];
   for (const [key, url] of Object.entries(raw)) {
     if (!isSemanticKey(key)) {
       throw new Error(`baseline manifest has invalid semantic key: ${key}`);
+    }
+    if (typeof url !== 'string' || url.trim().length === 0) {
+      throw new Error(`baseline manifest has invalid url for key: ${key}`);
     }
     entries.push([key, url]);
   }
@@ -30,7 +33,7 @@ export function mergeManifest(
   }
   const merged: Record<string, string> = { ...baseline };
   for (const [key, url] of Object.entries(override)) {
-    if (typeof url === 'string' && url.length > 0 && isSemanticKey(key)) {
+    if (typeof url === 'string' && url.trim().length > 0 && isSemanticKey(key)) {
       merged[key] = url;
     }
   }

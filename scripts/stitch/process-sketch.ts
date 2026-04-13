@@ -8,9 +8,10 @@ import { createHash } from 'node:crypto';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
-const REPO_ROOT = resolve(new URL('.', import.meta.url).pathname, '../..');
+const REPO_ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 const ASSET_MAP_PATH = join(REPO_ROOT, 'scripts/stitch/asset-map.json');
 
 // 마스터 크기: WP-020 에셋 매니페스트 계약이 요구하는 3:2 landscape 기준.
@@ -79,12 +80,10 @@ async function encodeWebpUnderBudget(
       return { buffer, quality };
     }
   }
-  // 최저 품질로도 예산을 초과하면 마지막 결과를 그대로 반환하고 경고한다.
-  const fallback = await pipeline
-    .clone()
-    .webp({ quality: QUALITY_SWEEP[QUALITY_SWEEP.length - 1], effort: 6 })
-    .toBuffer();
-  return { buffer: fallback, quality: QUALITY_SWEEP[QUALITY_SWEEP.length - 1] };
+  // 최저 품질로도 예산을 초과하면 400KB 계약을 위반하므로 에러를 던진다.
+  throw new Error(
+    `image cannot be encoded under ${MAX_BYTES} bytes at any quality in QUALITY_SWEEP`
+  );
 }
 
 async function loadAssetMap(): Promise<AssetMap> {
@@ -131,7 +130,7 @@ async function main(): Promise<void> {
 
   const sizeKb = (buffer.length / 1024).toFixed(1);
   console.log(
-    `${key}: ${MASTER_WIDTH}x${MASTER_HEIGHT} webp q${quality} ${sizeKb}KB → ${outRelPath}${buffer.length > MAX_BYTES ? ' (over budget)' : ''}`
+    `${key}: ${MASTER_WIDTH}x${MASTER_HEIGHT} webp q${quality} ${sizeKb}KB → ${outRelPath}`
   );
 }
 

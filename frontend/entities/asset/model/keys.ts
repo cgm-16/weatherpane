@@ -12,12 +12,11 @@ export interface SemanticKeyParts {
   variant: SketchVariantId;
 }
 
-const SKETCH_FAMILIES: readonly SketchFamily[] = ['hub', 'generic'];
-const SKETCH_FAMILY_IDS: readonly SketchFamilyId[] = [
-  'seoul',
-  'busan',
-  'urban',
-];
+// 허용된 familyId 집합 — family별로 다르다.
+const FAMILY_ID_MAP: Record<SketchFamily, readonly SketchFamilyId[]> = {
+  hub: ['seoul', 'busan'],
+  generic: ['urban'],
+};
 // 허용된 variant 리터럴 집합. WeatherVisualBucket × SketchDaypart 조합.
 const SKETCH_VARIANT_IDS: readonly SketchVariantId[] = [
   'clear-day',
@@ -31,11 +30,14 @@ const SKETCH_VARIANT_IDS: readonly SketchVariantId[] = [
 ];
 
 function isSketchFamily(value: string): value is SketchFamily {
-  return (SKETCH_FAMILIES as readonly string[]).includes(value);
+  return value === 'hub' || value === 'generic';
 }
 
-function isSketchFamilyId(value: string): value is SketchFamilyId {
-  return (SKETCH_FAMILY_IDS as readonly string[]).includes(value);
+function isFamilyIdForFamily(
+  familyId: string,
+  family: SketchFamily
+): familyId is SketchFamilyId {
+  return (FAMILY_ID_MAP[family] as readonly string[]).includes(familyId);
 }
 
 function isSketchVariantId(value: string): value is SketchVariantId {
@@ -59,7 +61,7 @@ export function parseSemanticKey(value: string): SemanticKeyParts | null {
     return null;
   }
 
-  if (!isSketchFamilyId(familyId) || !isSketchVariantId(variant)) {
+  if (!isFamilyIdForFamily(familyId, family) || !isSketchVariantId(variant)) {
     return null;
   }
 

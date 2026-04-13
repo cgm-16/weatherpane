@@ -82,12 +82,12 @@ Stitch generates images but cannot name them. After generation, a screen's `titl
 3. Re-list screens; diff against the snapshot to identify the new screen.
 4. Append to `asset-map.json`: `screenId`, `downloadUrl`, `sourceSize`, `generatedAt`.
 5. Download raw PNG:
-   ```
+   ```bash
    curl -L "<downloadUrl>=w2400" -o "scripts/stitch/_raw/<safe-key>.png"
    ```
    Append `=w2400` to the URL when the provider supports it for higher-resolution output.
 6. Post-process:
-   ```
+   ```bash
    pnpm exec tsx scripts/stitch/process-sketch.ts --key <semantic-key> --input scripts/stitch/_raw/<safe-key>.png
    ```
    This crops to 3:2 (bottom crop), resizes to 2400×1600, quality-sweeps to find the highest quality under 400 KB, writes `public/sketches/<key>.webp`, and updates `asset-map.json` with `localPath` and `sha256`.
