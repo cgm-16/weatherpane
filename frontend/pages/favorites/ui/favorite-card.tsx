@@ -129,7 +129,7 @@ function CardSnapshot({
         {isEditMode ? (
           <input
             type="text"
-            className="font-headline w-full rounded bg-transparent text-xl leading-tight font-bold text-card-foreground focus:outline-none"
+            className="font-headline w-full rounded bg-transparent text-xl leading-tight font-bold text-card-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
             value={draft}
             maxLength={20}
             aria-label={`${displayName} 닉네임 편집`}

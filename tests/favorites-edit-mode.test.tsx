@@ -92,7 +92,7 @@ const freshWeather: CoreWeather = {
   source: { provider: 'kma' },
 };
 
-function makeQueryClient() {
+function makeTestQueryClient() {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } });
 }
 
@@ -129,7 +129,7 @@ function setupWeather() {
 
 function renderPage() {
   return render(
-    <QueryClientProvider client={makeQueryClient()}>
+    <QueryClientProvider client={makeTestQueryClient()}>
       <MemoryRouter>
         <FavoritesPage />
       </MemoryRouter>
