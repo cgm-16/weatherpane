@@ -95,7 +95,7 @@ describe('HomePage 상태별 렌더링', () => {
     ).toBeInTheDocument();
   });
 
-  test('stale-fallback → 오프라인 표시와 기온, 최고·최저 기온을 표시한다', () => {
+  test('stale-fallback → 기온, 최고·최저 기온을 표시한다', () => {
     const now = new Date().toISOString();
     vi.mocked(useHomeBootstrap).mockReturnValue({
       kind: 'stale-fallback',
@@ -114,7 +114,6 @@ describe('HomePage 상태별 렌더링', () => {
       aqi: null,
     });
     renderPage();
-    expect(screen.getByText(/오프라인 상태/)).toBeInTheDocument();
     expect(screen.getByText(/17/)).toBeInTheDocument();
     expect(screen.getByText(/22°/)).toBeInTheDocument();
     expect(screen.getByText(/10°/)).toBeInTheDocument();

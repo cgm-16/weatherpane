@@ -260,7 +260,7 @@ describe('LocationPage 상태별 렌더링', () => {
     expect(mockRefresh).toHaveBeenCalledWith(loc.locationId);
   });
 
-  test('stale-fallback → 오프라인 배너와 기온을 표시한다', () => {
+  test('stale-fallback → 기온을 표시한다', () => {
     const now = new Date().toISOString();
     vi.mocked(useDetailBootstrap).mockReturnValue({
       kind: 'stale-fallback',
@@ -279,7 +279,6 @@ describe('LocationPage 상태별 렌더링', () => {
       aqi: null,
     });
     renderPage();
-    expect(screen.getByText(/오프라인 상태/)).toBeInTheDocument();
     expect(screen.getByText(/17/)).toBeInTheDocument();
   });
 

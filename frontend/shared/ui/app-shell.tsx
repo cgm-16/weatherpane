@@ -1,7 +1,6 @@
 import { BottomNav } from './bottom-nav';
 import { SidebarNav } from './sidebar-nav';
 import { OfflineBanner } from './offline-banner';
-import { useOnlineRecovery } from '~/features/app-bootstrap/use-online-recovery';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -13,8 +12,6 @@ interface AppShellProps {
  * - 데스크톱 (≥ md): SidebarNav 표시, 왼쪽 마진으로 콘텐츠 이동
  */
 export function AppShell({ children }: AppShellProps) {
-  useOnlineRecovery();
-
   return (
     <>
       <OfflineBanner />

@@ -46,13 +46,6 @@ export function HomePage() {
         className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background"
         role="main"
       >
-        {/* 오프라인 표시 */}
-        <div className="flex items-center gap-2 rounded-full bg-muted px-4 py-2">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-border" />
-          <span className="font-display text-[11px] font-bold tracking-widest text-muted-foreground uppercase">
-            오프라인 상태
-          </span>
-        </div>
         {/* 최소 날씨 표시 */}
         <p className="font-display text-5xl font-extrabold text-foreground">
           {Math.round(bootstrap.weather.temperatureC)}°C
