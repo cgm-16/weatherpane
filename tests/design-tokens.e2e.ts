@@ -89,16 +89,13 @@ test.describe('디자인 토큰 — Haet-Ssal (밝은 모드)', () => {
 
 test.describe('디자인 토큰 — Dal-Bit Night (어두운 모드)', () => {
   test.beforeEach(async ({ page }) => {
+    // 내비게이션 전 스토리지 키를 설정해 ThemeProvider가 정상 초기화 경로로 다크 모드를 적용하도록 한다
+    await page.addInitScript(() => {
+      const v = JSON.stringify({ version: 1, data: 'dark' });
+      localStorage.setItem('weatherpane.theme.v1', v);
+      sessionStorage.setItem('weatherpane.theme.v1', v);
+    });
     await page.goto('/');
-    // React 하이드레이션이 완전히 완료된 후 다크 모드 강제 적용.
-    // networkidle 대기 없이 바로 evaluate하면 ThemeProvider useEffect가 나중에 실행되어
-    // 수동으로 추가한 .dark 클래스를 제거할 수 있다.
-    await page.waitForLoadState('networkidle');
-    await page.evaluate(() => document.documentElement.classList.add('dark'));
-    // 클래스가 실제로 적용될 때까지 대기
-    await page.waitForFunction(() =>
-      document.documentElement.classList.contains('dark')
-    );
   });
 
   test('어두운 모드 색상 토큰이 Dal-Bit Night 값으로 전환된다', async ({

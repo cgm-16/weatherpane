@@ -21,7 +21,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="기본 내비게이션"
-      className="fixed right-0 bottom-0 left-0 z-50 flex items-center justify-around rounded-t-[32px] bg-surface-container-highest/60 px-6 pt-3 pb-6 shadow-[0px_-10px_24px_rgba(27,28,28,0.04)] backdrop-blur-[20px] dark:bg-surface-bright/40"
+      className="fixed right-0 bottom-0 left-0 z-50 flex items-center justify-around rounded-t-[32px] bg-surface-container-highest/60 px-6 pt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-[0px_-10px_24px_rgba(27,28,28,0.04)] backdrop-blur-[20px] dark:bg-surface-bright/40"
     >
       <NavLink to="/" end className={navItemClass}>
         <Home aria-hidden className="size-5" />
@@ -39,6 +39,7 @@ export function BottomNav() {
         aria-label={
           theme === 'light' ? '어두운 모드로 전환' : '밝은 모드로 전환'
         }
+        data-theme-toggle={theme === 'light' ? 'dark' : 'light'}
         className="flex flex-col items-center gap-0.5 rounded-full px-4 py-2 text-foreground/50 transition-colors hover:text-foreground"
         onClick={toggle}
       >

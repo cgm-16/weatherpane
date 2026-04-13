@@ -51,6 +51,7 @@ export function SidebarNav() {
           aria-label={
             theme === 'light' ? '어두운 모드로 전환' : '밝은 모드로 전환'
           }
+          data-theme-toggle={theme === 'light' ? 'dark' : 'light'}
           className="flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm text-foreground/60 transition-colors hover:bg-accent hover:text-foreground"
           onClick={toggle}
         >
