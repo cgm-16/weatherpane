@@ -139,6 +139,8 @@ function renderPage() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // setupWeather은 모든 테스트에서 동일하므로 여기서 호출한다.
+  // setupFavorites는 테스트마다 즐겨찾기 목록이 다르므로 각 테스트에서 직접 호출한다.
   setupWeather();
 });
 
