@@ -1,5 +1,3 @@
-import { Home, Moon, Search, Sun } from 'lucide-react';
-import { Heart } from 'lucide-react';
 import { NavLink } from 'react-router';
 import { cn } from '~/shared/lib/utils';
 import { useTheme } from '~/shared/hooks/use-theme';
@@ -34,14 +32,30 @@ export function SidebarNav() {
 
       <nav className="flex-1 space-y-1">
         <NavLink to="/" end className={navItemClass}>
-          <Home aria-hidden className="size-5 shrink-0" />홈
+          <span
+            aria-hidden
+            className="material-symbols-outlined shrink-0 text-[20px]"
+          >
+            home
+          </span>
+          홈
         </NavLink>
         <NavLink to="/search" className={navItemClass}>
-          <Search aria-hidden className="size-5 shrink-0" />
+          <span
+            aria-hidden
+            className="material-symbols-outlined shrink-0 text-[20px]"
+          >
+            search
+          </span>
           검색
         </NavLink>
         <NavLink to="/favorites" className={navItemClass}>
-          <Heart aria-hidden className="size-5 shrink-0" />
+          <span
+            aria-hidden
+            className="material-symbols-outlined shrink-0 text-[20px]"
+          >
+            favorite
+          </span>
           즐겨찾기
         </NavLink>
       </nav>
@@ -55,11 +69,12 @@ export function SidebarNav() {
           className="flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm text-foreground/60 transition-colors hover:bg-accent hover:text-foreground"
           onClick={toggle}
         >
-          {theme === 'light' ? (
-            <Moon aria-hidden className="size-5 shrink-0" />
-          ) : (
-            <Sun aria-hidden className="size-5 shrink-0" />
-          )}
+          <span
+            aria-hidden
+            className="material-symbols-outlined shrink-0 text-[20px]"
+          >
+            {theme === 'light' ? 'dark_mode' : 'light_mode'}
+          </span>
           {theme === 'light' ? '어두운 모드' : '밝은 모드'}
         </button>
       </div>
