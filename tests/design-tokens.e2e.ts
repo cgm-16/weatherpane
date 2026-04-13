@@ -96,6 +96,11 @@ test.describe('디자인 토큰 — Dal-Bit Night (어두운 모드)', () => {
       sessionStorage.setItem('weatherpane.theme.v1', v);
     });
     await page.goto('/');
+    // React 하이드레이션 중 .dark 클래스가 일시적으로 제거될 수 있으므로 ThemeProvider의
+    // useEffect가 .dark를 재적용할 때까지 대기한다 (FOUC 스크립트 이후 조정 완료 보장).
+    await page.waitForFunction(() =>
+      document.documentElement.classList.contains('dark')
+    );
   });
 
   test('어두운 모드 색상 토큰이 Dal-Bit Night 값으로 전환된다', async ({
