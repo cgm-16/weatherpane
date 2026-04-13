@@ -48,3 +48,28 @@ describe('useOnlineStatus', () => {
     expect(removeSpy).toHaveBeenCalledWith('offline', expect.any(Function));
   });
 });
+
+describe('useOnlineStatus - SSR 환경', () => {
+  let savedNavigator: PropertyDescriptor | undefined;
+
+  beforeEach(() => {
+    // navigator를 제거해 서버 렌더링 환경을 시뮬레이션한다.
+    savedNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+    Object.defineProperty(globalThis, 'navigator', {
+      value: undefined,
+      configurable: true,
+      writable: true,
+    });
+  });
+
+  afterEach(() => {
+    if (savedNavigator) {
+      Object.defineProperty(globalThis, 'navigator', savedNavigator);
+    }
+  });
+
+  it('navigator가 없는 환경에서 초기 상태는 true(온라인으로 가정)다', () => {
+    const { result } = renderHook(() => useOnlineStatus());
+    expect(result.current.isOnline).toBe(true);
+  });
+});

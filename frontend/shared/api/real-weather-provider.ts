@@ -5,6 +5,8 @@ import { WeatherProviderError } from './weather-provider-error';
 // OpenWeather Geocoding API 응답의 개별 항목 형태
 interface OpenWeatherGeocodeEntry {
   name: string;
+  // 언어별 현지 명칭 맵 (예: { ko: '서울특별시', en: 'Seoul' })
+  local_names?: Record<string, string>;
   state?: string;
   country: string;
   lat: number;
@@ -65,7 +67,7 @@ export const realWeatherProvider: WeatherProvider = {
     const data = (await response.json()) as OpenWeatherGeocodeEntry[];
 
     return data.map((item) => ({
-      name: item.name,
+      name: item.local_names?.ko ?? item.name,
       admin1: item.state,
       countryCode: item.country,
       latitude: item.lat,
