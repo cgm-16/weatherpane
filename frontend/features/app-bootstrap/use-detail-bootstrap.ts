@@ -1,9 +1,16 @@
 // 상세 페이지의 부트스트랩 오케스트레이터.
 // resolvedLocationId(라우트 파라미터)를 받아 판별 유니온 상태를 반환합니다.
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useActiveLocation } from './active-location-context';
+import { useWeatherProvider } from '~/shared/api/weather-provider';
 import { useCoreWeather } from '~/features/weather-queries/use-core-weather';
 import { useAqi } from '~/features/weather-queries/use-aqi';
+import {
+  buildCatalogLocationFromEntry,
+  createCatalogLocationResolver,
+  getCatalogEntryById,
+} from '~/entities/location';
+import { createUnsupportedRouteContextRepository } from '~/shared/lib/storage/repositories/unsupported-route-context-repository';
 import {
   createWeatherSnapshotRepository,
   createAqiSnapshotRepository,
@@ -11,7 +18,10 @@ import {
 import { coreWeatherToSnapshot } from '~/entities/weather/model/core-weather-to-snapshot';
 import { aqiToSnapshot } from '~/entities/aqi/model/aqi-to-snapshot';
 import { isWeatherSnapshotFresh, isAqiSnapshotFresh } from './snapshot-cutoff';
-import type { ResolvedLocation } from '~/entities/location/model/types';
+import type {
+  ResolvedLocation,
+  ActiveLocation,
+} from '~/entities/location/model/types';
 import type { CoreWeather } from '~/entities/weather/model/core-weather';
 import type { Aqi } from '~/entities/aqi/model/aqi';
 import type { PersistedWeatherSnapshot } from '~/entities/weather/model/persisted-weather-snapshot';
@@ -37,10 +47,14 @@ export type DetailBootstrapState =
     }
   | { kind: 'recoverable-error'; location: ResolvedLocation };
 
+type ColdLoadStatus = 'idle' | 'resolving' | 'failed';
+
 export function useDetailBootstrap(
   resolvedLocationId: string
 ): DetailBootstrapState {
-  const { activeLocation } = useActiveLocation();
+  const { activeLocation, setActiveLocation } = useActiveLocation();
+  const { geocode } = useWeatherProvider();
+  const [coldLoadStatus, setColdLoadStatus] = useState<ColdLoadStatus>('idle');
 
   const isUnsupported = resolvedLocationId.startsWith('unsupported::');
 
@@ -48,9 +62,66 @@ export function useDetailBootstrap(
   const resolvedLocation: ResolvedLocation | null =
     !isUnsupported &&
     activeLocation?.kind === 'resolved' &&
-    activeLocation.location.catalogLocationId === resolvedLocationId
+    activeLocation.location.locationId === resolvedLocationId
       ? activeLocation.location
       : null;
+
+  // activeLocation이 없을 때 카탈로그에서 위치를 자동으로 해결합니다 (북마크 / 딥링크 지원).
+  const needsColdLoad = !isUnsupported && activeLocation === null;
+
+  useEffect(() => {
+    if (!needsColdLoad || coldLoadStatus !== 'idle') return;
+
+    // loc_ 접두사를 제거하여 catalogLocationId를 추출합니다.
+    const catalogLocationId = resolvedLocationId.startsWith('loc_')
+      ? resolvedLocationId.slice(4)
+      : resolvedLocationId;
+
+    // 상태 변경을 모두 비동기 콜백 안에서 수행합니다 (동기 setState 경고 방지).
+    Promise.resolve(getCatalogEntryById(catalogLocationId))
+      .then((entry) => {
+        if (!entry) {
+          setColdLoadStatus('failed');
+          return;
+        }
+        setColdLoadStatus('resolving');
+
+        const resolver = createCatalogLocationResolver({
+          geocode,
+          now: () => new Date().toISOString(),
+          unsupportedRouteContextRepository:
+            createUnsupportedRouteContextRepository(),
+        });
+
+        return resolver
+          .resolveCatalogLocation({
+            catalogLocation: buildCatalogLocationFromEntry(entry),
+            canonicalPath: entry.canonicalPath,
+            overrideKey: entry.overrideKey,
+          })
+          .then((resolution) => {
+            if (resolution.kind === 'resolved') {
+              const loc: ActiveLocation = {
+                kind: 'resolved',
+                location: resolution.location,
+                source: 'search',
+                changedAt: new Date().toISOString(),
+              };
+              setActiveLocation(loc);
+              setColdLoadStatus('idle');
+            } else {
+              setColdLoadStatus('failed');
+            }
+          });
+      })
+      .catch(() => setColdLoadStatus('failed'));
+  }, [
+    needsColdLoad,
+    coldLoadStatus,
+    resolvedLocationId,
+    geocode,
+    setActiveLocation,
+  ]);
 
   const weatherQuery = useCoreWeather(resolvedLocation);
   const aqiQuery = useAqi(resolvedLocation);
@@ -82,11 +153,17 @@ export function useDetailBootstrap(
     };
   }
 
-  // 활성 위치가 없거나 catalogLocationId가 일치하지 않으면 not-found 반환
+  // activeLocation이 없음 → 콜드 로드 진행 중이거나 실패한 경우
+  if (activeLocation === null) {
+    return coldLoadStatus === 'failed'
+      ? { kind: 'not-found' }
+      : { kind: 'loading' };
+  }
+
+  // 활성 위치가 있지만 URL과 일치하지 않음 → not-found
   if (
-    !activeLocation ||
     activeLocation.kind !== 'resolved' ||
-    activeLocation.location.catalogLocationId !== resolvedLocationId
+    activeLocation.location.locationId !== resolvedLocationId
   ) {
     return { kind: 'not-found' };
   }
