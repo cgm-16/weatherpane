@@ -97,5 +97,5 @@ test('홈 대시보드에서 상세 보기 클릭 시 상세 페이지로 이동
   // 날씨 데이터가 로드될 때까지 대기 (시간별 예보에도 17°가 나타나므로 first() 사용)
   await expect(page.getByText(/17°/).first()).toBeVisible();
   await page.getByRole('link', { name: /상세 보기/ }).click();
-  await expect(page).toHaveURL(/\/location\/KR-Seoul/);
+  await expect(page).toHaveURL(/\/location\/loc_KR-Seoul/);
 });

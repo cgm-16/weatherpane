@@ -16,8 +16,8 @@ test('검색 결과 선택 시 Detail로 이동하고 날씨가 표시된다', a
 
   await searchbox.press('Enter');
 
-  // URL이 catalogLocationId로 이동했는지 확인
-  await expect(page).toHaveURL(/\/location\/[0-9a-f]{12}$/);
+  // URL이 locationId(loc_ 접두사 포함)로 이동했는지 확인
+  await expect(page).toHaveURL(/\/location\/loc_[0-9a-f]{12}$/);
 
   // 목 프로바이더 → 날씨 대시보드가 표시됨
   await expect(page.getByText(/17°/).first()).toBeVisible();
