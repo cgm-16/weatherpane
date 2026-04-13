@@ -6,6 +6,10 @@ import { describe, expect, test, vi, afterEach } from 'vitest';
 import { MemoryRouter } from 'react-router';
 import * as recentsModule from '../frontend/features/recents';
 import { HomeDashboard } from '../frontend/pages/home/ui/home-dashboard';
+import {
+  SketchManifestProvider,
+  BASELINE_MANIFEST,
+} from '../frontend/entities/asset';
 import type { ResolvedLocation } from '../frontend/entities/location/model/types';
 import type { CoreWeather } from '../frontend/entities/weather/model/core-weather';
 import type { Aqi } from '../frontend/entities/aqi/model/aqi';
@@ -80,16 +84,18 @@ describe('HomeDashboard — recents insertion', () => {
     const user = userEvent.setup();
 
     render(
-      <MemoryRouter>
-        <HomeDashboard
-          location={mockLocation}
-          weather={mockWeather}
-          aqi={mockAqi}
-          isRefreshing={false}
-          hasRefreshError={false}
-          onRefresh={vi.fn()}
-        />
-      </MemoryRouter>
+      <SketchManifestProvider manifest={BASELINE_MANIFEST}>
+        <MemoryRouter>
+          <HomeDashboard
+            location={mockLocation}
+            weather={mockWeather}
+            aqi={mockAqi}
+            isRefreshing={false}
+            hasRefreshError={false}
+            onRefresh={vi.fn()}
+          />
+        </MemoryRouter>
+      </SketchManifestProvider>
     );
 
     await user.click(screen.getByRole('button', { name: '새로고침' }));
@@ -103,16 +109,18 @@ describe('HomeDashboard — recents insertion', () => {
     const user = userEvent.setup();
 
     render(
-      <MemoryRouter>
-        <HomeDashboard
-          location={mockLocation}
-          weather={mockWeather}
-          aqi={mockAqi}
-          isRefreshing={false}
-          hasRefreshError={false}
-          onRefresh={vi.fn()}
-        />
-      </MemoryRouter>
+      <SketchManifestProvider manifest={BASELINE_MANIFEST}>
+        <MemoryRouter>
+          <HomeDashboard
+            location={mockLocation}
+            weather={mockWeather}
+            aqi={mockAqi}
+            isRefreshing={false}
+            hasRefreshError={false}
+            onRefresh={vi.fn()}
+          />
+        </MemoryRouter>
+      </SketchManifestProvider>
     );
 
     await user.click(screen.getByRole('button', { name: '즐겨찾기 추가' }));

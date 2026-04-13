@@ -5,6 +5,10 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
 import { HomeDashboard } from '../frontend/pages/home/ui/home-dashboard';
+import {
+  SketchManifestProvider,
+  BASELINE_MANIFEST,
+} from '../frontend/entities/asset';
 import type { ResolvedLocation } from '../frontend/entities/location/model/types';
 import type { CoreWeather } from '../frontend/entities/weather/model/core-weather';
 import type { Aqi } from '../frontend/entities/aqi/model/aqi';
@@ -77,17 +81,19 @@ function renderDashboard(
   overrides: Partial<Parameters<typeof HomeDashboard>[0]> = {}
 ) {
   return render(
-    <MemoryRouter>
-      <HomeDashboard
-        location={loc}
-        weather={weather}
-        aqi={aqi}
-        isRefreshing={false}
-        hasRefreshError={false}
-        onRefresh={vi.fn()}
-        {...overrides}
-      />
-    </MemoryRouter>
+    <SketchManifestProvider manifest={BASELINE_MANIFEST}>
+      <MemoryRouter>
+        <HomeDashboard
+          location={loc}
+          weather={weather}
+          aqi={aqi}
+          isRefreshing={false}
+          hasRefreshError={false}
+          onRefresh={vi.fn()}
+          {...overrides}
+        />
+      </MemoryRouter>
+    </SketchManifestProvider>
   );
 }
 
@@ -139,6 +145,15 @@ describe('HomeDashboard 콘텐츠 렌더링', () => {
   test('위치 이름이 표시된다', () => {
     renderDashboard();
     expect(screen.getByText('서울')).toBeInTheDocument();
+  });
+
+  test('스케치 배경이 hub/seoul/clear-day 키로 렌더된다', () => {
+    const { container } = renderDashboard();
+    const img = container.querySelector(
+      'img[data-sketch-key="hub/seoul/clear-day"]'
+    );
+    expect(img).not.toBeNull();
+    expect(img?.getAttribute('data-size-hint')).toBe('hero');
   });
 });
 

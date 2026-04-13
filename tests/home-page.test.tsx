@@ -30,6 +30,10 @@ vi.mock('../frontend/features/favorites/use-favorites', () => ({
 
 import { useHomeBootstrap } from '../frontend/features/app-bootstrap/use-home-bootstrap';
 import { HomePage } from '../frontend/pages/home/ui/home-page';
+import {
+  SketchManifestProvider,
+  BASELINE_MANIFEST,
+} from '../frontend/entities/asset';
 
 const loc = {
   kind: 'resolved' as const,
@@ -44,9 +48,11 @@ const loc = {
 
 function renderPage() {
   return render(
-    <MemoryRouter>
-      <HomePage />
-    </MemoryRouter>
+    <SketchManifestProvider manifest={BASELINE_MANIFEST}>
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    </SketchManifestProvider>
   );
 }
 

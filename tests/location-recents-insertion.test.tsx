@@ -4,6 +4,10 @@ import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import * as recentsModule from '../frontend/features/recents';
+import {
+  SketchManifestProvider,
+  BASELINE_MANIFEST,
+} from '../frontend/entities/asset';
 
 const mockLocation = {
   kind: 'resolved' as const,
@@ -57,9 +61,11 @@ describe('LocationPage — recents insertion on entry', () => {
       await import('../frontend/pages/location/ui/location-page');
 
     render(
-      <MemoryRouter>
-        <LocationPage resolvedLocationId="aaa000000001" />
-      </MemoryRouter>
+      <SketchManifestProvider manifest={BASELINE_MANIFEST}>
+        <MemoryRouter>
+          <LocationPage resolvedLocationId="aaa000000001" />
+        </MemoryRouter>
+      </SketchManifestProvider>
     );
 
     await waitFor(() => {

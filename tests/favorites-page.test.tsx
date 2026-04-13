@@ -30,6 +30,10 @@ import { FavoritesPage } from '../frontend/pages/favorites/ui/favorites-page';
 import { useActiveLocation } from '../frontend/features/app-bootstrap/active-location-context';
 import { useCoreWeather } from '../frontend/features/weather-queries/use-core-weather';
 import { useFavorites } from '../frontend/features/favorites/use-favorites';
+import {
+  SketchManifestProvider,
+  BASELINE_MANIFEST,
+} from '../frontend/entities/asset';
 import type { FavoriteLocation } from '../frontend/entities/location/model/types';
 import type { CoreWeather } from '../frontend/entities/weather/model/core-weather';
 
@@ -124,9 +128,11 @@ function renderCard(favorite: FavoriteLocation) {
   const qc = makeTestQueryClient();
   return render(<FavoriteCard favorite={favorite} />, {
     wrapper: ({ children }) => (
-      <QueryClientProvider client={qc}>
-        <MemoryRouter>{children}</MemoryRouter>
-      </QueryClientProvider>
+      <SketchManifestProvider manifest={BASELINE_MANIFEST}>
+        <QueryClientProvider client={qc}>
+          <MemoryRouter>{children}</MemoryRouter>
+        </QueryClientProvider>
+      </SketchManifestProvider>
     ),
   });
 }
@@ -228,6 +234,18 @@ describe('FavoriteCard', () => {
     expect(screen.getByText('28°')).toBeInTheDocument();
     expect(screen.getByText('18°')).toBeInTheDocument();
     expect(screen.queryByText(/오래된 정보/i)).not.toBeInTheDocument();
+  });
+
+  test('compact 사이즈 힌트로 스케치 배경을 렌더한다', () => {
+    setupActiveLocation();
+    vi.mocked(useCoreWeather).mockReturnValue(
+      makeWeatherQuery({ data: freshWeatherData })
+    );
+    const { container } = renderCard(seoulFav);
+    const compactImgs = container.querySelectorAll(
+      'img[data-sketch-key][data-size-hint="compact"]'
+    );
+    expect(compactImgs.length).toBeGreaterThan(0);
   });
 
   test('shows nickname when set', () => {
@@ -405,11 +423,13 @@ describe('FavoritesPage', () => {
 
   function renderPage() {
     return render(
-      <QueryClientProvider client={makeTestQueryClient()}>
-        <MemoryRouter>
-          <FavoritesPage />
-        </MemoryRouter>
-      </QueryClientProvider>
+      <SketchManifestProvider manifest={BASELINE_MANIFEST}>
+        <QueryClientProvider client={makeTestQueryClient()}>
+          <MemoryRouter>
+            <FavoritesPage />
+          </MemoryRouter>
+        </QueryClientProvider>
+      </SketchManifestProvider>
     );
   }
 
