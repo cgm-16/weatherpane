@@ -1,4 +1,4 @@
-import { createContext, use, useEffect, useState } from 'react';
+import { createContext, use, useLayoutEffect, useState } from 'react';
 import { getSessionStorage } from '~/shared/lib/storage/browser-storage';
 import { createThemeRepository } from '~/shared/lib/storage/repositories/theme-repository';
 
@@ -39,7 +39,9 @@ function resolveInitialTheme(): ThemeMode {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<ThemeMode>(resolveInitialTheme);
 
-  useEffect(() => {
+  // useLayoutEffect: 브라우저 페인트 전 커밋 단계에서 동기 실행되므로,
+  // React 하이드레이션 조정 후 .dark 클래스가 페인트 전에 확정된다.
+  useLayoutEffect(() => {
     applyThemeToDom(theme);
   }, [theme]);
 
