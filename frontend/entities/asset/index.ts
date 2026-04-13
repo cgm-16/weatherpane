@@ -31,3 +31,12 @@ export {
   REMOTE_MANIFEST_URL,
   fetchRemoteManifest,
 } from './api/fetch-remote-manifest';
+export {
+  SketchManifestProvider,
+  useSketchManifest,
+  type SketchManifestProviderProps,
+} from './ui/sketch-manifest-context';
+export {
+  SketchBackground,
+  type SketchBackgroundProps,
+} from './ui/sketch-background';
