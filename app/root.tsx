@@ -13,6 +13,38 @@ import '../frontend/app/styles/global.css';
 
 export const links: Route.LinksFunction = () => [];
 
+// 페이지 로드 전에 즉시 실행되는 테마 초기화 스크립트 (FOUC 방지 + 하이드레이션 전 인터랙션 처리).
+// React가 하이드레이션되기 전에도 테마 토글이 동작하도록 클릭 인터셉터를 등록한다.
+const THEME_INIT_SCRIPT = `(function(){
+  var k = 'weatherpane.theme.v1';
+  function save(d) {
+    var v = JSON.stringify({ version: 1, data: d });
+    try { sessionStorage.setItem(k, v); } catch(e) {}
+    try { localStorage.setItem(k, v); } catch(e) {}
+  }
+  function applyTheme(dark) {
+    document.documentElement.classList.toggle('dark', dark);
+    save(dark ? 'dark' : 'light');
+  }
+  try {
+    var raw = sessionStorage.getItem(k) || localStorage.getItem(k);
+    if (raw) {
+      var d = JSON.parse(raw).data;
+      if (d === 'dark') { document.documentElement.classList.add('dark'); }
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+  } catch(e) {}
+  // React 하이드레이션 전 클릭을 처리해 상태 불일치와 경쟁 조건을 방지한다
+  document.addEventListener('click', function(e) {
+    var btn = e.target && e.target.closest && e.target.closest('button[aria-label]');
+    if (!btn) return;
+    var lbl = btn.getAttribute('aria-label');
+    if (lbl === '어두운 모드로 전환') { applyTheme(true); }
+    else if (lbl === '밝은 모드로 전환') { applyTheme(false); }
+  }, true);
+})();`;
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
@@ -21,6 +53,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        {/* 테마를 즉시 적용해 React 하이드레이션 전 깜빡임을 방지한다 */}
+        {/* eslint-disable-next-line @eslint-react/dom-no-dangerously-set-innerhtml -- 인라인 스크립트는 FOUC 방지 목적으로 의도적으로 사용한다 */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body>
         {children}
