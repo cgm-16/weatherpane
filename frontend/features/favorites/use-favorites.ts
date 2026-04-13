@@ -82,9 +82,13 @@ export function useFavorites() {
   }
 
   function updateNickname(favoriteId: string, nickname: string | null): void {
+    const trimmed = nickname?.trim().slice(0, 20) ?? null;
+    const normalized = trimmed && trimmed.length > 0 ? trimmed : null;
     const now = new Date().toISOString();
     const next = favorites.map((f) =>
-      f.favoriteId === favoriteId ? { ...f, nickname, updatedAt: now } : f
+      f.favoriteId === favoriteId
+        ? { ...f, nickname: normalized, updatedAt: now }
+        : f
     );
     createFavoritesRepository().replaceAll(next);
     setFavorites(next);

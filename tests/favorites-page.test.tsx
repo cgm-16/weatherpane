@@ -106,22 +106,22 @@ const freshWeatherData: CoreWeather = {
 
 const staleWeatherData: CoreWeather = {
   ...freshWeatherData,
-  fetchedAt: new Date(Date.now() - 15 * 60_000).toISOString(), // 15 min ago
+  fetchedAt: new Date(Date.now() - 15 * 60_000).toISOString(), // 15분 전
 };
 
 const veryStaleWeatherData: CoreWeather = {
   ...freshWeatherData,
-  fetchedAt: new Date(Date.now() - 70 * 60_000).toISOString(), // 70 min ago
+  fetchedAt: new Date(Date.now() - 70 * 60_000).toISOString(), // 70분 전
 };
 
 // --- FavoriteCard 헬퍼 ---
 
-function makeQueryClient() {
+function makeTestQueryClient() {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } });
 }
 
 function renderCard(favorite: FavoriteLocation) {
-  const qc = makeQueryClient();
+  const qc = makeTestQueryClient();
   return render(<FavoriteCard favorite={favorite} />, {
     wrapper: ({ children }) => (
       <QueryClientProvider client={qc}>
@@ -405,7 +405,7 @@ describe('FavoritesPage', () => {
 
   function renderPage() {
     return render(
-      <QueryClientProvider client={makeQueryClient()}>
+      <QueryClientProvider client={makeTestQueryClient()}>
         <MemoryRouter>
           <FavoritesPage />
         </MemoryRouter>
