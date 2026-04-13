@@ -14,7 +14,7 @@ function freezeManifest(raw: Record<string, string>): SketchManifest {
     if (typeof url !== 'string' || url.trim().length === 0) {
       throw new Error(`baseline manifest has invalid url for key: ${key}`);
     }
-    entries.push([key, url]);
+    entries.push([key, url.trim()]);
   }
   return Object.freeze(Object.fromEntries(entries)) as SketchManifest;
 }
@@ -33,8 +33,12 @@ export function mergeManifest(
   }
   const merged: Record<string, string> = { ...baseline };
   for (const [key, url] of Object.entries(override)) {
-    if (typeof url === 'string' && url.trim().length > 0 && isSemanticKey(key)) {
-      merged[key] = url;
+    if (
+      typeof url === 'string' &&
+      url.trim().length > 0 &&
+      isSemanticKey(key)
+    ) {
+      merged[key] = url.trim();
     }
   }
   return Object.freeze(merged) as SketchManifest;
