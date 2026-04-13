@@ -20,10 +20,15 @@ function normalizeCssValue(value: string) {
 
 test.describe('디자인 토큰 — Haet-Ssal (밝은 모드)', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      const v = JSON.stringify({ version: 1, data: 'light' });
+      localStorage.setItem('weatherpane.theme.v1', v);
+      sessionStorage.setItem('weatherpane.theme.v1', v);
+    });
     await page.goto('/');
-    // 라이트 모드 강제: .dark 클래스가 있으면 제거
-    await page.evaluate(() =>
-      document.documentElement.classList.remove('dark')
+    // React ThemeProvider가 .dark 없이 안정화될 때까지 대기한다.
+    await page.waitForFunction(
+      () => !document.documentElement.classList.contains('dark')
     );
   });
 
