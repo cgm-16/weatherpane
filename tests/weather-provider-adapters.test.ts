@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi, afterEach } from 'vitest';
 
 import type { ResolvedLocation } from '../frontend/entities/location/model/types';
 import { mockWeatherProvider } from '../frontend/shared/api/mock-weather-provider';
@@ -97,6 +97,99 @@ describe('realWeatherProvider', () => {
       name: 'WeatherProviderError',
       code: 'PROVIDER_NOT_IMPLEMENTED',
       provider: 'openweather',
+    });
+  });
+
+  describe('geocode', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+      vi.restoreAllMocks();
+    });
+
+    test('API 키가 없으면 PROVIDER_NOT_IMPLEMENTED 오류를 발생시킨다', async () => {
+      vi.stubEnv('VITE_OPENWEATHER_API_KEY', '');
+
+      await expect(
+        realWeatherProvider.geocode('서울-종로구')
+      ).rejects.toMatchObject({
+        name: 'WeatherProviderError',
+        code: 'PROVIDER_NOT_IMPLEMENTED',
+        provider: 'openweather',
+      });
+    });
+
+    test('API가 200이 아닌 상태를 반환하면 INVALID_PROVIDER_RESPONSE 오류를 발생시킨다', async () => {
+      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'test-key');
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response('Unauthorized', { status: 401 })
+      );
+
+      await expect(
+        realWeatherProvider.geocode('서울-종로구')
+      ).rejects.toMatchObject({
+        name: 'WeatherProviderError',
+        code: 'INVALID_PROVIDER_RESPONSE',
+        provider: 'openweather',
+      });
+    });
+
+    test('네트워크 오류 시 INVALID_PROVIDER_RESPONSE 오류를 발생시킨다', async () => {
+      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'test-key');
+      vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(
+        new TypeError('Failed to fetch')
+      );
+
+      await expect(
+        realWeatherProvider.geocode('서울-종로구')
+      ).rejects.toMatchObject({
+        name: 'WeatherProviderError',
+        code: 'INVALID_PROVIDER_RESPONSE',
+        provider: 'openweather',
+      });
+    });
+
+    test('유효한 API 응답을 LocationGeocodeCandidate 배열로 변환한다', async () => {
+      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'test-key');
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        Response.json([
+          {
+            name: '종로구',
+            state: '서울특별시',
+            country: 'KR',
+            lat: 37.5729,
+            lon: 126.9794,
+          },
+        ])
+      );
+
+      const candidates = await realWeatherProvider.geocode('서울-종로구');
+
+      expect(candidates).toEqual([
+        {
+          name: '종로구',
+          admin1: '서울특별시',
+          countryCode: 'KR',
+          latitude: 37.5729,
+          longitude: 126.9794,
+        },
+      ]);
+    });
+
+    test('올바른 URL로 API를 호출한다', async () => {
+      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'my-api-key');
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValueOnce(Response.json([]));
+
+      await realWeatherProvider.geocode('서울-종로구');
+
+      const calledUrl = new URL(fetchSpy.mock.calls[0][0] as string);
+      expect(calledUrl.origin + calledUrl.pathname).toBe(
+        'https://api.openweathermap.org/geo/1.0/direct'
+      );
+      expect(calledUrl.searchParams.get('q')).toBe('서울-종로구');
+      expect(calledUrl.searchParams.get('limit')).toBe('5');
+      expect(calledUrl.searchParams.get('appid')).toBe('my-api-key');
     });
   });
 });
