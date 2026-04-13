@@ -4,6 +4,21 @@
 @import '@fontsource/be-vietnam-pro/700.css';
 @import './tokens.css';
 
+/* Tailwind v4: dark: 유틸리티를 미디어쿼리 대신 클래스 기반으로 동작 */
+@variant dark (&:is(.dark, .dark *));
+
+/* 비필수 애니메이션/전환 억제 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 html,
 body,
 #root {
