@@ -1,8 +1,8 @@
 // 스케치 에셋 시맨틱 키(`<family>/<familyId>/<variant>`) 타입과 유틸리티.
+import type { SketchVariantId } from './variant';
 
 export type SketchFamily = 'hub' | 'generic';
-export type SketchFamilyId = string;
-export type SketchVariantId = string;
+export type SketchFamilyId = 'seoul' | 'busan' | 'urban';
 export type SemanticKey =
   `${SketchFamily}/${SketchFamilyId}/${SketchVariantId}`;
 
@@ -13,11 +13,33 @@ export interface SemanticKeyParts {
 }
 
 const SKETCH_FAMILIES: readonly SketchFamily[] = ['hub', 'generic'];
-// 소문자 영문/숫자와 대시만 허용하여 예기치 않은 문자열이 키로 들어오는 것을 막는다.
-const SEGMENT_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+const SKETCH_FAMILY_IDS: readonly SketchFamilyId[] = [
+  'seoul',
+  'busan',
+  'urban',
+];
+// 허용된 variant 리터럴 집합. WeatherVisualBucket × SketchDaypart 조합.
+const SKETCH_VARIANT_IDS: readonly SketchVariantId[] = [
+  'clear-day',
+  'clear-night',
+  'cloudy-day',
+  'cloudy-night',
+  'rainy-day',
+  'rainy-night',
+  'snowy-day',
+  'snowy-night',
+];
 
 function isSketchFamily(value: string): value is SketchFamily {
   return (SKETCH_FAMILIES as readonly string[]).includes(value);
+}
+
+function isSketchFamilyId(value: string): value is SketchFamilyId {
+  return (SKETCH_FAMILY_IDS as readonly string[]).includes(value);
+}
+
+function isSketchVariantId(value: string): value is SketchVariantId {
+  return (SKETCH_VARIANT_IDS as readonly string[]).includes(value);
 }
 
 export function toSemanticKey(parts: SemanticKeyParts): SemanticKey {
@@ -37,7 +59,7 @@ export function parseSemanticKey(value: string): SemanticKeyParts | null {
     return null;
   }
 
-  if (!SEGMENT_PATTERN.test(familyId) || !SEGMENT_PATTERN.test(variant)) {
+  if (!isSketchFamilyId(familyId) || !isSketchVariantId(variant)) {
     return null;
   }
 
