@@ -12,6 +12,8 @@ import { ActiveLocationProvider } from '~/features/app-bootstrap/active-location
 import { ThemeProvider } from '~/shared/hooks/use-theme';
 import { SketchManifestProvider, loadSessionManifest } from '~/entities/asset';
 import { HomeConfigError } from '~/pages/home/ui/home-config-error';
+import { isProduction } from '~/shared/lib/runtime-env';
+import { AppEffects } from './app-effects';
 
 // 시작 시 한 번만 파싱되며 런타임 중 환경 변수 변경에 반응하지 않습니다.
 const configResult = parseAppConfig();
@@ -36,7 +38,7 @@ export function AppProviders({ children }: AppProvidersProps) {
 
   // 프로덕션에서 설정 오류 발생 시 전체 화면 오버레이를 표시한다. 개발/테스트(mock) 모드에서는 항상 유효.
   const configError = getConfigError();
-  if (!import.meta.env.DEV && configError) {
+  if (isProduction() && configError) {
     return (
       <ThemeProvider>
         <HomeConfigError error={configError} />
@@ -50,6 +52,7 @@ export function AppProviders({ children }: AppProvidersProps) {
         <WeatherProviderContext value={weatherProvider}>
           <ActiveLocationProvider>
             <SketchManifestProvider manifest={sketchManifest}>
+              <AppEffects />
               {children}
             </SketchManifestProvider>
           </ActiveLocationProvider>
