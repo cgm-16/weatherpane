@@ -166,5 +166,13 @@
     "generatedAt": "2026-04-13T19:07:00Z",
     "localPath": "public/sketches/generic/urban/snowy-day.webp",
     "sha256": "f4c4f92fcb3173b36ccf0e06fee051f9ea50b45455e30ea32b9a9f9a8a585d7f"
+  },
+  "generic/urban/cloudy-day": {
+    "screenId": "projects/15042235601276525488/screens/3e76540ec9c6441b855699eed8207cb0",
+    "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuCkJszbiZYFfcGlvkXgxTxfblavFHAlddrqOACUhl-qzlDFXbJyoQGH0Oq3wa2CEqn_DD7mgB62hC7IMpcJN_LYwlPiAFOFpZpWkaY-RkwYbJIi5KDwkbiLJ0eRdersGMBbRF47rU6-ZpIn2CpQhrA5-8QQXsHO4XjjDy-ISpq1RXWXAGHDnGi4xcI6YENWBveba985aY3yocRosAo1BhGDvAEaWaT2guEm64AMgHbDps8hZVbfNPpfBECHeETW4yq-27BeQkoapJkO",
+    "sourceSize": "1024x1024",
+    "generatedAt": "2026-04-13T19:30:00Z",
+    "localPath": "public/sketches/generic/urban/cloudy-day.webp",
+    "sha256": "fdfb222940763efd8c8a1b65b329c9836884d4d20f1bbffa5fc9a5d67bd8a827"
   }
 }
