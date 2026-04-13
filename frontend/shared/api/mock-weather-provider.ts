@@ -21,7 +21,7 @@ export const mockWeatherProvider: WeatherProvider = {
     return normalizeOpenWeatherAqiResponse(mockOpenWeatherAqiFixture, location);
   },
   async geocode(query: string): Promise<LocationGeocodeCandidate[]> {
-    // canonicalPath 세그먼트를 분리하여 한국 지오코딩 결과를 시뮬레이션합니다.
+    // 쿼리 문자열을 그대로 name으로 사용하여 한국 지오코딩 결과를 시뮬레이션합니다.
     const segments = query.split('-');
     const name = segments[segments.length - 1];
     const admin1 = segments[0];

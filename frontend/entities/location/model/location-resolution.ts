@@ -85,8 +85,10 @@ export function buildResolvedLocation(
     locationId: buildResolvedLocationId(catalogLocation.catalogLocationId),
     catalogLocationId: catalogLocation.catalogLocationId,
     name: fields.name,
-    admin1: fields.admin1 ?? catalogLocation.admin1,
-    ...(fields.admin2 ? { admin2: fields.admin2 } : {}),
+    admin1: catalogLocation.admin1,
+    ...((fields.admin2 ?? catalogLocation.admin2)
+      ? { admin2: fields.admin2 ?? catalogLocation.admin2 }
+      : {}),
     latitude: fields.latitude,
     longitude: fields.longitude,
     timezone: fields.timezone ?? 'Asia/Seoul',
