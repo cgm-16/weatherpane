@@ -2,6 +2,7 @@
 @import '@fontsource-variable/plus-jakarta-sans';
 @import '@fontsource/be-vietnam-pro/400.css';
 @import '@fontsource/be-vietnam-pro/700.css';
+@import 'material-symbols/outlined.css';
 @import './tokens.css';
 
 /* Tailwind v4: dark: 유틸리티를 미디어쿼리 대신 클래스 기반으로 동작 */
