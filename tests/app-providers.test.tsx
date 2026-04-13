@@ -70,19 +70,13 @@ describe('AppProviders', () => {
     expect(screen.getByTestId('child')).toBeInTheDocument();
   });
 
-  it('프로덕션에서 설정 오류가 있으면 HomeConfigError를 렌더링하고 children을 숨긴다', () => {
+  it('프로덕션에서 설정이 유효하면 children을 렌더링한다', () => {
     vi.mocked(isProduction).mockReturnValue(true);
-    // configError는 모듈 로드 시 파싱되므로 getConfigError를 직접 검증합니다.
-    // AppProviders가 isProduction()=true일 때 configError가 있으면 오버레이를 표시하는지 확인합니다.
-    // configResult는 모듈 초기화 시 parseAppConfig()로 설정되므로,
-    // 이 테스트에서는 isProduction=true + 초기 parseAppConfig 반환값이 ok:true인 상태를 검증합니다.
-    // 오버레이가 표시되지 않고 children이 렌더링되어야 합니다 (오류 없음).
     render(
       <AppProviders>
         <div data-testid="child">자식 컴포넌트</div>
       </AppProviders>
     );
-    // 설정이 유효하므로 children이 렌더링됩니다.
     expect(screen.getByTestId('child')).toBeInTheDocument();
   });
 
