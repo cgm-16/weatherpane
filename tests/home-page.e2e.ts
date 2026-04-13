@@ -42,7 +42,7 @@ test('위치가 설정된 홈에서 날씨 대시보드가 표시된다', async 
   await expect(page.getByRole('link', { name: /상세 보기/ })).toBeVisible();
   // 새로고침 버튼
   await expect(page.getByRole('button', { name: /새로고침/ })).toBeVisible();
-  // 스케치 배경 이미지가 렌더링되고 /sketches/*.webp 경로를 가리키는지 확인
+  // 서울 + 모의 프로바이더는 hub/seoul/clear-day로 결정론적으로 해석 → baseline manifest URL까지 엔드투엔드로 검증한다.
   const sketchImg = page.locator('img[data-sketch-key="hub/seoul/clear-day"]');
   await expect(sketchImg).toBeVisible();
   await expect(sketchImg).toHaveAttribute('src', /^\/sketches\/.+\.webp$/);
