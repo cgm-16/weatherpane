@@ -46,6 +46,9 @@ test.describe('테마 시스템 — 스모크', () => {
     await expect(
       page.getByRole('navigation', { name: '기본 내비게이션' })
     ).toBeVisible();
+    await expect(
+      page.getByRole('complementary', { name: '사이드바 내비게이션' })
+    ).not.toBeVisible();
   });
 
   test('데스크톱 뷰포트: 사이드바 내비게이션이 렌더링된다', async ({
@@ -56,5 +59,8 @@ test.describe('테마 시스템 — 스모크', () => {
     await expect(
       page.getByRole('complementary', { name: '사이드바 내비게이션' })
     ).toBeVisible();
+    await expect(
+      page.getByRole('navigation', { name: '기본 내비게이션' })
+    ).not.toBeVisible();
   });
 });

@@ -70,7 +70,10 @@ Expected: all assertions pass. Each test reads the computed CSS custom property 
 Also run:
 
 ```bash
+pnpm lint
 pnpm typecheck
+pnpm test
+pnpm test:e2e
 pnpm build
 ```
 

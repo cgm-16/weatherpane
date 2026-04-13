@@ -35,13 +35,13 @@ const THEME_INIT_SCRIPT = `(function(){
       document.documentElement.classList.add('dark');
     }
   } catch(e) {}
-  // React 하이드레이션 전 클릭을 처리해 상태 불일치와 경쟁 조건을 방지한다
+  // React 하이드레이션 전 클릭을 처리해 상태 불일치와 경쟁 조건을 방지한다 (data-theme-toggle 속성 기반)
   document.addEventListener('click', function(e) {
-    var btn = e.target && e.target.closest && e.target.closest('button[aria-label]');
+    var btn = e.target && e.target.closest && e.target.closest('button[data-theme-toggle]');
     if (!btn) return;
-    var lbl = btn.getAttribute('aria-label');
-    if (lbl === '어두운 모드로 전환') { applyTheme(true); }
-    else if (lbl === '밝은 모드로 전환') { applyTheme(false); }
+    var val = btn.getAttribute('data-theme-toggle');
+    if (val === 'dark') { applyTheme(true); }
+    else if (val === 'light') { applyTheme(false); }
   }, true);
 })();`;
 
