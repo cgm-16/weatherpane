@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { renderHook, act } from '@testing-library/react';
-import { describe, expect, test, beforeEach } from 'vitest';
+import { describe, expect, test, beforeEach, vi } from 'vitest';
 import { useFavorites } from '../frontend/features/favorites/use-favorites';
 import type { ResolvedLocation } from '../frontend/entities/location/model/types';
 
@@ -75,6 +75,25 @@ describe('useFavorites — updateNickname', () => {
     const { result: r2 } = renderHook(() => useFavorites());
     expect(r2.current.favorites[0].nickname).toBe('홈');
   });
+
+  test('updateNickname updates updatedAt timestamp', () => {
+    vi.useFakeTimers();
+    try {
+      const { result } = renderHook(() => useFavorites());
+      act(() => {
+        result.current.addFavorite(seoul);
+      });
+      const before = result.current.favorites[0].updatedAt;
+      const id = result.current.favorites[0].favoriteId;
+      vi.advanceTimersByTime(1);
+      act(() => {
+        result.current.updateNickname(id, '새이름');
+      });
+      expect(result.current.favorites[0].updatedAt).not.toBe(before);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe('useFavorites — reorderFavorites', () => {
@@ -107,6 +126,25 @@ describe('useFavorites — reorderFavorites', () => {
     expect(result.current.favorites[2].location.locationId).toBe(
       busan.locationId
     );
+  });
+
+  test('reorderFavorites assigns updated order values', () => {
+    const { result } = renderHook(() => useFavorites());
+    act(() => {
+      result.current.addFavorite(seoul);
+    });
+    act(() => {
+      result.current.addFavorite(busan);
+    });
+    const [s, b] = result.current.favorites;
+    act(() => {
+      result.current.reorderFavorites([
+        { ...b, order: 0 },
+        { ...s, order: 1 },
+      ]);
+    });
+    expect(result.current.favorites[0].order).toBe(0);
+    expect(result.current.favorites[1].order).toBe(1);
   });
 
   test('reorderFavorites persists across remount', () => {
