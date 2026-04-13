@@ -114,7 +114,7 @@ export function HomeDashboard({
       )}
 
       {/* 메인 요약 카드 — 탭 시 상세 페이지로 이동 (raw-GPS는 비대화형) */}
-      <div className="relative mx-4 mt-3 overflow-hidden rounded-[--radius-md]">
+      <div className="relative mx-4 mt-3 overflow-hidden rounded-[--radius-md] bg-card">
         <SketchBackground
           location={location}
           condition={weather.current.condition}
