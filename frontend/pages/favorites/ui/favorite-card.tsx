@@ -156,6 +156,9 @@ function CardSnapshot({
           <>
             {/* 드래그 핸들 */}
             <div
+              draggable={true}
+              onDragStart={editProps.onDragStart}
+              onDragEnd={editProps.onDragEnd}
               className="flex h-8 w-8 cursor-grab items-center justify-center rounded-full bg-muted active:cursor-grabbing"
               aria-hidden="true"
             >
@@ -250,6 +253,8 @@ export interface CardEditProps {
   onMoveUp: () => void;
   onMoveDown: () => void;
   onNicknameCommit: (nickname: string | null) => void;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
 interface FavoriteCardProps {

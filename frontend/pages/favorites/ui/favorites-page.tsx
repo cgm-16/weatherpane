@@ -13,9 +13,13 @@ export function FavoritesPage() {
     useFavorites();
   useRefreshQueue(favorites);
   const [isEditMode, setIsEditMode] = useState(false);
+  // 편집 모드에서 순서 변경을 로컬에 보관하다가 "완료" 시점에 한 번만 저장한다
+  const [draftFavorites, setDraftFavorites] =
+    useState<FavoriteLocation[]>(favorites);
   const draggedIdRef = useRef<string | null>(null);
 
   function handleEnterEdit() {
+    setDraftFavorites(favorites);
     setIsEditMode(true);
   }
 
@@ -24,35 +28,38 @@ export function FavoritesPage() {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
+    reorderFavorites(draftFavorites);
     setIsEditMode(false);
   }
 
   function handleMoveUp(index: number) {
     if (index === 0) return;
-    const next: FavoriteLocation[] = [...favorites];
+    const next: FavoriteLocation[] = [...draftFavorites];
     [next[index - 1], next[index]] = [next[index], next[index - 1]];
-    reorderFavorites(next.map((f, i) => ({ ...f, order: i })));
+    setDraftFavorites(next.map((f, i) => ({ ...f, order: i })));
   }
 
   function handleMoveDown(index: number) {
-    if (index === favorites.length - 1) return;
-    const next: FavoriteLocation[] = [...favorites];
+    if (index === draftFavorites.length - 1) return;
+    const next: FavoriteLocation[] = [...draftFavorites];
     [next[index], next[index + 1]] = [next[index + 1], next[index]];
-    reorderFavorites(next.map((f, i) => ({ ...f, order: i })));
+    setDraftFavorites(next.map((f, i) => ({ ...f, order: i })));
   }
 
   function handleDrop(targetId: string) {
     const fromId = draggedIdRef.current;
     if (!fromId || fromId === targetId) return;
-    const from = favorites.findIndex((f) => f.favoriteId === fromId);
-    const to = favorites.findIndex((f) => f.favoriteId === targetId);
+    const from = draftFavorites.findIndex((f) => f.favoriteId === fromId);
+    const to = draftFavorites.findIndex((f) => f.favoriteId === targetId);
     if (from === -1 || to === -1) return;
-    const next = [...favorites];
+    const next = [...draftFavorites];
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved);
-    reorderFavorites(next.map((f, i) => ({ ...f, order: i })));
+    setDraftFavorites(next.map((f, i) => ({ ...f, order: i })));
     draggedIdRef.current = null;
   }
+
+  const displayFavorites = isEditMode ? draftFavorites : favorites;
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,20 +88,13 @@ export function FavoritesPage() {
           <FavoritesEmptyState />
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {favorites.map((fav, i) => (
+            {displayFavorites.map((fav, i) => (
               <div
                 key={fav.favoriteId}
-                draggable={isEditMode}
-                onDragStart={() => {
-                  draggedIdRef.current = fav.favoriteId;
-                }}
                 onDragOver={(e) => {
                   e.preventDefault();
                 }}
                 onDrop={() => handleDrop(fav.favoriteId)}
-                onDragEnd={() => {
-                  draggedIdRef.current = null;
-                }}
               >
                 <FavoriteCard
                   favorite={fav}
@@ -102,11 +102,17 @@ export function FavoritesPage() {
                     isEditMode
                       ? {
                           isFirst: i === 0,
-                          isLast: i === favorites.length - 1,
+                          isLast: i === displayFavorites.length - 1,
                           onMoveUp: () => handleMoveUp(i),
                           onMoveDown: () => handleMoveDown(i),
                           onNicknameCommit: (nick) =>
                             updateNickname(fav.favoriteId, nick),
+                          onDragStart: () => {
+                            draggedIdRef.current = fav.favoriteId;
+                          },
+                          onDragEnd: () => {
+                            draggedIdRef.current = null;
+                          },
                         }
                       : undefined
                   }

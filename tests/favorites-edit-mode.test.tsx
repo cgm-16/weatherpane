@@ -285,26 +285,42 @@ describe('FavoritesPage — up/down reorder buttons', () => {
     ).not.toBeInTheDocument();
   });
 
-  test('clicking 위로 on second card calls reorderFavorites with swapped order', async () => {
+  test('clicking 위로 on second card defers reorder until 완료', async () => {
     setupFavorites([seoulFav, busanFav]);
     renderPage();
     await userEvent.click(screen.getByRole('button', { name: /편집/i }));
     await userEvent.click(
       screen.getByRole('button', { name: '즐겨찾기 부산 위로 이동' })
     );
+    // 버튼 클릭 시 즉시 저장 안 됨 — draft에만 반영
+    expect(mockReorderFavorites).not.toHaveBeenCalled();
+    // draft 순서가 DOM에 반영되어 부산이 첫 번째(위로 버튼 없음)
+    expect(
+      screen.queryByRole('button', { name: '즐겨찾기 부산 위로 이동' })
+    ).not.toBeInTheDocument();
+    // "완료" 클릭 시 바뀐 순서로 한 번만 저장
+    await userEvent.click(screen.getByRole('button', { name: /완료/i }));
     expect(mockReorderFavorites).toHaveBeenCalledOnce();
     const [reordered] = mockReorderFavorites.mock.calls[0];
     expect(reordered[0].favoriteId).toBe(busanFav.favoriteId);
     expect(reordered[1].favoriteId).toBe(seoulFav.favoriteId);
   });
 
-  test('clicking 아래로 on first card calls reorderFavorites with swapped order', async () => {
+  test('clicking 아래로 on first card defers reorder until 완료', async () => {
     setupFavorites([seoulFav, busanFav]);
     renderPage();
     await userEvent.click(screen.getByRole('button', { name: /편집/i }));
     await userEvent.click(
       screen.getByRole('button', { name: '즐겨찾기 서울 아래로 이동' })
     );
+    // 버튼 클릭 시 즉시 저장 안 됨 — draft에만 반영
+    expect(mockReorderFavorites).not.toHaveBeenCalled();
+    // draft 순서가 DOM에 반영되어 서울이 마지막(아래로 버튼 없음)
+    expect(
+      screen.queryByRole('button', { name: '즐겨찾기 서울 아래로 이동' })
+    ).not.toBeInTheDocument();
+    // "완료" 클릭 시 바뀐 순서로 한 번만 저장
+    await userEvent.click(screen.getByRole('button', { name: /완료/i }));
     expect(mockReorderFavorites).toHaveBeenCalledOnce();
     const [reordered] = mockReorderFavorites.mock.calls[0];
     expect(reordered[0].favoriteId).toBe(busanFav.favoriteId);
