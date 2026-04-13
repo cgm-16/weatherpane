@@ -20,6 +20,7 @@ export function DevProviderToggle({
 
   return (
     <button
+      type="button"
       onClick={handleToggle}
       aria-label={`개발 모드: ${currentMode}. 클릭하면 전환 후 재로드합니다`}
       className="fixed right-4 bottom-4 z-50 rounded-full bg-foreground px-3 py-1 font-mono text-xs text-background opacity-70 transition-opacity select-none hover:opacity-100"
