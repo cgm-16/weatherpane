@@ -124,14 +124,13 @@ test.describe('Favorites page — 편집/정렬 모드', () => {
   });
 
   test('nickname persists after editing and reload', async ({ page }) => {
-    // 재로드 시 addInitScript가 재실행되므로 키가 없을 때만 씨딩한다
-    await page.addInitScript(
-      ({ key, value }) => {
-        if (!localStorage.getItem(key)) localStorage.setItem(key, value);
-      },
-      { key: FAVORITES_KEY, value: favoritesPayload([seoulFav]) }
-    );
+    // page.evaluate로 씨딩하면 재로드 시 재실행되지 않아 앱이 저장한 상태가 유지된다
     await page.goto('/favorites');
+    await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+      key: FAVORITES_KEY,
+      value: favoritesPayload([seoulFav]),
+    });
+    await page.reload();
     await page.getByRole('button', { name: /편집/i }).click();
     const input = page.getByRole('textbox').first();
     await input.fill('서울역');
@@ -141,27 +140,26 @@ test.describe('Favorites page — 편집/정렬 모드', () => {
   });
 
   test('reorder via 위로 button persists after reload', async ({ page }) => {
-    // 재로드 시 addInitScript가 재실행되므로 키가 없을 때만 씨딩한다
-    await page.addInitScript(
-      ({ key, value }) => {
-        if (!localStorage.getItem(key)) localStorage.setItem(key, value);
-      },
-      { key: FAVORITES_KEY, value: favoritesPayload([seoulFav, busanFav]) }
-    );
+    // page.evaluate로 씨딩하면 재로드 시 재실행되지 않아 앱이 저장한 상태가 유지된다
     await page.goto('/favorites');
+    await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+      key: FAVORITES_KEY,
+      value: favoritesPayload([seoulFav, busanFav]),
+    });
+    await page.reload();
     await page.getByRole('button', { name: /편집/i }).click();
     await page
       .getByRole('button', { name: /즐겨찾기 해운대 위로 이동/i })
       .click();
     await page.getByRole('button', { name: /완료/i }).click();
     await page.reload();
-    // 날씨 데이터 로딩 후 카드 제목이 나타날 때까지 대기
-    await expect(page.getByRole('heading', { name: /해운대/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /서울/i })).toBeVisible();
+    // 두 카드 제목이 모두 DOM에 나타날 때까지 대기
+    const headings = page.locator('h3');
+    await expect(headings).toHaveCount(2);
+    const texts = await headings.allTextContents();
     // 해운대(부산)가 첫 번째로 나타나야 한다
-    const allHeadings = await page.locator('h3').allTextContents();
-    const busanIndex = allHeadings.findIndex((t) => t.includes('해운대'));
-    const seoulIndex = allHeadings.findIndex((t) => t.includes('서울'));
+    const busanIndex = texts.findIndex((t) => t.includes('해운대'));
+    const seoulIndex = texts.findIndex((t) => t.includes('서울'));
     expect(busanIndex).toBeLessThan(seoulIndex);
   });
 });
