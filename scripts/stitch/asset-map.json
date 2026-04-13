@@ -3,48 +3,168 @@
     "screenId": "projects/15042235601276525488/screens/da2e46579fc1463c9706e4b0c001109e",
     "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuCNYhybc9YAUY7N1Do_1mmt1z8Y8I6qK7KNBJTEsdkKCoL9-kxzTUtzpWHtTxTl4UTC-6yagpJ08mqGUwq9WADV_nK6VlYzUByLp0E9y_9GWN3y5-5FnneY7gB9Pg5HNB4BTKxqjlHaFXmmGYrMTwmTT0_XP_Hx4daocuUl-3QQkVDNFzrjOdo34Yk6O6eld1i5ePSxRpio1Yd6SoJEn-CvX_gVU05s4nnA-bft-BA1Mrc8aBqBq8geBv7uWFTuCyI5NBbYuKrDhNm-",
     "sourceSize": "1024x1024",
-    "generatedAt": "2026-04-13T17:37:00Z"
+    "generatedAt": "2026-04-13T17:37:00Z",
+    "localPath": "public/sketches/hub/seoul/rainy-day.webp",
+    "sha256": "6201a3a25d97fb386ffa530fb3a6a0c8fd334e0c166e4bc5412cf0887e963b2b"
   },
   "hub/seoul/clear-day": {
     "screenId": "projects/15042235601276525488/screens/5e3c8c735db54229865285787422458c",
     "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuAG8jCUvGMdTGf_MRWli_qVhBQcCgzZ3EnvdKHaTsZTig4wIXRF6vFDtbVSxA6fS7jz0df9PuGm_M4mCvWBI4ZlVGEC5vTvrWwMqylIRGVYWn4L98Y48_Iz5ZqKNsIJFd62bmL-P-MTLmqMeqkhXLeus2gLKl8_4T3cjrtqNoSZ1M1a8EMEqMCDer1ZFxsqa-Rb05CJiLmex8A_N6bwOLGq1k-KeCj79nLPB3WR-unaDDEUpDvqYV0ORyWc4vpnh7OLtsOZo89xM9DN",
     "sourceSize": "1024x1024",
-    "generatedAt": "2026-04-13T18:30:00Z"
+    "generatedAt": "2026-04-13T18:30:00Z",
+    "localPath": "public/sketches/hub/seoul/clear-day.webp",
+    "sha256": "20845fac9044d8837067fc0b844d78c34ee97d3e16bcd50ee4d7faef17c4dba6"
   },
   "hub/seoul/cloudy-day": {
     "screenId": "projects/15042235601276525488/screens/031c75df0bd74716bef3cf85434072f8",
     "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuAOhcXdAOYJM702YPqSbfguxilFgLIXEFvQGDoJxmHQ7Y_mIURCbLciZ7LJphgrsgC0IKOH29jmQC0hl5NAxc04WP5aSDiSww0UhexjZ_JXpkVmL2bN77vd_ECAya4l6ZnfMtVH35NMqfbV0IutS1KP3xHmQecZDqpKUAOt-V8kmUBvc1JLNxWsG1CXakENGPNFLwBB2ze8nyu-RARsBzTceci8eNwpV3ocm2zgA472ra6MDeZ4zfYg_uOY3srlrUgfrwvivUn_qCKG",
     "sourceSize": "1024x1024",
-    "generatedAt": "2026-04-13T18:30:00Z"
+    "generatedAt": "2026-04-13T18:30:00Z",
+    "localPath": "public/sketches/hub/seoul/cloudy-day.webp",
+    "sha256": "257bdda4a4f108186a9101245de25e317b3047b4e1ba892129794d6fc066cb99"
   },
   "hub/seoul/clear-night": {
     "screenId": "projects/15042235601276525488/screens/e967fc61b20149378a4a97c1874f3537",
     "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuCR7N0HL7-MXWS3crEisVZsVALAWhESJywdsO27OXouTyB80zgewt5zwzq6jwk4rm7k9f3_MyAcdpQwUcMLZwivKsQljWPkZJ-TSyqXEzMGlzBrXvccQAArz5_DE8cRuNgGtNPeSBdurZlqauqFUyAhvKdPyyQPjhMRuFcgyKXsPe39Aj66BA9luH1QXuxjc2coWc0Lw_6mnPrsA47m7SY-xYNkbP9mPOPZuGK38-OmAfTqTlQUFsRCY0kQhg_4Wf7Ow27MPblJTxAo",
     "sourceSize": "1024x1024",
-    "generatedAt": "2026-04-13T18:30:00Z"
+    "generatedAt": "2026-04-13T18:30:00Z",
+    "localPath": "public/sketches/hub/seoul/clear-night.webp",
+    "sha256": "7100b86787b7d836304221ba6835c656e2f9d9100d472faf9eb6f7a4899187bf"
   },
   "hub/busan/clear-day": {
     "screenId": "projects/15042235601276525488/screens/15d44c8bc7044ebaa6de51e28dcfa23a",
     "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuAAdXmi5cNCyR5U-7rv7YQSMahOwCEYV-DtT7dyg_SlLGb9T6rnygAawwUBNbg1jX90Bb5PK29m3JyUE9K2-gIwtAWqVlUH2mysoOcNRt7jA7QQ_Cv0j7SCrBtWBtI8wwrWYKRojNbWsk6K2_J9vH4y_c6Kiml5k3lsIY1wGiaXZahZuJzPRgp8o8kCVmknV_eHBkBDaMWPm7iek7F97gaA_pF_X-HOf9hUyx6j1jsJjT3bI48wt40bMvQDPSiiwAjzSaG90A5Q4Hqw",
     "sourceSize": "1024x1024",
-    "generatedAt": "2026-04-13T18:30:00Z"
+    "generatedAt": "2026-04-13T18:30:00Z",
+    "localPath": "public/sketches/hub/busan/clear-day.webp",
+    "sha256": "d798ce3fe5cc1c5711609aedeefc9d83c124cc57cc0ad640d48d23740da9fe03"
   },
   "hub/busan/clear-night": {
     "screenId": "projects/15042235601276525488/screens/d5fe92ee2f084a82b06e45ab8a4f02d1",
     "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuBsz6T8b7MKOqbJGvXVUq4lVfd8VtXvpZNJ_SH_HrFdlUm1MpAf4OXDbEXbHdA2VzbLnBJClX04_cKCPzLzXYrx1UWCAzUaKSMgTBYotaOdh-q_vRNtmutBq37jQkblRVKVNIIgK1pu707BnHE0ljnMUSq48FA6pcrEutpAD7BSG6Q2B2hOEyReRIcuqdo_JH6iAKknGt8Jqm4za6zXBh7-sXywJqYKKoB57Ul8vPWNlOEO6P_xFkS8YkzrLSMYVntQ9ZPvWKg6k2A8",
     "sourceSize": "1024x1024",
-    "generatedAt": "2026-04-13T18:35:00Z"
+    "generatedAt": "2026-04-13T18:35:00Z",
+    "localPath": "public/sketches/hub/busan/clear-night.webp",
+    "sha256": "d067004ab5ab58deef46ccf46468fbc8dae59cd9a407ab88db5a68154e4b3e9c"
   },
   "hub/busan/rainy-night": {
     "screenId": "projects/15042235601276525488/screens/d66ecfa18e3d4138af0e18762bca6e7f",
     "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuDIH7s0tXKop0VKCx5eBSr6jPu-P762B7uE4T9SbD_bQtRFl63fSsjuHgoQ386T6f6TinBTafdspZOWSEOv9yp6Xu08IukNvGxgVainFf0VS7GnWYt09h7rwjIY2E2H3vqypjlVCu-Fv2NTTcdIiyfWCkd1n-Pfg_qSnCGkM0FMs-xtMkfmkyQKgrarKL5VqR9HCaSoTWNDWaR63AndoPqqrbzJlwsIqzB_wwFaa8NuvbC5CJsutzChB6sPUYWKYrasR7djN5c3VCCk",
     "sourceSize": "1024x1024",
-    "generatedAt": "2026-04-13T18:37:00Z"
+    "generatedAt": "2026-04-13T18:37:00Z",
+    "localPath": "public/sketches/hub/busan/rainy-night.webp",
+    "sha256": "26117378d856009a016384575bc0754c5078ffb173e9ed6422f17f98b528a110"
   },
   "generic/urban/clear-day": {
     "screenId": "projects/15042235601276525488/screens/005190a158634df489683fc9e4f4a076",
     "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuCEYU9GuajOSMPMh5QwY4nhd64bOZE5IpWx9lQhxWff4l0IO4mzoMvdRBdX1QXxEK9ML_tQg7ERPWMMzlh0WzlbLIqi4pSVwVHa85beqIVg82GKcYjb4Y8srKyu6BUjaetOGwz4tiCpDp-siWG1OGyT-TNPD7YejjdCcIxbT535o-Y7ss72G2QSqdwuuStQXXwxXHz5X0lSmWHNOaLzJdfs0AUggOMZTOC0NeY2Tag-PB2PuP4fBtzs12gRVEg0y0L3bdcBwpZyRbKh",
     "sourceSize": "1024x1024",
-    "generatedAt": "2026-04-13T18:30:00Z"
+    "generatedAt": "2026-04-13T18:30:00Z",
+    "localPath": "public/sketches/generic/urban/clear-day.webp",
+    "sha256": "56c39c38445e72f25a8c6e848138381579e9bbea0b1833c8b97f5ace3f74ba8f"
+  },
+  "hub/seoul/cloudy-night": {
+    "screenId": "projects/15042235601276525488/screens/8ffd818f48bf432f893b32a0f494c132",
+    "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuA5Uv9LI3wVSsDMVLBTYhliOkn89AIi6V4N1n-6IERYhJj6k-yIV-lGkv7SlcqxjXL-UHyeZQHYspWc7CDcjsQKHBNxzX5kivacd0Qn70jDfzSGvrNbyCYFL9pCPcOxOTTWDKL6u0h_ZUcEXET6pp2ScnUNe_bxjHqIdQ265k1PNEezm1KPB6QNrbH9X5W7X6PqcgujLhzq0ZRC7q0VVc8nF3arZtqG7G5tYVYlGUcYmHq6ZDo380wSqpB4ogSOE1SguMZo0f4dDJkw",
+    "sourceSize": "1024x1024",
+    "generatedAt": "2026-04-13T19:07:00Z",
+    "localPath": "public/sketches/hub/seoul/cloudy-night.webp",
+    "sha256": "e749a0209b8a4a68c813f3b70a1a17532eb10ca3cb475f16276f1779576f226d"
+  },
+  "hub/seoul/rainy-night": {
+    "screenId": "projects/15042235601276525488/screens/66ad31959064470f90e844d460416fbc",
+    "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuDfoNOXY87WB-a5WC9QVi-q7HonETXdj-pojPj7B-qnO3wSpvMx5h-ZCSsRjAw_LHElie4iNW_OK_foXqkptB0kQ-ZXr4RVwzPzhqFbQYIBTvC5VamWqpzTHLiYBt8GN_ncI7YeTVj-o4nxBJWDjPoqRyI5-TE4U0Jk4Rryrl8dC3Tjz7qcK6Ujv7prDAWfUGTyqO_QhTwgE_aWbpqz-R2BhKDyibXQ68Xbjd2CKo_Juhib-6t_fWlA03_MDnKgYp5Z1CzVHYy4Rpye",
+    "sourceSize": "1024x1024",
+    "generatedAt": "2026-04-13T19:07:00Z",
+    "localPath": "public/sketches/hub/seoul/rainy-night.webp",
+    "sha256": "f5db2780c6a66c02b1688d5676f7c8be5f46816780406b14bb042b4e0b6f3d81"
+  },
+  "hub/seoul/snowy-day": {
+    "screenId": "projects/15042235601276525488/screens/5a8ea3561b544c489a93e3d1a36df147",
+    "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuCp8Zge54yDg1pHKvKAZ7TVR4t9jd90FlUf0dOhsGLypJwg0WV7WiT3AonMNbbwKAP3VBZzNyUJim8ecQh44u1aCvC3VRwptl-ZFVvuyYbvc6-4_XcbZsKHZIfwfnZ55ARPpzqAq84ubH2otIR1C1I3jOogghcHfMHLvP-jc6aDmxDOGCRKoF_WFqtS9M8h7iNs1_ZlUmV8t8O4Qkd9SdQbkP_xeayiVT6Ihj_5ZPrK6QWEmnW6By4Vu63gclduIpIxquKWTqYuuv9N",
+    "sourceSize": "1024x1024",
+    "generatedAt": "2026-04-13T19:07:00Z",
+    "localPath": "public/sketches/hub/seoul/snowy-day.webp",
+    "sha256": "e63d15f8b07667c5d331e7ee9c3402daaaf10d5fc353fb68b13a4126110cedeb"
+  },
+  "hub/seoul/snowy-night": {
+    "screenId": "projects/15042235601276525488/screens/6c3033bebcad4476ac08ead6de3dfea5",
+    "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuC-9Ls2V1Bu9gKLkwgogmgVCIZlLgwfpCyZ2Wswe53X_PsR15UGWPxJKGHqLOUyAMCH9kXAGrk9qhva9Wm8O-xVjeI-e2U2-nqXRDEf2pga-2IEnoRDUV4bnCBR35-PoGSr-t1vsNTkXRU9f7cYB2AtqZ7I7Id37krrChNfKfEoO3now6WX7vRTNRiR0inrNfWMENYy6_BQb8vn3jWgVJmttuwG9yxn9yK6x63vUvwHdzMn_r31uClwOUDTKmfSyb1tNrK1yow8-WYi",
+    "sourceSize": "1024x1024",
+    "generatedAt": "2026-04-13T19:07:00Z",
+    "localPath": "public/sketches/hub/seoul/snowy-night.webp",
+    "sha256": "0ed2f0c38a3cb18ad36ada841b6df79cb1a5ef7c06a794ceb42d2702f5af44c1"
+  },
+  "hub/busan/cloudy-day": {
+    "screenId": "projects/15042235601276525488/screens/93e0bef6cd0f4a07a4df29a6db0458a8",
+    "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuDLcuxZdxfvdmHPKJ5Ch0LqDB78_LFTPppJc0FobUlncz-2YsobIJdiUOSX5Ov3kMuy7iAOiXdhdC6qg5zJDURr41QmI0wr-1Tj19Rv7wZlatQOyP9zUrdqcXZg4KGfHA7bg3soJmJbmV3gPBxeeFJz3sPhlTzjmTg8f1lPYq-5NgM2EZqllw8zXVVRwoZOuqgZQkF03bced6iiwZgaNahqUPJ2GfbM0LwGzCL2EXvYiXoxX616aGlKD1ITG-ebLrs8CAiO2R00grdf",
+    "sourceSize": "1024x1024",
+    "generatedAt": "2026-04-13T19:07:00Z",
+    "localPath": "public/sketches/hub/busan/cloudy-day.webp",
+    "sha256": "6609145e99c3bf8574450fff95bd3bf21090c1e3659ce7b7e178e7bcd6ff2a41"
+  },
+  "hub/busan/cloudy-night": {
+    "screenId": "projects/15042235601276525488/screens/eb0e50fece2e405f88aa70235de30df7",
+    "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuCwh0dyyKpmmwsPrpIXTgekfHkxUZpXBqXRTewR-dilb-chwh_bza2anDWptXdU-56lqk9nsdN8AjRHaUFvDnJVMTphyaHoz9ku8T8FctVFZDMOnHraKJi_B96NOp0DdIOgavcEdjlhyXu9HnYMIX1F_2lvq261RtlMRWrjdpfMqbTDnZj_FxyvqJcavOTJEpFuITnN-aSIWztlZMe-qSbtl6bMfQDqbu3SxUiEZV0kLz1sH00BtXTfVzUFY8bN4ZXYtpuQGnSAd1xG",
+    "sourceSize": "1024x1024",
+    "generatedAt": "2026-04-13T19:07:00Z",
+    "localPath": "public/sketches/hub/busan/cloudy-night.webp",
+    "sha256": "c4e347d49a5c15efbb955654df2cb794d20c782e7711e61aa8b87facd4f959c1"
+  },
+  "hub/busan/rainy-day": {
+    "screenId": "projects/15042235601276525488/screens/8152e87c351341689480a2292790dce4",
+    "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuAtqi_jLPKk4r3CHjHssNhjn3vm9wM24Cn3jWpZIN5j0HL2GM4StRt22b937RMoG3HprFXNPAV2wba9QaFGJVvcRnWF-0Qa2hCIiG9zHiC4EqWo-kfl0XWURlDLhcCopItsHRDyAwbc9r-JOIMgKH0pHJe2KbPnNZzMIf-XL8OJ48nxqVrjdnSQE4WP8VnT1WiEWCAlNtc_PNdTDENypRaw9bJ8fFKP-AOP0SLt2--zukulDytbKLQk6W4eeeAJSCQ5ofhjew_HRAMA",
+    "sourceSize": "1024x1024",
+    "generatedAt": "2026-04-13T19:07:00Z",
+    "localPath": "public/sketches/hub/busan/rainy-day.webp",
+    "sha256": "edefbadda7d1e925d38d9e596d71a87c476d82c8ab65ea811851fee1d6535529"
+  },
+  "hub/busan/snowy-day": {
+    "screenId": "projects/15042235601276525488/screens/f054b2dcd1f54549aad3303dd099b731",
+    "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuAEAnvt4RGQHx0gHA_Lrknyiy8irLiPbTtzLMmn4xuWjUQtya0FO3XG0JiBypLL4XIhRY9fWDr_8qNxJbKU1RpUp5TL9cTn1SUTeNIAuhpFaAqlANWrQjOt0dO6DuDbysUDT7vOdnKtBOhSa3RQSe6K76zqMoWi-4UcBFU1Hf4cQGe-ziOF5w6gUChYRvYFLNamZnAB6uUwxPZU-jyUR82wUYQC0wf9eNeYpbadSVbv8rbB0DRSediww0k6YO14MCX6DyPZA2o6LEDF",
+    "sourceSize": "1024x1024",
+    "generatedAt": "2026-04-13T19:07:00Z",
+    "localPath": "public/sketches/hub/busan/snowy-day.webp",
+    "sha256": "7e3136dc90d6210d55ed6f3a23504c1b67c5476ac379fdba3b03af2aaa023beb"
+  },
+  "hub/busan/snowy-night": {
+    "screenId": "projects/15042235601276525488/screens/e0f789e54385474b8f946e3c9c121e4f",
+    "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuBRIV6v_FLiiqAITk1vr4C0T1DKrLA_dD5b4JMbBNFBl7mfiQZsU-OhS_1VAkBgQuJOS41jQ_X72-9P7FvGGf4Ku7eyLydwnUXlTUQim6rtXwLFtBahz5uk-1te-mhZO-F0f-kirrFv3ioSbSXwV1EkcAo_AWjcx1f2RFRl5-l5dwwT0cilPoFvpkX5O1JJoYs26lk6dcGN0-ydCILXDPhgfxe5ioOl9Uu0JVSHSXp0mII2wp3gZ5weRyCA0cy5atscE-LMU2ri4eBH",
+    "sourceSize": "1024x1024",
+    "generatedAt": "2026-04-13T19:07:00Z",
+    "localPath": "public/sketches/hub/busan/snowy-night.webp",
+    "sha256": "53cc20088ea9014b15d4512f678638a728412683e8790a0f6c9e5b1b2526ea1b"
+  },
+  "generic/urban/clear-night": {
+    "screenId": "projects/15042235601276525488/screens/fa2abb95bbd34127901c84e67b5f3c83",
+    "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuBc21SCQl_9cBtSJftNOxt-BmjewxNz_3dpzWfAtqifu4n0Cb4LGea61kVeaS3x3KJqNjXskLW6DBotO5VFnBhjFNa5feg9I0AaTpVCEF6IySxaWpNBgCAkICMKA8Alt6FmC8CQw7oWkl_ae9ihOKQdzMBmvXTvD4LGu1vN0iYDVS4RqPo1B6qyx570b5_H5z7dLPPw8XtUOLblxjLPzj57eQp_WhF9QqWLz-uktxN9k95bsAYb-bBcTkFRvWppI16PLdF_SqzR-zq5",
+    "sourceSize": "1024x1024",
+    "generatedAt": "2026-04-13T19:07:00Z",
+    "localPath": "public/sketches/generic/urban/clear-night.webp",
+    "sha256": "af720da726636024c8392c6f92ae1a4c7626865526adf97467bc927a136d605b"
+  },
+  "generic/urban/rainy-day": {
+    "screenId": "projects/15042235601276525488/screens/6c168b6146784968b46730e65a6bae74",
+    "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuC1sArNK-wMS6z1FfmJiMSN26TssQOlCY_ljHpPEsKPbOmRU5UB8v44M3nEL1YOK2mgBNAfRqvpCfgNr8mfEBXc00m4zSzwuYHpZ7GwSZiGcnvNcjQmQxVcv4gvdpFrsEK5QB4VA5h6DEC_n0OG9kovBdv-_YTnUVEVOBL6QhZD93j9gO3t1DTV_ZPoeEBXY5JdaBAlk4JxPR-VieNX9D3wUtZg5GNtQt62ag-DU9OXLOxwxBAuOpT-seSwUJO_jfNZkmsr3xWb6C9g",
+    "sourceSize": "1024x1024",
+    "generatedAt": "2026-04-13T19:07:00Z",
+    "localPath": "public/sketches/generic/urban/rainy-day.webp",
+    "sha256": "324981d0466e9f31541f7fbf4c6cc6010005eeb15ec5e2b0ea6f2445e727ae0e"
+  },
+  "generic/urban/rainy-night": {
+    "screenId": "projects/15042235601276525488/screens/195814143f4544078db2ec64e382a931",
+    "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuDZXpHuVsavowItkCNF5nPam00ZfxGFkF0XE_K9SU7NkA9JBwLsPIVcCbec0E0ykYPI0nneTOOxh9CuldBsNBu16l-9FZXzDsfvQVCjelD_b9_pRr2mo9GWsYX6lAs9JoT333Mc2acjpTTK4xDRCyK8rW8LjZ7HJYZdNSUsBVTrJhnwuXmrCQ--Q2UsoJxjHiHtbl04z_WUd0BblCVfHnV2fYj_t6_FPxd4BzIJUAkP5rsUBP6W8KFBrHClgjKMspi1l60Q6ulL3Q5k",
+    "sourceSize": "1024x1024",
+    "generatedAt": "2026-04-13T19:07:00Z",
+    "localPath": "public/sketches/generic/urban/rainy-night.webp",
+    "sha256": "f18d441e20b1b60d82d2adaaf2e7a62cb1749eee7d0fe4fb03403844d4819cce"
+  },
+  "generic/urban/snowy-day": {
+    "screenId": "projects/15042235601276525488/screens/8c71d3f686f4407d8fa343bdffccdd7a",
+    "downloadUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuAtNZ_2O7m17oVcflOax1V6l1NqiJJ-mh2ZP7yOdr8A1q7yhX0WlR-OJgfwAviLnba__R58X3g9945FL3aEIledyZVQcGe2N0S6cqiHv6ij4ZLkuRGkM7hF83J-rFN8KBDYnJIwBZnayEeZ7DbeX-XmZH_EoO3F1ecMLK1SZN0SVimiNRsKDHmuJCrcc6Zixvt0t-p4CEhV-5Db9oUdk2N3syjIpXWHa9dfy0mMVcsWOsWzpSpJv6WXu4mHPk_t-g8-2zLRC9O3KGfq",
+    "sourceSize": "1024x1024",
+    "generatedAt": "2026-04-13T19:07:00Z",
+    "localPath": "public/sketches/generic/urban/snowy-day.webp",
+    "sha256": "f4c4f92fcb3173b36ccf0e06fee051f9ea50b45455e30ea32b9a9f9a8a585d7f"
   }
 }
