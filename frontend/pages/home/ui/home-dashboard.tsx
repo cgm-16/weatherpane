@@ -19,6 +19,27 @@ interface HomeDashboardProps {
   onRefresh: () => void;
 }
 
+function WeatherSummaryContent({ weather }: { weather: CoreWeather }) {
+  return (
+    <>
+      <p className="font-display text-7xl font-extrabold text-foreground">
+        {Math.round(weather.current.temperatureC)}°
+      </p>
+      <p className="font-body text-base text-muted-foreground">
+        {weather.current.condition.text}
+      </p>
+      <div className="flex gap-4">
+        <span className="font-body text-sm text-muted-foreground">
+          H {Math.round(weather.today.maxC)}°
+        </span>
+        <span className="font-body text-sm text-muted-foreground">
+          L {Math.round(weather.today.minC)}°
+        </span>
+      </div>
+    </>
+  );
+}
+
 const aqiCategoryLabel: Record<string, string> = {
   good: '좋음',
   fair: '보통',
@@ -127,40 +148,14 @@ export function HomeDashboard({
             className="relative flex flex-col items-center gap-2 px-6 py-8"
             aria-label={`${location.name}: ${Math.round(weather.current.temperatureC)}° ${weather.current.condition.text}, 날씨 상세 보기`}
           >
-            <p className="font-display text-7xl font-extrabold text-foreground">
-              {Math.round(weather.current.temperatureC)}°
-            </p>
-            <p className="font-body text-base text-muted-foreground">
-              {weather.current.condition.text}
-            </p>
-            <div className="flex gap-4">
-              <span className="font-body text-sm text-muted-foreground">
-                H {Math.round(weather.today.maxC)}°
-              </span>
-              <span className="font-body text-sm text-muted-foreground">
-                L {Math.round(weather.today.minC)}°
-              </span>
-            </div>
+            <WeatherSummaryContent weather={weather} />
             <span className="mt-2 rounded-full bg-primary px-4 py-1 font-body text-sm font-semibold text-primary-foreground">
               상세 보기
             </span>
           </Link>
         ) : (
           <div className="relative flex flex-col items-center gap-2 px-6 py-8">
-            <p className="font-display text-7xl font-extrabold text-foreground">
-              {Math.round(weather.current.temperatureC)}°
-            </p>
-            <p className="font-body text-base text-muted-foreground">
-              {weather.current.condition.text}
-            </p>
-            <div className="flex gap-4">
-              <span className="font-body text-sm text-muted-foreground">
-                H {Math.round(weather.today.maxC)}°
-              </span>
-              <span className="font-body text-sm text-muted-foreground">
-                L {Math.round(weather.today.minC)}°
-              </span>
-            </div>
+            <WeatherSummaryContent weather={weather} />
           </div>
         )}
       </div>

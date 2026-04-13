@@ -89,8 +89,7 @@ describe('loadSessionManifest', () => {
     window.localStorage.setItem(PENDING_MANIFEST_STORAGE_KEY, existing);
     const remoteFetcher = vi.fn().mockRejectedValue(new Error('network'));
     loadSessionManifest({ remoteFetcher });
-    // 실패가 비동기적으로 처리될 시간을 준다.
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await vi.waitFor(() => expect(remoteFetcher).toHaveBeenCalled());
     expect(window.localStorage.getItem(PENDING_MANIFEST_STORAGE_KEY)).toBe(
       existing
     );

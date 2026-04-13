@@ -2,12 +2,31 @@
 import type { RemoteManifestFetcher } from './load-session-manifest';
 
 export const REMOTE_MANIFEST_URL = '/v1/assets/manifest';
+const FETCH_TIMEOUT_MS = 5_000;
 
 // 엔드포인트에서 매니페스트 override 객체를 가져온다. 실패 시 throw 한다.
 export const fetchRemoteManifest: RemoteManifestFetcher = async () => {
-  const response = await fetch(REMOTE_MANIFEST_URL, {
-    headers: { Accept: 'application/json' },
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    FETCH_TIMEOUT_MS
+  );
+  let response: Response;
+  try {
+    response = await fetch(REMOTE_MANIFEST_URL, {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (controller.signal.aborted) {
+      throw new Error(
+        `remote manifest fetch timed out after ${FETCH_TIMEOUT_MS}ms`
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
   if (!response.ok) {
     throw new Error(`remote manifest fetch failed: ${response.status}`);
   }
