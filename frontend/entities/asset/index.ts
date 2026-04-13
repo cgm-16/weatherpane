@@ -16,3 +16,18 @@ export {
   type SketchVariantId,
 } from './model/variant';
 export { selectSketchKey } from './model/selector';
+export {
+  BASELINE_MANIFEST,
+  mergeManifest,
+  type SketchManifest,
+} from './model/manifest';
+export {
+  PENDING_MANIFEST_STORAGE_KEY,
+  loadSessionManifest,
+  type LoadSessionManifestOptions,
+  type RemoteManifestFetcher,
+} from './api/load-session-manifest';
+export {
+  REMOTE_MANIFEST_URL,
+  fetchRemoteManifest,
+} from './api/fetch-remote-manifest';
