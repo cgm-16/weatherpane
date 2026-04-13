@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { renderHook, act } from '@testing-library/react';
-import { describe, expect, test, beforeEach, vi } from 'vitest';
+import { describe, expect, test, beforeEach, afterEach, vi } from 'vitest';
 import { useFavorites } from '../frontend/features/favorites/use-favorites';
 import type { ResolvedLocation } from '../frontend/entities/location/model/types';
 
@@ -22,6 +22,9 @@ const jeju = makeLocation('KR-Jeju', 2);
 describe('useFavorites — updateNickname', () => {
   beforeEach(() => {
     localStorage.clear();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   test('updateNickname sets a nickname on a matching favorite', () => {
@@ -78,21 +81,17 @@ describe('useFavorites — updateNickname', () => {
 
   test('updateNickname updates updatedAt timestamp', () => {
     vi.useFakeTimers();
-    try {
-      const { result } = renderHook(() => useFavorites());
-      act(() => {
-        result.current.addFavorite(seoul);
-      });
-      const before = result.current.favorites[0].updatedAt;
-      const id = result.current.favorites[0].favoriteId;
-      vi.advanceTimersByTime(1);
-      act(() => {
-        result.current.updateNickname(id, '새이름');
-      });
-      expect(result.current.favorites[0].updatedAt).not.toBe(before);
-    } finally {
-      vi.useRealTimers();
-    }
+    const { result } = renderHook(() => useFavorites());
+    act(() => {
+      result.current.addFavorite(seoul);
+    });
+    const before = result.current.favorites[0].updatedAt;
+    const id = result.current.favorites[0].favoriteId;
+    vi.advanceTimersByTime(1);
+    act(() => {
+      result.current.updateNickname(id, '새이름');
+    });
+    expect(result.current.favorites[0].updatedAt).not.toBe(before);
   });
 });
 
