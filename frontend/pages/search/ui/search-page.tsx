@@ -312,7 +312,11 @@ export function SearchPage() {
                 role="searchbox"
                 type="search"
                 value={query}
-                onChange={(event) => updateQuery(event.currentTarget.value)}
+                onChange={(event) => {
+                  // IME 조합 중에는 중간 자모가 URL에 반영되지 않도록 무시
+                  if ((event.nativeEvent as InputEvent).isComposing) return;
+                  updateQuery(event.currentTarget.value);
+                }}
                 onKeyDown={handleInputKeyDown}
               />
             </div>
