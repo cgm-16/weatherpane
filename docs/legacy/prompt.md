@@ -1,3 +1,9 @@
+---
+archived_on: 2026-04-13
+archive_reason: 구현 완료. 이 문서는 전체 구현 이전 에이전트 프롬프트 팩이었다.
+replaced_by: AGENTS.md, docs/agents/, docs/skills/
+---
+
 # Weatherpane Implementation Prompt Pack
 
 This file is the **execution blueprint plus agent prompt pack** for implementing Weatherpane incrementally and safely.
