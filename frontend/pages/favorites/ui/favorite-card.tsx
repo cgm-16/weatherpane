@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useCoreWeather } from '~/features/weather-queries/use-core-weather';
 import { CORE_WEATHER_STALE_TIME } from '~/features/weather-queries/weather-query-options';
 import { useActiveLocation } from '~/features/app-bootstrap/active-location-context';
+import { SketchBackground } from '~/entities/asset';
 import type { FavoriteLocation } from '~/entities/location/model/types';
 import type { CoreWeather } from '~/entities/weather/model/core-weather';
 
@@ -223,13 +224,25 @@ function CardSnapshot({
   );
 
   const cardClasses =
-    'group relative flex h-44 w-full flex-col justify-between overflow-hidden rounded-[--radius-md] bg-card p-6 text-left';
+    'group relative flex h-44 w-full flex-col justify-between overflow-hidden rounded-[--radius-md] p-6 text-left';
+
+  const sketch = (
+    <SketchBackground
+      location={favorite.location}
+      condition={weather.current.condition}
+      sizeHint="compact"
+      className="absolute inset-0 h-full w-full object-cover opacity-30"
+    />
+  );
 
   if (isEditMode) {
     return (
       <div className={cardClasses}>
-        {topSection}
-        {bottomSection}
+        {sketch}
+        <div className="relative flex h-full flex-col justify-between">
+          {topSection}
+          {bottomSection}
+        </div>
       </div>
     );
   }
@@ -241,8 +254,11 @@ function CardSnapshot({
       onClick={onCardClick}
       className={`${cardClasses} cursor-pointer transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary`}
     >
-      {topSection}
-      {bottomSection}
+      {sketch}
+      <div className="relative flex h-full flex-col justify-between">
+        {topSection}
+        {bottomSection}
+      </div>
     </button>
   );
 }

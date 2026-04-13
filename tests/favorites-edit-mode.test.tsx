@@ -28,6 +28,10 @@ import { FavoritesPage } from '../frontend/pages/favorites/ui/favorites-page';
 import { useActiveLocation } from '../frontend/features/app-bootstrap/active-location-context';
 import { useCoreWeather } from '../frontend/features/weather-queries/use-core-weather';
 import { useFavorites } from '../frontend/features/favorites/use-favorites';
+import {
+  SketchManifestProvider,
+  BASELINE_MANIFEST,
+} from '../frontend/entities/asset';
 import type { FavoriteLocation } from '../frontend/entities/location/model/types';
 import type { CoreWeather } from '../frontend/entities/weather/model/core-weather';
 
@@ -129,11 +133,13 @@ function setupWeather() {
 
 function renderPage() {
   return render(
-    <QueryClientProvider client={makeTestQueryClient()}>
-      <MemoryRouter>
-        <FavoritesPage />
-      </MemoryRouter>
-    </QueryClientProvider>
+    <SketchManifestProvider manifest={BASELINE_MANIFEST}>
+      <QueryClientProvider client={makeTestQueryClient()}>
+        <MemoryRouter>
+          <FavoritesPage />
+        </MemoryRouter>
+      </QueryClientProvider>
+    </SketchManifestProvider>
   );
 }
 

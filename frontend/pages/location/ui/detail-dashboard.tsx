@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { useFavorites, FavoriteUndoToast } from '~/features/favorites';
 import { HourlyStrip } from '~/shared/ui/hourly-strip';
+import { SketchBackground } from '~/entities/asset';
 import { DetailAqiCard } from './detail-aqi-card';
 import { DetailUvCard } from './detail-uv-card';
 import type {
@@ -110,20 +111,28 @@ export function DetailDashboard({
       )}
 
       {/* 현재 날씨 카드 */}
-      <div className="mx-4 mt-3 flex flex-col items-center gap-2 rounded-[--radius-md] bg-card px-6 py-8">
-        <p className="font-display text-7xl font-extrabold text-foreground">
-          {Math.round(weather.current.temperatureC)}°
-        </p>
-        <p className="font-body text-base text-muted-foreground">
-          {weather.current.condition.text}
-        </p>
-        <div className="flex gap-4">
-          <span className="font-body text-sm text-muted-foreground">
-            H {Math.round(weather.today.maxC)}°
-          </span>
-          <span className="font-body text-sm text-muted-foreground">
-            L {Math.round(weather.today.minC)}°
-          </span>
+      <div className="relative mx-4 mt-3 overflow-hidden rounded-[--radius-md]">
+        <SketchBackground
+          location={location}
+          condition={weather.current.condition}
+          sizeHint="hero"
+          className="absolute inset-0 h-full w-full object-cover opacity-40"
+        />
+        <div className="relative flex flex-col items-center gap-2 px-6 py-8">
+          <p className="font-display text-7xl font-extrabold text-foreground">
+            {Math.round(weather.current.temperatureC)}°
+          </p>
+          <p className="font-body text-base text-muted-foreground">
+            {weather.current.condition.text}
+          </p>
+          <div className="flex gap-4">
+            <span className="font-body text-sm text-muted-foreground">
+              H {Math.round(weather.today.maxC)}°
+            </span>
+            <span className="font-body text-sm text-muted-foreground">
+              L {Math.round(weather.today.minC)}°
+            </span>
+          </div>
         </div>
       </div>
 

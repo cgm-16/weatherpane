@@ -10,6 +10,10 @@ import { LocationConnectionError } from '../frontend/pages/location/ui/location-
 import { useDetailBootstrap } from '../frontend/features/app-bootstrap/use-detail-bootstrap';
 import { useWeatherRefresh } from '../frontend/features/weather-queries/use-weather-refresh';
 import { LocationPage } from '../frontend/pages/location/ui/location-page';
+import {
+  SketchManifestProvider,
+  BASELINE_MANIFEST,
+} from '../frontend/entities/asset';
 
 vi.mock('../frontend/features/app-bootstrap/use-detail-bootstrap', () => ({
   useDetailBootstrap: vi.fn(),
@@ -197,9 +201,11 @@ const locationPageCondition = {
 
 function renderPage(resolvedLocationId = 'KR-Seoul') {
   return render(
-    <MemoryRouter>
-      <LocationPage resolvedLocationId={resolvedLocationId} />
-    </MemoryRouter>
+    <SketchManifestProvider manifest={BASELINE_MANIFEST}>
+      <MemoryRouter>
+        <LocationPage resolvedLocationId={resolvedLocationId} />
+      </MemoryRouter>
+    </SketchManifestProvider>
   );
 }
 

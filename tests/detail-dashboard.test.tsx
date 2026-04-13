@@ -8,6 +8,10 @@ import { useFavorites } from '../frontend/features/favorites/use-favorites';
 import { DetailAqiCard } from '../frontend/pages/location/ui/detail-aqi-card';
 import { DetailUvCard } from '../frontend/pages/location/ui/detail-uv-card';
 import { DetailDashboard } from '../frontend/pages/location/ui/detail-dashboard';
+import {
+  SketchManifestProvider,
+  BASELINE_MANIFEST,
+} from '../frontend/entities/asset';
 import type { Aqi } from '../frontend/entities/aqi/model/aqi';
 import type { ResolvedLocation } from '../frontend/entities/location/model/types';
 import type { CoreWeather } from '../frontend/entities/weather/model/core-weather';
@@ -155,17 +159,19 @@ function renderDashboard(
   overrides: Partial<Parameters<typeof DetailDashboard>[0]> = {}
 ) {
   return render(
-    <MemoryRouter>
-      <DetailDashboard
-        location={loc}
-        weather={dashboardWeather}
-        aqi={aqi}
-        isRefreshing={false}
-        hasRefreshError={false}
-        onRefresh={vi.fn()}
-        {...overrides}
-      />
-    </MemoryRouter>
+    <SketchManifestProvider manifest={BASELINE_MANIFEST}>
+      <MemoryRouter>
+        <DetailDashboard
+          location={loc}
+          weather={dashboardWeather}
+          aqi={aqi}
+          isRefreshing={false}
+          hasRefreshError={false}
+          onRefresh={vi.fn()}
+          {...overrides}
+        />
+      </MemoryRouter>
+    </SketchManifestProvider>
   );
 }
 
@@ -199,6 +205,15 @@ describe('DetailDashboard 콘텐츠 렌더링', () => {
   test('위치 이름을 표시한다', () => {
     renderDashboard();
     expect(screen.getByText('서울')).toBeInTheDocument();
+  });
+
+  test('스케치 배경이 hub/seoul/clear-day 키로 렌더된다', () => {
+    const { container } = renderDashboard();
+    const img = container.querySelector(
+      'img[data-sketch-key="hub/seoul/clear-day"]'
+    );
+    expect(img).not.toBeNull();
+    expect(img?.getAttribute('data-size-hint')).toBe('hero');
   });
 
   test('홈으로 돌아가기 링크가 /로 연결된다', () => {
