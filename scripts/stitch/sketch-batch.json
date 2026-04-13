@@ -1,0 +1,70 @@
+{
+  "$schema": "./sketch-batch.schema.json",
+  "projectId": "15042235601276525488",
+  "promptTemplate": {
+    "preamble": "Create a premium editorial weather illustration for a modern Korean weather app. The image should look like a refined architectural travel sketch: hand-drawn ink and pencil linework, soft watercolor wash, subtle paper texture, elegant and calm, premium but understated, atmospheric, clean, readable, and realistic in place identity without becoming photorealistic.",
+    "compositionRules": [
+      "ASPECT RATIO 3:2 landscape (wider than tall), never square, never portrait",
+      "main architectural or environmental subject should be right-weighted or right-center",
+      "preserve the left 40% as calm negative space for UI overlays",
+      "keep the top 15% and bottom 20% relatively low-detail for bars and cards",
+      "avoid centering the hero subject",
+      "avoid busy visual noise inside the left safe zone",
+      "make the scene feel spacious, breathable, and app-friendly",
+      "no text, labels, logos, UI, or frames",
+      "no dramatic close-up foreground objects blocking the composition",
+      "no prominent people as main subjects",
+      "weather mood should be immediately legible at a glance"
+    ],
+    "negativePrompt": "text, logo, watermark, UI overlay, border, frame, split layout, collage, centered hero subject, symmetrical composition, busy left side, cluttered foreground, highly detailed top bar area, highly detailed bottom card area, neon cyberpunk, anime, cartoon, 3d render, photorealistic camera shot, fisheye lens, extreme contrast, oversaturated colors, blurry building edges, duplicated structures, malformed perspective, crowded people, vehicles dominating foreground, illegible signage, giant moon, fantasy castle, sci-fi skyline, square composition, portrait composition"
+  },
+  "subjects": {
+    "hub/seoul": "Seoul, South Korea, with its layered urban skyline and subtle historical character. A secondary suggestion of N Seoul Tower may appear to the right but must not dominate or be centered. Suggest the layered urban identity without looking like a tourism poster.",
+    "hub/busan": "Busan, South Korea, with its coastal port identity: layered hills meeting the sea, bridge silhouettes, and modern apartment clusters. The ocean must occupy the right and right-center of the composition.",
+    "generic/urban": "A generic modern Korean urban district with mid-rise apartment clusters, tree-lined streets, and small commercial buildings. No identifiable landmarks."
+  },
+  "variants": {
+    "clear-day": "a clear day. Crisp premium spring or early autumn daylight, broad quiet sky, restrained greens, calm air, soft shadows on buildings on the right.",
+    "clear-night": "a clear night. Deep indigo sky with stars faintly visible, warm tungsten city lights scattered from the right-side skyline, calm air, no neon saturation.",
+    "cloudy-day": "a cloudy day. Soft gray overcast, muted but not gloomy lighting, slightly cool atmosphere, diffused light, gentle tonal contrast on the right-side subject.",
+    "cloudy-night": "a cloudy night. Heavy layered cloud cover glowing faintly from city lights below, right-side skyline silhouetted against the clouds, brooding but calm.",
+    "rainy-day": "a rainy day. Wet pavement reflections on the right, fine diagonal rain strokes across the sky, muted blue-gray palette, umbrellas implied far in the distance.",
+    "rainy-night": "a rainy night. Rain-slicked streets glowing with reflected lamp light on the right, gentle rain strokes, indigo and warm amber palette, small puddles.",
+    "snowy-day": "a snowy day. Fresh snow clinging to rooftops and tree branches on the right, soft pale sky, muted warm grays, hushed quiet mood.",
+    "snowy-night": "a snowy night. Heavy snowfall backlit by scattered warm window lights from the right-side subject, deep navy sky, soft white foreground drifts."
+  },
+  "subjectOverrides": {
+    "hub/busan/clear-day": "a clear day. Bright summer daylight, sparkling sea on the right, warm sand undertones, clear horizon, cable-stayed bridge silhouette far right, gentle sea breeze implied.",
+    "hub/busan/clear-night": "a clear night. Starlit sky over the bay, glittering port and bridge lights on the right, calm sea reflecting warm city glow, peaceful.",
+    "hub/busan/cloudy-day": "a cloudy day. Heavy sea fog rolling in over the coastal hills on the right, muted teal and gray palette, ghostly bridge silhouette, calm water.",
+    "hub/busan/cloudy-night": "a cloudy night. Thick low clouds over the bay, faint port lights glowing through mist on the right, silhouette of hills against dim horizon, quiet mood.",
+    "hub/busan/rainy-day": "a rainy day. Rain over the harbor, wet rocks and docks on the right, muted green-gray sea, gentle diagonal rain strokes, soft fog.",
+    "hub/busan/rainy-night": "a rainy night. Rain falling over illuminated bridges and port cranes on the right, reflections on wet dock surfaces, deep indigo sea, warm lamp glow.",
+    "hub/busan/snowy-day": "a snowy day. Rare Busan snow dusting the coastal hills and apartment rooftops on the right, pale gray sea, hushed winter coastal mood.",
+    "hub/busan/snowy-night": "a snowy night. Snow falling over the bay with warm port lights glowing on the right, dark sea reflecting faint winter glow, quiet and still."
+  },
+  "keys": [
+    "hub/seoul/clear-day",
+    "hub/seoul/clear-night",
+    "hub/seoul/cloudy-day",
+    "hub/seoul/cloudy-night",
+    "hub/seoul/rainy-day",
+    "hub/seoul/rainy-night",
+    "hub/seoul/snowy-day",
+    "hub/seoul/snowy-night",
+    "hub/busan/clear-day",
+    "hub/busan/clear-night",
+    "hub/busan/cloudy-day",
+    "hub/busan/cloudy-night",
+    "hub/busan/rainy-day",
+    "hub/busan/rainy-night",
+    "hub/busan/snowy-day",
+    "hub/busan/snowy-night",
+    "generic/urban/clear-day",
+    "generic/urban/clear-night",
+    "generic/urban/cloudy-day",
+    "generic/urban/rainy-day",
+    "generic/urban/rainy-night",
+    "generic/urban/snowy-day"
+  ]
+}
