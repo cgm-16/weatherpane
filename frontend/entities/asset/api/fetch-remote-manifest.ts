@@ -7,10 +7,7 @@ const FETCH_TIMEOUT_MS = 5_000;
 // 엔드포인트에서 매니페스트 override 객체를 가져온다. 실패 시 throw 한다.
 export const fetchRemoteManifest: RemoteManifestFetcher = async () => {
   const controller = new AbortController();
-  const timeoutId = setTimeout(
-    () => controller.abort(),
-    FETCH_TIMEOUT_MS
-  );
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   let response: Response;
   try {
     response = await fetch(REMOTE_MANIFEST_URL, {
@@ -20,7 +17,8 @@ export const fetchRemoteManifest: RemoteManifestFetcher = async () => {
   } catch (err) {
     if (controller.signal.aborted) {
       throw new Error(
-        `remote manifest fetch timed out after ${FETCH_TIMEOUT_MS}ms`
+        `remote manifest fetch timed out after ${FETCH_TIMEOUT_MS}ms`,
+        { cause: err }
       );
     }
     throw err;
