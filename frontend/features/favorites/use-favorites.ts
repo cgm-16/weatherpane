@@ -81,11 +81,27 @@ export function useFavorites() {
     setUndoEntry(null);
   }
 
+  function updateNickname(favoriteId: string, nickname: string | null): void {
+    const now = new Date().toISOString();
+    const next = favorites.map((f) =>
+      f.favoriteId === favoriteId ? { ...f, nickname, updatedAt: now } : f
+    );
+    createFavoritesRepository().replaceAll(next);
+    setFavorites(next);
+  }
+
+  function reorderFavorites(reordered: FavoriteLocation[]): void {
+    createFavoritesRepository().replaceAll(reordered);
+    setFavorites(reordered);
+  }
+
   return {
     favorites,
     isFavorite,
     addFavorite,
     removeFavorite,
+    updateNickname,
+    reorderFavorites,
     undoEntry,
     undoRemove,
     atMaxFavorites: favorites.length >= MAX_FAVORITES,
