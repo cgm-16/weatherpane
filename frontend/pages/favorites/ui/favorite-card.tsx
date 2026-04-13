@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useCoreWeather } from '~/features/weather-queries/use-core-weather';
 import { CORE_WEATHER_STALE_TIME } from '~/features/weather-queries/weather-query-options';
 import { useActiveLocation } from '~/features/app-bootstrap/active-location-context';
+import { useOnlineStatus } from '~/shared/hooks/use-online-status';
 import { SketchBackground } from '~/entities/asset';
 import type { FavoriteLocation } from '~/entities/location/model/types';
 import type { CoreWeather } from '~/entities/weather/model/core-weather';
@@ -282,7 +283,8 @@ export function FavoriteCard({ favorite, editProps }: FavoriteCardProps) {
   const navigate = useNavigate();
   const { setActiveLocation } = useActiveLocation();
   const weatherQuery = useCoreWeather(favorite.location);
-  const isOffline = !navigator.onLine;
+  const { isOnline } = useOnlineStatus();
+  const isOffline = !isOnline;
 
   function handleCardClick() {
     setActiveLocation({

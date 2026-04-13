@@ -172,6 +172,41 @@ describe('LocationConnectionError', () => {
       screen.getByRole('link', { name: /현재 위치로 돌아가기/ })
     ).toHaveAttribute('href', '/');
   });
+
+  describe('온라인 상태 인식', () => {
+    afterEach(() => {
+      Object.defineProperty(navigator, 'onLine', {
+        value: true,
+        configurable: true,
+      });
+    });
+
+    test('온라인 상태에서는 wifi_off가 아닌 cloud_off 아이콘을 표시한다', () => {
+      // jsdom 기본값: navigator.onLine = true
+      render(
+        <MemoryRouter>
+          <LocationConnectionError onRetry={vi.fn()} />
+        </MemoryRouter>
+      );
+      expect(screen.getByText('cloud_off')).toBeInTheDocument();
+      expect(screen.queryByText('wifi_off')).not.toBeInTheDocument();
+      expect(screen.queryByText('오프라인 상태')).not.toBeInTheDocument();
+    });
+
+    test('오프라인 상태에서는 wifi_off 아이콘과 오프라인 배지를 표시한다', () => {
+      Object.defineProperty(navigator, 'onLine', {
+        value: false,
+        configurable: true,
+      });
+      render(
+        <MemoryRouter>
+          <LocationConnectionError onRetry={vi.fn()} />
+        </MemoryRouter>
+      );
+      expect(screen.getByText('wifi_off')).toBeInTheDocument();
+      expect(screen.getByText('오프라인 상태')).toBeInTheDocument();
+    });
+  });
 });
 
 const loc = {

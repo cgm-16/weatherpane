@@ -19,7 +19,7 @@ vi.mock('../frontend/features/favorites/use-refresh-queue', () => ({
 }));
 
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useNavigate } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -326,6 +326,33 @@ describe('FavoriteCard', () => {
       })
     );
     expect(mockNavigateFn).toHaveBeenCalledWith('/location/loc-seoul');
+  });
+
+  test('온라인 복귀 시 wifi_off가 사라지고 다시 시도 버튼이 표시된다', async () => {
+    Object.defineProperty(navigator, 'onLine', {
+      value: false,
+      configurable: true,
+    });
+    setupActiveLocation();
+    vi.mocked(useCoreWeather).mockReturnValue(
+      makeWeatherQuery({ isError: true })
+    );
+    renderCard(seoulFav);
+    // 오프라인 상태 확인
+    expect(screen.getByText(/오프라인/i)).toBeInTheDocument();
+    // 온라인 복귀 이벤트 발생
+    Object.defineProperty(navigator, 'onLine', {
+      value: true,
+      configurable: true,
+    });
+    window.dispatchEvent(new Event('online'));
+    // 카드가 온라인 상태로 업데이트되어야 함
+    await waitFor(() => {
+      expect(screen.queryByText(/오프라인/i)).not.toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole('button', { name: /다시 시도/i })
+    ).toBeInTheDocument();
   });
 
   test('skeleton is not navigable (button role absent)', () => {

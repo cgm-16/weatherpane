@@ -1,5 +1,6 @@
 // 날씨 데이터 로드에 실패했을 때(네트워크 오류 등) 표시되는 화면입니다.
 import { Link } from 'react-router';
+import { useOnlineStatus } from '~/shared/hooks/use-online-status';
 
 interface LocationConnectionErrorProps {
   onRetry: () => void;
@@ -8,24 +9,27 @@ interface LocationConnectionErrorProps {
 export function LocationConnectionError({
   onRetry,
 }: LocationConnectionErrorProps) {
+  const { isOnline } = useOnlineStatus();
   return (
     <main
       className="flex min-h-screen flex-col items-center justify-center bg-background px-6"
       role="main"
     >
       <div className="w-full max-w-md rounded-[--radius-lg] bg-card p-8">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2">
-          <span className="h-2 w-2 rounded-full bg-destructive" />
-          <span className="font-headline text-[11px] font-bold tracking-widest text-muted-foreground uppercase">
-            오프라인 상태
-          </span>
-        </div>
+        {!isOnline && (
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2">
+            <span className="h-2 w-2 rounded-full bg-destructive" />
+            <span className="font-headline text-[11px] font-bold tracking-widest text-muted-foreground uppercase">
+              오프라인 상태
+            </span>
+          </div>
+        )}
         <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
           <span
             className="material-symbols-outlined text-5xl text-primary"
             style={{ fontVariationSettings: "'FILL' 0, 'wght' 200" }}
           >
-            wifi_off
+            {isOnline ? 'cloud_off' : 'wifi_off'}
           </span>
         </div>
         <h2 className="font-headline mb-4 text-3xl font-extrabold text-foreground">
