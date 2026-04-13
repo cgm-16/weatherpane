@@ -19,6 +19,7 @@ function mockMatchMedia(prefersDark: boolean) {
 describe('useTheme — 시스템 테마 기본 경로', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     document.documentElement.classList.remove('dark');
   });
 
@@ -52,6 +53,7 @@ describe('useTheme — 시스템 테마 기본 경로', () => {
 describe('useTheme — 저장된 테마 복원', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     document.documentElement.classList.remove('dark');
     mockMatchMedia(false); // 시스템은 밝은 모드
   });

@@ -65,13 +65,13 @@ test.describe('디자인 토큰 — Haet-Ssal (밝은 모드)', () => {
 
   test('서체 및 그림자 토큰이 정의된다', async ({ page }) => {
     expect(await getCssVar(page, '--font-display')).toBe(
-      '"Plus Jakarta Sans Variable", "Plus Jakarta Sans", sans-serif'
+      "'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif"
     );
     expect(await getCssVar(page, '--font-body')).toBe(
-      '"Be Vietnam Pro", sans-serif'
+      "'Be Vietnam Pro', sans-serif"
     );
     expect(await getCssVar(page, '--font-sans')).toBe(
-      '"Be Vietnam Pro", sans-serif'
+      "'Be Vietnam Pro', sans-serif"
     );
     expect(normalizeCssValue(await getCssVar(page, '--shadow-float'))).toBe(
       '0px 2px 4px rgba(27, 28, 28, 0.04), 0px 4px 12px rgba(27, 28, 28, 0.04), 0px 10px 24px rgba(27, 28, 28, 0.04)'
@@ -90,8 +90,15 @@ test.describe('디자인 토큰 — Haet-Ssal (밝은 모드)', () => {
 test.describe('디자인 토큰 — Dal-Bit Night (어두운 모드)', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    // 다크 모드 강제: 클래스 기반으로 .dark 적용
+    // React 하이드레이션이 완전히 완료된 후 다크 모드 강제 적용.
+    // networkidle 대기 없이 바로 evaluate하면 ThemeProvider useEffect가 나중에 실행되어
+    // 수동으로 추가한 .dark 클래스를 제거할 수 있다.
+    await page.waitForLoadState('networkidle');
     await page.evaluate(() => document.documentElement.classList.add('dark'));
+    // 클래스가 실제로 적용될 때까지 대기
+    await page.waitForFunction(() =>
+      document.documentElement.classList.contains('dark')
+    );
   });
 
   test('어두운 모드 색상 토큰이 Dal-Bit Night 값으로 전환된다', async ({
@@ -133,13 +140,13 @@ test.describe('디자인 토큰 — Dal-Bit Night (어두운 모드)', () => {
     expect(await getCssVar(page, '--radius-lg')).toBe('2rem');
     expect(await getCssVar(page, '--radius-full')).toBe('9999px');
     expect(await getCssVar(page, '--font-display')).toBe(
-      '"Plus Jakarta Sans Variable", "Plus Jakarta Sans", sans-serif'
+      "'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif"
     );
     expect(await getCssVar(page, '--font-body')).toBe(
-      '"Plus Jakarta Sans Variable", "Plus Jakarta Sans", sans-serif'
+      "'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif"
     );
     expect(await getCssVar(page, '--font-sans')).toBe(
-      '"Plus Jakarta Sans Variable", "Plus Jakarta Sans", sans-serif'
+      "'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif"
     );
     expect(normalizeCssValue(await getCssVar(page, '--shadow-float'))).toBe(
       '0px 2px 4px rgba(229, 226, 225, 0.04), 0px 4px 12px rgba(229, 226, 225, 0.04), 0px 10px 24px rgba(229, 226, 225, 0.04)'
