@@ -123,8 +123,6 @@ function CardSnapshot({
     }
   }
 
-  const cardName = favorite.nickname ?? favorite.location.name;
-
   const topSection = (
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0 flex-1">
@@ -134,7 +132,7 @@ function CardSnapshot({
             className="font-headline w-full rounded bg-transparent text-xl leading-tight font-bold text-card-foreground focus:outline-none"
             value={draft}
             maxLength={20}
-            aria-label={`${cardName} 닉네임 편집`}
+            aria-label={`${displayName} 닉네임 편집`}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
@@ -170,7 +168,7 @@ function CardSnapshot({
               {!editProps.isFirst && (
                 <button
                   type="button"
-                  aria-label={`즐겨찾기 ${cardName} 위로 이동`}
+                  aria-label={`즐겨찾기 ${displayName} 위로 이동`}
                   onClick={editProps.onMoveUp}
                   className="flex h-7 w-7 items-center justify-center rounded bg-muted text-foreground transition-colors hover:bg-accent"
                 >
@@ -182,7 +180,7 @@ function CardSnapshot({
               {!editProps.isLast && (
                 <button
                   type="button"
-                  aria-label={`즐겨찾기 ${cardName} 아래로 이동`}
+                  aria-label={`즐겨찾기 ${displayName} 아래로 이동`}
                   onClick={editProps.onMoveDown}
                   className="flex h-7 w-7 items-center justify-center rounded bg-muted text-foreground transition-colors hover:bg-accent"
                 >
