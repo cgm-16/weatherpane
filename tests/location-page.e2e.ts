@@ -44,6 +44,10 @@ test('유효한 상세 페이지에서 날씨 대시보드가 표시된다', asy
   await expect(
     page.getByRole('link', { name: /홈으로 돌아가기/ })
   ).toBeVisible();
+  // 스케치 배경 이미지가 렌더링되고 /sketches/*.webp 경로를 가리키는지 확인
+  const sketchImg = page.locator('img[data-sketch-key="hub/seoul/clear-day"]');
+  await expect(sketchImg).toBeVisible();
+  await expect(sketchImg).toHaveAttribute('src', /^\/sketches\/.+\.webp$/);
 });
 
 test('활성 위치 없이 접근하면 찾을 수 없음 페이지가 표시된다', async ({
