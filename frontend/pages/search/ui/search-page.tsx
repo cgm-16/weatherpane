@@ -270,7 +270,7 @@ export function SearchPage() {
       source: 'recent',
       changedAt: new Date().toISOString(),
     });
-    navigate(`/location/${recent.location.catalogLocationId}`);
+    navigate(`/location/${recent.location.locationId}`);
   }
 
   return (

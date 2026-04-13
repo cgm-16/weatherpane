@@ -241,7 +241,7 @@ describe('search route', () => {
 
     await waitFor(() => {
       expect(router.state.location.pathname).toMatch(
-        /^\/location\/[0-9a-f]{12}$/
+        /^\/location\/loc_[0-9a-f]{12}$/
       );
     });
     expect(router.state.historyAction).toBe('PUSH');
@@ -359,7 +359,7 @@ describe('search result selection', () => {
 
     await waitFor(() => {
       expect(router.state.location.pathname).toMatch(
-        /^\/location\/[0-9a-f]{12}$/
+        /^\/location\/loc_[0-9a-f]{12}$/
       );
     });
     expect(router.state.historyAction).toBe('PUSH');
@@ -464,7 +464,7 @@ describe('search result selection', () => {
 
     await waitFor(() => {
       expect(router.state.location.pathname).toMatch(
-        /^\/location\/[0-9a-f]{12}$/
+        /^\/location\/loc_[0-9a-f]{12}$/
       );
     });
   });
@@ -575,7 +575,7 @@ describe('search default state — recents and popular', () => {
     await userEvent.setup().click(btn);
 
     await waitFor(() => {
-      expect(router.state.location.pathname).toBe('/location/5f5def784f91');
+      expect(router.state.location.pathname).toBe('/location/loc_5f5def784f91');
     });
     expect(router.state.historyAction).toBe('PUSH');
 

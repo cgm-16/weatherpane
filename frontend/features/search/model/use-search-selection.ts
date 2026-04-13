@@ -4,29 +4,14 @@ import { useNavigate } from 'react-router';
 import { useActiveLocation } from '~/features/app-bootstrap/active-location-context';
 import { useWeatherProvider } from '~/shared/api/weather-provider';
 import {
+  buildCatalogLocationFromEntry,
   createCatalogLocationResolver,
   getCatalogEntryById,
 } from '~/entities/location';
 import { createUnsupportedRouteContextRepository } from '~/shared/lib/storage/repositories/unsupported-route-context-repository';
 import { persistRecent } from '~/features/recents';
 import type { SearchCatalogResult } from '~/entities/location/model/search';
-import type {
-  ActiveLocation,
-  CatalogLocation,
-} from '~/entities/location/model/types';
-import type { CatalogEntry } from '~/entities/location/model/catalog';
-
-function buildCatalogLocationFromEntry(entry: CatalogEntry): CatalogLocation {
-  return {
-    catalogLocationId: entry.catalogLocationId,
-    name: entry.leafLabel,
-    admin1: entry.siDo,
-    ...(entry.siGunGu ? { admin2: entry.siGunGu } : {}),
-    // 위도/경도는 해결사가 사용하지 않습니다 — 지오코딩 결과에서 재정의됩니다.
-    latitude: 0,
-    longitude: 0,
-  };
-}
+import type { ActiveLocation } from '~/entities/location/model/types';
 
 export function useSearchSelection() {
   const navigate = useNavigate();
@@ -77,7 +62,7 @@ export function useSearchSelection() {
         };
         setActiveLocation(activeLocation);
         persistRecent(resolution.location);
-        navigate(`/location/${result.catalogLocationId}`);
+        navigate(`/location/${resolution.location.locationId}`);
       } else {
         navigate(`/location/${resolution.token}`);
       }

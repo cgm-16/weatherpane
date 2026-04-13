@@ -1,4 +1,5 @@
 // frontend/entities/location/model/catalog.ts
+import type { CatalogLocation } from './types';
 
 export type CatalogDepth = 1 | 2 | 3 | 4;
 
@@ -25,4 +26,19 @@ export interface LocationCatalog {
   generatedAt: string; // ISO 8601 형식 생성 일시
   total: number; // 항목 수
   entries: CatalogEntry[];
+}
+
+// CatalogEntry를 위치 해결사에 전달할 수 있는 CatalogLocation으로 변환합니다.
+// 위도/경도는 해결사가 지오코딩 결과로 재정의하므로 0으로 설정합니다.
+export function buildCatalogLocationFromEntry(
+  entry: CatalogEntry
+): CatalogLocation {
+  return {
+    catalogLocationId: entry.catalogLocationId,
+    name: entry.leafLabel,
+    admin1: entry.siDo,
+    ...(entry.siGunGu ? { admin2: entry.siGunGu } : {}),
+    latitude: 0,
+    longitude: 0,
+  };
 }

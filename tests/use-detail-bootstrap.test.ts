@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, test, vi, beforeEach } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import type { CoreWeather } from '../frontend/entities/weather/model/core-weather';
 import type { Aqi } from '../frontend/entities/aqi/model/aqi';
 
@@ -30,6 +30,28 @@ vi.mock(
     })),
   })
 );
+vi.mock('../frontend/shared/api/weather-provider', () => ({
+  useWeatherProvider: vi.fn(() => ({ geocode: vi.fn() })),
+}));
+vi.mock('../frontend/entities/location', () => ({
+  // 기본값: 카탈로그 항목 없음 → 콜드 로드 실패 → not-found
+  getCatalogEntryById: vi.fn(() => null),
+  buildCatalogLocationFromEntry: vi.fn(),
+  createCatalogLocationResolver: vi.fn(() => ({
+    resolveCatalogLocation: vi
+      .fn()
+      .mockResolvedValue({ kind: 'unsupported', token: 'x' }),
+  })),
+}));
+vi.mock(
+  '../frontend/shared/lib/storage/repositories/unsupported-route-context-repository',
+  () => ({
+    createUnsupportedRouteContextRepository: vi.fn(() => ({
+      get: vi.fn(),
+      set: vi.fn(),
+    })),
+  })
+);
 
 import { useActiveLocation } from '../frontend/features/app-bootstrap/active-location-context';
 import { useCoreWeather } from '../frontend/features/weather-queries/use-core-weather';
@@ -38,6 +60,10 @@ import {
   createWeatherSnapshotRepository,
   createAqiSnapshotRepository,
 } from '../frontend/shared/lib/storage/repositories/snapshot-repositories';
+import {
+  getCatalogEntryById,
+  createCatalogLocationResolver,
+} from '../frontend/entities/location';
 import { useDetailBootstrap } from '../frontend/features/app-bootstrap/use-detail-bootstrap';
 
 const location = {
@@ -146,6 +172,13 @@ beforeEach(() => {
     remove: vi.fn(),
     clear: vi.fn(),
   });
+  // 기본값 복원: 카탈로그 항목 없음
+  vi.mocked(getCatalogEntryById).mockReturnValue(null);
+  vi.mocked(createCatalogLocationResolver).mockReturnValue({
+    resolveCatalogLocation: vi
+      .fn()
+      .mockResolvedValue({ kind: 'unsupported', token: 'x' }),
+  });
 });
 
 describe('useDetailBootstrap', () => {
@@ -162,19 +195,20 @@ describe('useDetailBootstrap', () => {
     }
   });
 
-  test('활성 위치 없음 → not-found 반환', () => {
+  test('활성 위치 없음, 카탈로그 미스 → not-found 반환', async () => {
     vi.mocked(useActiveLocation).mockReturnValue(noCtx);
     vi.mocked(useCoreWeather).mockReturnValue(pendingQuery());
     vi.mocked(useAqi).mockReturnValue(pendingQuery());
-    const { result } = renderHook(() => useDetailBootstrap('KR-Seoul'));
-    expect(result.current.kind).toBe('not-found');
+    // getCatalogEntryById는 기본적으로 null 반환
+    const { result } = renderHook(() => useDetailBootstrap('loc_test'));
+    await waitFor(() => expect(result.current.kind).toBe('not-found'));
   });
 
-  test('활성 위치가 catalogLocationId와 불일치 → not-found 반환', () => {
+  test('활성 위치가 locationId와 불일치 → not-found 반환', () => {
     vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
     vi.mocked(useCoreWeather).mockReturnValue(pendingQuery());
     vi.mocked(useAqi).mockReturnValue(pendingQuery());
-    const { result } = renderHook(() => useDetailBootstrap('KR-Busan'));
+    const { result } = renderHook(() => useDetailBootstrap('loc_busan'));
     expect(result.current.kind).toBe('not-found');
   });
 
@@ -182,7 +216,7 @@ describe('useDetailBootstrap', () => {
     vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
     vi.mocked(useCoreWeather).mockReturnValue(pendingQuery());
     vi.mocked(useAqi).mockReturnValue(pendingQuery());
-    const { result } = renderHook(() => useDetailBootstrap('KR-Seoul'));
+    const { result } = renderHook(() => useDetailBootstrap('loc_test'));
     expect(result.current.kind).toBe('loading');
   });
 
@@ -190,7 +224,7 @@ describe('useDetailBootstrap', () => {
     vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
     vi.mocked(useCoreWeather).mockReturnValue(successQuery(weather));
     vi.mocked(useAqi).mockReturnValue(successQuery(aqi));
-    const { result } = renderHook(() => useDetailBootstrap('KR-Seoul'));
+    const { result } = renderHook(() => useDetailBootstrap('loc_test'));
     expect(result.current.kind).toBe('data');
   });
 
@@ -198,7 +232,7 @@ describe('useDetailBootstrap', () => {
     vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
     vi.mocked(useCoreWeather).mockReturnValue(successQuery(weather, true));
     vi.mocked(useAqi).mockReturnValue(successQuery(aqi));
-    const { result } = renderHook(() => useDetailBootstrap('KR-Seoul'));
+    const { result } = renderHook(() => useDetailBootstrap('loc_test'));
     expect(result.current.kind).toBe('data');
     if (result.current.kind === 'data') {
       expect(result.current.isRefreshing).toBe(true);
@@ -227,7 +261,7 @@ describe('useDetailBootstrap', () => {
     vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
     vi.mocked(useCoreWeather).mockReturnValue(errorQuery());
     vi.mocked(useAqi).mockReturnValue(errorQuery());
-    const { result } = renderHook(() => useDetailBootstrap('KR-Seoul'));
+    const { result } = renderHook(() => useDetailBootstrap('loc_test'));
     expect(result.current.kind).toBe('stale-fallback');
   });
 
@@ -253,7 +287,7 @@ describe('useDetailBootstrap', () => {
     vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
     vi.mocked(useCoreWeather).mockReturnValue(errorQuery());
     vi.mocked(useAqi).mockReturnValue(errorQuery());
-    const { result } = renderHook(() => useDetailBootstrap('KR-Seoul'));
+    const { result } = renderHook(() => useDetailBootstrap('loc_test'));
     expect(result.current.kind).toBe('recoverable-error');
   });
 
@@ -261,7 +295,7 @@ describe('useDetailBootstrap', () => {
     vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
     vi.mocked(useCoreWeather).mockReturnValue(errorQuery());
     vi.mocked(useAqi).mockReturnValue(errorQuery());
-    const { result } = renderHook(() => useDetailBootstrap('KR-Seoul'));
+    const { result } = renderHook(() => useDetailBootstrap('loc_test'));
     expect(result.current.kind).toBe('recoverable-error');
   });
 
@@ -269,7 +303,7 @@ describe('useDetailBootstrap', () => {
     vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
     vi.mocked(useCoreWeather).mockReturnValue(successQuery(weather));
     vi.mocked(useAqi).mockReturnValue({ ...successQuery(aqi), isError: true });
-    const { result } = renderHook(() => useDetailBootstrap('KR-Seoul'));
+    const { result } = renderHook(() => useDetailBootstrap('loc_test'));
     expect(result.current.kind).toBe('data');
     if (result.current.kind === 'data') {
       expect(result.current.hasRefreshError).toBe(true);
@@ -313,10 +347,118 @@ describe('useDetailBootstrap', () => {
     vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
     vi.mocked(useCoreWeather).mockReturnValue(errorQuery());
     vi.mocked(useAqi).mockReturnValue(errorQuery());
-    const { result } = renderHook(() => useDetailBootstrap('KR-Seoul'));
+    const { result } = renderHook(() => useDetailBootstrap('loc_test'));
     expect(result.current.kind).toBe('stale-fallback');
     if (result.current.kind === 'stale-fallback') {
       expect(result.current.aqi).not.toBeNull();
     }
+  });
+
+  describe('콜드 로드 해결 (activeLocation 없음)', () => {
+    test('카탈로그 히트 + 지오코딩 성공 → setActiveLocation 호출 후 loading 반환', async () => {
+      const resolvedLoc = { ...location };
+      vi.mocked(getCatalogEntryById).mockReturnValue({
+        catalogLocationId: 'KR-Seoul',
+        canonicalPath: '서울특별시',
+        depth: 1,
+        siDo: '서울특별시',
+        leafLabel: '서울',
+        tokens: ['서울특별시'],
+        display: { primaryLabel: '서울', secondaryLabel: null },
+        archetypeKey: null,
+        overrideKey: null,
+      });
+      vi.mocked(createCatalogLocationResolver).mockReturnValue({
+        resolveCatalogLocation: vi.fn().mockResolvedValue({
+          kind: 'resolved',
+          routeId: 'loc_test',
+          location: resolvedLoc,
+        }),
+      });
+
+      // setActiveLocation 호출 시 activeLocation을 갱신하여 콜드 로드 루프를 중단합니다.
+      const setActiveLocation = vi.fn((loc) => {
+        vi.mocked(useActiveLocation).mockReturnValue({
+          activeLocation: {
+            kind: 'resolved',
+            location: loc.location,
+            source: loc.source,
+            changedAt: loc.changedAt,
+          },
+          setActiveLocation,
+          clearActiveLocation: vi.fn(),
+        });
+      });
+      vi.mocked(useActiveLocation).mockReturnValue({
+        ...noCtx,
+        setActiveLocation,
+      });
+      vi.mocked(useCoreWeather).mockReturnValue(pendingQuery());
+      vi.mocked(useAqi).mockReturnValue(pendingQuery());
+
+      const { result } = renderHook(() => useDetailBootstrap('loc_test'));
+
+      // 최초 렌더링은 loading (콜드 로드 시작 전)
+      expect(result.current.kind).toBe('loading');
+
+      // 해결 성공 후 setActiveLocation이 호출됩니다.
+      await waitFor(() => expect(setActiveLocation).toHaveBeenCalledOnce());
+    });
+
+    test('카탈로그 미스 → not-found 반환', async () => {
+      vi.mocked(getCatalogEntryById).mockReturnValue(null);
+      vi.mocked(useActiveLocation).mockReturnValue(noCtx);
+      vi.mocked(useCoreWeather).mockReturnValue(pendingQuery());
+      vi.mocked(useAqi).mockReturnValue(pendingQuery());
+
+      const { result } = renderHook(() => useDetailBootstrap('loc_unknown'));
+      await waitFor(() => expect(result.current.kind).toBe('not-found'));
+    });
+
+    test('지오코딩 실패 → not-found 반환', async () => {
+      vi.mocked(getCatalogEntryById).mockReturnValue({
+        catalogLocationId: 'KR-Seoul',
+        canonicalPath: '서울특별시',
+        depth: 1,
+        siDo: '서울특별시',
+        leafLabel: '서울',
+        tokens: ['서울특별시'],
+        display: { primaryLabel: '서울', secondaryLabel: null },
+        archetypeKey: null,
+        overrideKey: null,
+      });
+      vi.mocked(createCatalogLocationResolver).mockReturnValue({
+        resolveCatalogLocation: vi
+          .fn()
+          .mockRejectedValue(new Error('네트워크 오류')),
+      });
+      vi.mocked(useActiveLocation).mockReturnValue(noCtx);
+      vi.mocked(useCoreWeather).mockReturnValue(pendingQuery());
+      vi.mocked(useAqi).mockReturnValue(pendingQuery());
+
+      const { result } = renderHook(() => useDetailBootstrap('loc_test'));
+      await waitFor(() => expect(result.current.kind).toBe('not-found'));
+    });
+
+    test('unsupported 해결 결과 → not-found 반환', async () => {
+      vi.mocked(getCatalogEntryById).mockReturnValue({
+        catalogLocationId: 'KR-Seoul',
+        canonicalPath: '서울특별시',
+        depth: 1,
+        siDo: '서울특별시',
+        leafLabel: '서울',
+        tokens: ['서울특별시'],
+        display: { primaryLabel: '서울', secondaryLabel: null },
+        archetypeKey: null,
+        overrideKey: null,
+      });
+      // 기본 mock은 이미 unsupported를 반환합니다.
+      vi.mocked(useActiveLocation).mockReturnValue(noCtx);
+      vi.mocked(useCoreWeather).mockReturnValue(pendingQuery());
+      vi.mocked(useAqi).mockReturnValue(pendingQuery());
+
+      const { result } = renderHook(() => useDetailBootstrap('loc_test'));
+      await waitFor(() => expect(result.current.kind).toBe('not-found'));
+    });
   });
 });
