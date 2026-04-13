@@ -11,7 +11,10 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
-const REPO_ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
+const REPO_ROOT = resolve(
+  fileURLToPath(new URL('.', import.meta.url)),
+  '../..'
+);
 const ASSET_MAP_PATH = join(REPO_ROOT, 'scripts/stitch/asset-map.json');
 
 // 마스터 크기: WP-020 에셋 매니페스트 계약이 요구하는 3:2 landscape 기준.
@@ -110,6 +113,13 @@ async function main(): Promise<void> {
   const meta = await sharp(absInput).metadata();
   if (!meta.width || !meta.height) {
     throw new Error('could not read source image dimensions');
+  }
+  // sourceSize 계약(WxH 형식)과 실제 입력 이미지 크기를 검증한다.
+  const [expectedW, expectedH] = map[key].sourceSize.split('x').map(Number);
+  if (meta.width !== expectedW || meta.height !== expectedH) {
+    throw new Error(
+      `source image is ${meta.width}x${meta.height} but asset-map expects ${map[key].sourceSize} for key: ${key}`
+    );
   }
   const crop = computeBottomCrop(meta.width, meta.height);
 
