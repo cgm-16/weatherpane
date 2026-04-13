@@ -8,7 +8,7 @@ import {
   BASELINE_MANIFEST,
   mergeManifest,
 } from '~/entities/asset/model/manifest';
-import { isSemanticKey } from '~/entities/asset/model/keys';
+import { isSemanticKey } from '~/entities/asset';
 
 // 드리프트 가드: sketch-batch.json 키 집합과 baseline manifest 키 집합이 정확히 일치해야 한다.
 describe('baseline manifest drift guard', () => {
