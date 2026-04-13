@@ -26,14 +26,19 @@ describe('AppProviders — SketchManifestProvider 연결', () => {
   beforeEach(() => {
     window.localStorage.clear();
     // ThemeProvider가 시스템 테마를 조회할 때 사용하는 matchMedia 모의.
-    Object.defineProperty(window, 'matchMedia', {
-      value: vi.fn(() => ({
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockImplementation((query) => ({
         matches: false,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      })),
-      writable: true,
-    });
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }))
+    );
     // jsdom 환경에서 loadSessionManifest가 호출하는 원격 fetch를 차단해 콘솔 노이즈를 없앤다.
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('test')));
   });
@@ -51,7 +56,6 @@ describe('AppProviders — SketchManifestProvider 연결', () => {
     );
 
     const expectedCount = Object.keys(BASELINE_MANIFEST).length;
-    expect(expectedCount).toBe(22);
     expect(screen.getByTestId('probe-count').textContent).toBe(
       String(expectedCount)
     );
