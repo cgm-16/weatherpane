@@ -105,8 +105,16 @@ export function FavoritesPage() {
                           isLast: i === displayFavorites.length - 1,
                           onMoveUp: () => handleMoveUp(i),
                           onMoveDown: () => handleMoveDown(i),
-                          onNicknameCommit: (nick) =>
-                            updateNickname(fav.favoriteId, nick),
+                          onNicknameCommit: (nick) => {
+                            updateNickname(fav.favoriteId, nick);
+                            setDraftFavorites((prev) =>
+                              prev.map((d) =>
+                                d.favoriteId === fav.favoriteId
+                                  ? { ...d, nickname: nick }
+                                  : d
+                              )
+                            );
+                          },
                           onDragStart: () => {
                             draggedIdRef.current = fav.favoriteId;
                           },
