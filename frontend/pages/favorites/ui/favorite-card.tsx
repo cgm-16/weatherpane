@@ -224,7 +224,7 @@ function CardSnapshot({
   );
 
   const cardClasses =
-    'group relative flex h-44 w-full flex-col justify-between overflow-hidden rounded-[--radius-md] p-6 text-left';
+    'group relative flex h-44 w-full flex-col justify-between overflow-hidden rounded-[--radius-md] bg-card p-6 text-left';
 
   const sketch = (
     <SketchBackground

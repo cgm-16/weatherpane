@@ -111,7 +111,7 @@ export function DetailDashboard({
       )}
 
       {/* 현재 날씨 카드 */}
-      <div className="relative mx-4 mt-3 overflow-hidden rounded-[--radius-md]">
+      <div className="relative mx-4 mt-3 overflow-hidden rounded-[--radius-md] bg-card">
         <SketchBackground
           location={location}
           condition={weather.current.condition}
