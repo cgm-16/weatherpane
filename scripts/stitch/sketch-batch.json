@@ -1,5 +1,4 @@
 {
-  "$schema": "./sketch-batch.schema.json",
   "projectId": "15042235601276525488",
   "promptTemplate": {
     "preamble": "Create a premium editorial weather illustration for a modern Korean weather app. The image should look like a refined architectural travel sketch: hand-drawn ink and pencil linework, soft watercolor wash, subtle paper texture, elegant and calm, premium but understated, atmospheric, clean, readable, and realistic in place identity without becoming photorealistic.",

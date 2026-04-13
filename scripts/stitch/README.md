@@ -24,9 +24,9 @@ For a key `hub/seoul/rainy-day`:
 1. Start with `promptTemplate.preamble`.
 2. Append `Composition rules:` followed by every entry in
    `promptTemplate.compositionRules` as a bullet list.
-3. If `subjectOverrides[key]` exists, append `Depict ` + `subjects[family]` + ` The scene shows ` + `subjectOverrides[key]`.
-   Otherwise, append `Depict ` + `subjects[family]` + ` The scene shows ` + `variants[variant]`.
-4. Append `Negative prompt: ` + `promptTemplate.negativePrompt`.
+3. If `subjectOverrides[key]` exists, append `Depict {subjects[family]} The scene shows {subjectOverrides[key]}`.
+   Otherwise, append `Depict {subjects[family]} The scene shows {variants[variant]}`.
+4. Append `Negative prompt: {promptTemplate.negativePrompt}`.
 
 `family` is the first two segments of the key (`hub/seoul`). `variant` is the
 last segment (`rainy-day`).
@@ -39,6 +39,7 @@ last segment (`rainy-day`).
 4. Verify the returned screen is 3:2 landscape. If not, reject and retry with
    stronger framing language.
 5. Append an entry to `asset-map.json`:
+
    ```json
    {
      "hub/seoul/rainy-day": {
@@ -49,6 +50,7 @@ last segment (`rainy-day`).
      }
    }
    ```
+
 6. curl the `downloadUrl` to `_raw/<key-safe>.png`.
 7. Run `process-sketch.ts --key hub/seoul/rainy-day --input _raw/...png`.
 8. The script writes `public/sketches/hub/seoul/rainy-day.webp` and fills in
