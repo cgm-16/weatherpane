@@ -68,10 +68,12 @@ pnpm exec playwright test tests/design-tokens.e2e.ts --reporter=line
 Expected: all assertions pass. Each test reads the computed CSS custom property value from the browser — a pass means the token is correctly applied in the live app.
 
 Also run:
+
 ```bash
 pnpm typecheck
 pnpm build
 ```
+
 Expected: no errors. The build output should include the font assets for Plus Jakarta Sans and Be Vietnam Pro.
 
 ## Stop and ask Ori
@@ -91,31 +93,34 @@ Expected: no errors. The build output should include the font assets for Plus Ja
 
 ### Semantic color tokens
 
-| Token | Light value | Dark value | Purpose |
-|---|---|---|---|
-| `background` / `foreground` | `#fcf9f8` / `#1b1c1c` | `#131313` / `#e5e2e1` | Page base and primary text |
-| `card` / `card-foreground` | `#ffffff` / `#1b1c1c` | `#1c1b1b` / `#e5e2e1` | Elevated surface containers |
-| `popover` / `popover-foreground` | `#ffffff` / `#1b1c1c` | `#20201f` / `#e5e2e1` | Floating overlays, tooltips |
-| `primary` / `primary-foreground` | `#ba0036` / `#ffffff` | `#ffb2b6` / `#68001a` | Brand action color (Rausch Red) |
-| `secondary` / `secondary-foreground` | `#5e5e5e` / `#ffffff` | `#ffb2b6` / `#67001a` | Supporting actions |
-| `accent` / `accent-foreground` | `#eae7e7` / `#1b1c1c` | `#2a2a2a` / `#e5e2e1` | Hover states, subtle highlights |
-| `muted` / `muted-foreground` | `#f0eded` / `#5c3f41` | `#20201f` / `#e5bdbe` | De-emphasized content, labels |
-| `destructive` / `destructive-foreground` | `#ba1a1a` / `#ffffff` | `#ffb4ab` / `#690005` | Error states |
-| `border` | `#e5bdbe` | `#5c3f41` | Structural outlines (use sparingly — see Hard rules) |
-| `input` | `#f6f3f2` | `#1c1b1b` | Form input backgrounds |
-| `ring` | `#ba0036` | `#ffb2b6` | Focus ring color |
+| Token                                    | Light value           | Dark value            | Purpose                                              |
+| ---------------------------------------- | --------------------- | --------------------- | ---------------------------------------------------- |
+| `background` / `foreground`              | `#fcf9f8` / `#1b1c1c` | `#131313` / `#e5e2e1` | Page base and primary text                           |
+| `card` / `card-foreground`               | `#ffffff` / `#1b1c1c` | `#1c1b1b` / `#e5e2e1` | Elevated surface containers                          |
+| `popover` / `popover-foreground`         | `#ffffff` / `#1b1c1c` | `#20201f` / `#e5e2e1` | Floating overlays, tooltips                          |
+| `primary` / `primary-foreground`         | `#ba0036` / `#ffffff` | `#ffb2b6` / `#68001a` | Brand action color (Rausch Red)                      |
+| `secondary` / `secondary-foreground`     | `#5e5e5e` / `#ffffff` | `#ffb2b6` / `#67001a` | Supporting actions                                   |
+| `accent` / `accent-foreground`           | `#eae7e7` / `#1b1c1c` | `#2a2a2a` / `#e5e2e1` | Hover states, subtle highlights                      |
+| `muted` / `muted-foreground`             | `#f0eded` / `#5c3f41` | `#20201f` / `#e5bdbe` | De-emphasized content, labels                        |
+| `destructive` / `destructive-foreground` | `#ba1a1a` / `#ffffff` | `#ffb4ab` / `#690005` | Error states                                         |
+| `border`                                 | `#e5bdbe`             | `#5c3f41`             | Structural outlines (use sparingly — see Hard rules) |
+| `input`                                  | `#f6f3f2`             | `#1c1b1b`             | Form input backgrounds                               |
+| `ring`                                   | `#ba0036`             | `#ffb2b6`             | Focus ring color                                     |
+| `tertiary`                               | `#006a45`             | `#62dca3`             | Emerald — weather condition status (good/hazard)     |
+| `surface-container-highest`              | `#ffffff`             | (same)                | Glass base: light mode glassmorphism                 |
+| `surface-bright`                         | `#f0eded`             | `#393939`             | Glass base: dark mode glassmorphism                  |
 
 ### Non-color tokens
 
-| Token | Value | Use |
-|---|---|---|
-| `--radius-sm` | `0.5rem` | Buttons |
-| `--radius-md` | `1.5rem` | Cards, editorial tiles |
-| `--radius-lg` | `2rem` | Modals, large panels |
-| `--radius-full` | `9999px` | Chips, pills |
-| `--font-display` | Plus Jakarta Sans Variable | Headlines, temperatures |
-| `--font-body` | Be Vietnam Pro (light) / Plus Jakarta Sans (dark) | Body text, labels |
-| `--font-sans` | Alias of `--font-body` — Tailwind `font-sans` utility maps here | General sans-serif utility |
-| `--shadow-float` | Three-layer ambient system | Floating elements only |
+| Token            | Value                                                           | Use                        |
+| ---------------- | --------------------------------------------------------------- | -------------------------- |
+| `--radius-sm`    | `0.5rem`                                                        | Buttons                    |
+| `--radius-md`    | `1.5rem`                                                        | Cards, editorial tiles     |
+| `--radius-lg`    | `2rem`                                                          | Modals, large panels       |
+| `--radius-full`  | `9999px`                                                        | Chips, pills               |
+| `--font-display` | Plus Jakarta Sans Variable                                      | Headlines, temperatures    |
+| `--font-body`    | Be Vietnam Pro (light) / Plus Jakarta Sans (dark)               | Body text, labels          |
+| `--font-sans`    | Alias of `--font-body` — Tailwind `font-sans` utility maps here | General sans-serif utility |
+| `--shadow-float` | Three-layer ambient system                                      | Floating elements only     |
 
 **Font note:** Be Vietnam Pro has no variable font upstream. Static weights 400 and 700 are imported. Use `font-sans` or `font-body` utility/token for body text; use `var(--font-display)` for headlines.

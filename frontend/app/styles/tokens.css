@@ -7,25 +7,24 @@
   /* ── 타이포그래피 ──────────────────────────────────────────────── */
 
   /* 헤드라인/디스플레이: Plus Jakarta Sans (두 모드 공통) */
-  --font-display: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", sans-serif;
+  --font-display: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
   /* 본문/레이블: 밝은 모드 Be Vietnam Pro, 어두운 모드에서 오버라이드 */
-  --font-body: "Be Vietnam Pro", sans-serif;
+  --font-body: 'Be Vietnam Pro', sans-serif;
   /* Tailwind v4 기본값: font-sans 유틸리티가 프로젝트 본문 서체를 가리킴 */
-  --font-sans: "Be Vietnam Pro", sans-serif;
+  --font-sans: 'Be Vietnam Pro', sans-serif;
 
   /* ── 테두리 반경 ────────────────────────────────────────────────── */
 
-  --radius-sm: 0.5rem;    /* 8px — 버튼 */
-  --radius-md: 1.5rem;    /* 24px — 카드 */
-  --radius-lg: 2rem;      /* 32px — 모달 */
-  --radius-full: 9999px;  /* 알약형 — 칩, 태그 */
+  --radius-sm: 0.5rem; /* 8px — 버튼 */
+  --radius-md: 1.5rem; /* 24px — 카드 */
+  --radius-lg: 2rem; /* 32px — 모달 */
+  --radius-full: 9999px; /* 알약형 — 칩, 태그 */
 
   /* ── 그림자: 세 겹 앰비언트 시스템 ─────────────────────────────── */
 
   /* 밝은 모드 기본값; on_surface(#1b1c1c) 기반 색조 적용 */
   --shadow-float:
-    0px 2px 4px rgba(27, 28, 28, 0.04),
-    0px 4px 12px rgba(27, 28, 28, 0.04),
+    0px 2px 4px rgba(27, 28, 28, 0.04), 0px 4px 12px rgba(27, 28, 28, 0.04),
     0px 10px 24px rgba(27, 28, 28, 0.04);
 
   /* ── 색상 토큰 (기본값: Haet-Ssal 밝은 모드) ─────────────────── */
@@ -63,9 +62,16 @@
   --color-destructive-foreground: #ffffff;
 
   /* 경계선 및 입력 */
-  --color-border: #e5bdbe;   /* outline_variant */
-  --color-input: #f6f3f2;    /* surface_container_low */
-  --color-ring: #ba0036;     /* primary */
+  --color-border: #e5bdbe; /* outline_variant */
+  --color-input: #f6f3f2; /* surface_container_low */
+  --color-ring: #ba0036; /* primary */
+
+  /* 초록: 기상 상태 (좋음/위험) 표시용 */
+  --color-tertiary: #006a45;
+
+  /* 유리형태 기반 색상 */
+  --color-surface-container-highest: #ffffff; /* 밝은 모드 glass base */
+  --color-surface-bright: #f0eded; /* light fallback (unused) */
 }
 
 /* ── Dal-Bit Night 어두운 모드 오버라이드 ──────────────────────── */
@@ -105,14 +111,20 @@
   --color-destructive-foreground: #690005;
 
   /* 경계선 및 입력 */
-  --color-border: #5c3f41;   /* outline_variant */
-  --color-input: #1c1b1b;    /* surface_container_low */
-  --color-ring: #ffb2b6;     /* primary */
+  --color-border: #5c3f41; /* outline_variant */
+  --color-input: #1c1b1b; /* surface_container_low */
+  --color-ring: #ffb2b6; /* primary */
+
+  /* 초록 보조: 어두운 배경 가독성 */
+  --color-tertiary: #62dca3;
+
+  /* 유리형태 기반 색상 */
+  --color-surface-bright: #393939; /* surface_bright */
 
   /* Dal-Bit Night: 본문도 Plus Jakarta Sans로 통일 */
-  --font-body: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", sans-serif;
+  --font-body: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
   /* 어두운 모드: font-sans도 Plus Jakarta Sans로 통일 */
-  --font-sans: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", sans-serif;
+  --font-sans: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
 
   /* 어두운 모드 그림자: on-surface(#e5e2e1) 기반 색조 */
   --shadow-float:
