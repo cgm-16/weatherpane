@@ -168,8 +168,12 @@ export function SearchPage() {
   // 입력 박스 표시 값 — URL 쿼리와 분리하여 타이핑 중 React가 DOM 값을 덮어쓰지 않도록 함
   const [inputValue, setInputValue] = useState(query);
   const queryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // 브라우저 뒤로/앞으로 이동 시 URL이 외부에서 변경되면 입력 박스를 동기화
+  // 브라우저 뒤로/앞으로 이동 시 URL이 외부에서 변경되면 디바운스를 취소하고 입력 박스를 동기화
   useEffect(() => {
+    if (queryDebounceRef.current !== null) {
+      clearTimeout(queryDebounceRef.current);
+      queryDebounceRef.current = null;
+    }
     // eslint-disable-next-line @eslint-react/set-state-in-effect
     setInputValue(query);
   }, [query]);
@@ -235,6 +239,27 @@ export function SearchPage() {
       return;
     }
 
+    // Escape는 hasActiveQuery 여부와 무관하게 디바운스를 취소해야 하므로 먼저 처리
+    if (event.key === 'Escape') {
+      event.preventDefault();
+
+      if (hasHighlightForCurrentQuery) {
+        // 디바운스 중인 입력이 있을 경우 취소하고 현재 URL 쿼리로 복원
+        if (queryDebounceRef.current !== null) {
+          clearTimeout(queryDebounceRef.current);
+          queryDebounceRef.current = null;
+        }
+        setInputValue(query);
+        setHighlightedQuery(query);
+        setManualHighlightedIndex(0);
+        setIsHighlightActive(false);
+      } else {
+        // updateQuery 내부에서 디바운스를 취소하고 입력을 초기화
+        updateQuery('');
+      }
+      return;
+    }
+
     if (!hasActiveQuery) {
       return;
     }
@@ -265,19 +290,6 @@ export function SearchPage() {
     if (event.key === 'Enter' && queryResults[highlightedIndex]) {
       event.preventDefault();
       selectResult(queryResults[highlightedIndex]);
-      return;
-    }
-
-    if (event.key === 'Escape') {
-      event.preventDefault();
-
-      if (hasHighlightForCurrentQuery) {
-        setHighlightedQuery(query);
-        setManualHighlightedIndex(0);
-        setIsHighlightActive(false);
-      } else {
-        updateQuery('');
-      }
     }
   }
 
