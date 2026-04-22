@@ -300,6 +300,30 @@ describe('search route', () => {
     expect(router.state.location.search).toBe('?q=%EC%84%9C%EC%9A%B8');
   });
 
+  test('입력 박스는 IME 조합 중에도 조합 중인 값을 표시해야 함 (URL은 변경되지 않음)', () => {
+    // 조합 중 onChange 가드가 URL만 막아야 하며, 입력 박스의 표시 값은 막으면 안 됨.
+    const { router } = renderSearchRoute('/search?q=%EB%AA%85%EB%8F%99'); // 명동
+    const input = document.querySelector<HTMLInputElement>('#search-query')!;
+
+    const nativeValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )!.set!;
+    nativeValueSetter.call(input, 'ㅁ');
+
+    const composingEvent = new Event('change', { bubbles: true });
+    Object.defineProperty(composingEvent, 'isComposing', {
+      value: true,
+      configurable: true,
+    });
+    fireEvent(input, composingEvent);
+
+    // 입력 박스는 조합 중인 자모를 표시해야 함
+    expect(input.value).toBe('ㅁ');
+    // URL은 변경되지 않아야 함
+    expect(router.state.location.search).toBe('?q=%EB%AA%85%EB%8F%99');
+  });
+
   test('clears the auto-highlight on the first Esc, then clears the query on the next Esc', async () => {
     const { router, user } = renderSearchRoute(
       '/search?q=%EC%B2%AD%EC%9A%B4%EB%8F%99'

@@ -22,7 +22,7 @@
   - fold whitespace and punctuation for matching
   - support omitted suffixes only for `시`, `도`, `구`, `군`, `읍`, `면`, `동`, `리`
   - do not broaden suffix stripping without an explicit spec decision
-- Filtering is instant on every committed keystroke. During IME composition (`event.nativeEvent.isComposing === true`), do not call `updateQuery` — wait for the composition to end before updating URL state. This prevents decomposed jamo from appearing in the search input and URL mid-composition.
+- Filtering is instant on every committed keystroke. During IME composition (`event.nativeEvent.isComposing === true`), do not call `updateQuery` — wait for the composition to end before updating URL state. This prevents decomposed jamo from appearing in the URL mid-composition. The input box must still display composing characters as the user types: use a separate local `inputValue` state for `value=` on the input element, always updated in `onChange`, and push to `updateQuery` only when `isComposing` is false or in `onCompositionEnd`.
 - The URL query is authoritative on `/search?q=...`.
 - Replace history while typing.
 - Push history only on explicit navigation.
