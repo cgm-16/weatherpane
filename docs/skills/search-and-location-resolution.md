@@ -22,7 +22,7 @@
   - fold whitespace and punctuation for matching
   - support omitted suffixes only for `시`, `도`, `구`, `군`, `읍`, `면`, `동`, `리`
   - do not broaden suffix stripping without an explicit spec decision
-- Filtering is instant on every committed keystroke. During IME composition (`event.nativeEvent.isComposing === true`), do not call `updateQuery` — wait for the composition to end before updating URL state. This prevents decomposed jamo from appearing in the URL mid-composition. The input box must still display composing characters as the user types: use a separate local `inputValue` state for `value=` on the input element, always updated in `onChange`, and push to `updateQuery` only when `isComposing` is false or in `onCompositionEnd`.
+- The search input uses a local `inputValue` state for `value=` (updated synchronously on every `onChange`) and a 300 ms debounced call to `updateQuery` (which drives the URL and search results). This decouples the display value from URL state so React never reasserts the old URL value onto the DOM input mid-keystroke — which would interrupt browser IME composition and cause jamo decomposition on Korean input. Do not revert to `value={query}` + immediate `updateQuery` in `onChange`; that is the original bug. Any direct call to `updateQuery` (e.g., Escape) must cancel the pending debounce timer first.
 - The URL query is authoritative on `/search?q=...`.
 - Replace history while typing.
 - Push history only on explicit navigation.

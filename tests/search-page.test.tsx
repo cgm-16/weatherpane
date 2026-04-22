@@ -264,64 +264,43 @@ describe('search route', () => {
     expect(router.state.location.pathname).toBe('/search');
   });
 
-  test('does not update query during IME composition on change', () => {
-    // IME 조합 중 onChange가 호출되면 URL이 변경되지 않아야 함.
-    // jsdom에서는 실제 조합 이벤트 체인을 재현하기 어려우므로 nativeEvent.isComposing을
-    // 직접 설정한 change 이벤트로 동작을 검증한다.
-    const { router } = renderSearchRoute('/search?q=%EB%AA%85%EB%8F%99'); // starts at 명동
-    const input = document.querySelector<HTMLInputElement>('#search-query')!;
+  test('타이핑 시 입력 박스는 즉시 업데이트되고 URL은 300ms 디바운스 후 업데이트됨', () => {
+    vi.useFakeTimers();
+    try {
+      const { router } = renderSearchRoute('/search');
+      const input = document.querySelector<HTMLInputElement>('#search-query')!;
 
-    // 브라우저가 IME 조합 중에 하는 것처럼 native value setter를 통해 값을 설정하고
-    // isComposing: true인 change 이벤트를 발생시킨다.
-    const nativeValueSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      'value'
-    )!.set!;
-    nativeValueSetter.call(input, 'ㅁ');
+      fireEvent.change(input, { target: { value: '서울' } });
 
-    const composingEvent = new Event('change', { bubbles: true });
-    Object.defineProperty(composingEvent, 'isComposing', {
-      value: true,
-      configurable: true,
-    });
-    fireEvent(input, composingEvent);
+      // 입력 박스는 즉시 업데이트됨
+      expect(input.value).toBe('서울');
+      // 디바운스 전에는 URL이 변경되지 않아야 함
+      expect(router.state.location.search).toBe('');
 
-    // 조합 중이므로 URL은 변경되지 않아야 함
-    expect(router.state.location.search).toBe('?q=%EB%AA%85%EB%8F%99');
+      vi.advanceTimersByTime(300);
+
+      // 디바운스 후 URL이 업데이트됨
+      expect(router.state.location.search).toBe('?q=%EC%84%9C%EC%9A%B8');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
-  test('updates query when IME composition is not active on change', () => {
-    const { router } = renderSearchRoute('/search');
-    const input = document.querySelector<HTMLInputElement>('#search-query')!;
+  test('연속 타이핑 시 마지막 값만 URL에 반영됨 (디바운스 중복 방지)', () => {
+    vi.useFakeTimers();
+    try {
+      const { router } = renderSearchRoute('/search');
+      const input = document.querySelector<HTMLInputElement>('#search-query')!;
 
-    // IME 조합이 완료된 후 change 이벤트가 발생하면 URL이 업데이트되어야 함
-    fireEvent.change(input, { target: { value: '서울' } });
+      fireEvent.change(input, { target: { value: '서' } });
+      vi.advanceTimersByTime(100);
+      fireEvent.change(input, { target: { value: '서울' } });
+      vi.advanceTimersByTime(300);
 
-    expect(router.state.location.search).toBe('?q=%EC%84%9C%EC%9A%B8');
-  });
-
-  test('입력 박스는 IME 조합 중에도 조합 중인 값을 표시해야 함 (URL은 변경되지 않음)', () => {
-    // 조합 중 onChange 가드가 URL만 막아야 하며, 입력 박스의 표시 값은 막으면 안 됨.
-    const { router } = renderSearchRoute('/search?q=%EB%AA%85%EB%8F%99'); // 명동
-    const input = document.querySelector<HTMLInputElement>('#search-query')!;
-
-    const nativeValueSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      'value'
-    )!.set!;
-    nativeValueSetter.call(input, 'ㅁ');
-
-    const composingEvent = new Event('change', { bubbles: true });
-    Object.defineProperty(composingEvent, 'isComposing', {
-      value: true,
-      configurable: true,
-    });
-    fireEvent(input, composingEvent);
-
-    // 입력 박스는 조합 중인 자모를 표시해야 함
-    expect(input.value).toBe('ㅁ');
-    // URL은 변경되지 않아야 함
-    expect(router.state.location.search).toBe('?q=%EB%AA%85%EB%8F%99');
+      expect(router.state.location.search).toBe('?q=%EC%84%9C%EC%9A%B8');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test('clears the auto-highlight on the first Esc, then clears the query on the next Esc', async () => {
