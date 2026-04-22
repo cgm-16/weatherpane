@@ -165,6 +165,12 @@ export function SearchPage() {
     initialQuery.trim().length > 0
   );
   const query = searchParams.get('q') ?? '';
+  const [inputValue, setInputValue] = useState(query);
+  // 브라우저 뒤로/앞으로 이동 시 URL이 외부에서 변경되면 입력 박스를 동기화
+  useEffect(() => {
+    // eslint-disable-next-line @eslint-react/set-state-in-effect
+    setInputValue(query);
+  }, [query]);
   const hasActiveQuery = query.trim().length > 0;
   const queryResults = hasActiveQuery ? searchCatalogLocations(query) : [];
   const hasHighlightForCurrentQuery =
@@ -185,6 +191,7 @@ export function SearchPage() {
     const nextSearchParams = new URLSearchParams(searchParams);
     const normalizedQuery = nextQuery.trim().length === 0 ? '' : nextQuery;
 
+    setInputValue(normalizedQuery);
     setHighlightedQuery(normalizedQuery);
     setManualHighlightedIndex(0);
     setIsHighlightActive(normalizedQuery.length > 0);
@@ -311,10 +318,15 @@ export function SearchPage() {
                 placeholder="도시, 구, 동을 입력하세요"
                 role="searchbox"
                 type="search"
-                value={query}
+                value={inputValue}
                 onChange={(event) => {
+                  const val = event.currentTarget.value;
+                  setInputValue(val);
                   // IME 조합 중에는 중간 자모가 URL에 반영되지 않도록 무시
                   if ((event.nativeEvent as InputEvent).isComposing) return;
+                  updateQuery(val);
+                }}
+                onCompositionEnd={(event) => {
                   updateQuery(event.currentTarget.value);
                 }}
                 onKeyDown={handleInputKeyDown}
