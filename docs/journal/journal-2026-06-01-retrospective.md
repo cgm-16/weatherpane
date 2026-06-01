@@ -48,3 +48,7 @@
 - 자산: 날씨 상태와 지역별 이미지를 컴포넌트가 직접 파일 경로로 알면 확장과 교체가 어렵다. 해결은 semantic key, baseline manifest, next-session remote override, override 실패 시 baseline fallback.
 - 테마: FOUC와 hydration 전 클릭 경쟁이 생길 수 있다. 해결은 root inline init script, class-based dark mode, versioned theme repository, session/local 동시 저장.
 - 테스트: 흐름이 저장소/네트워크/라우팅에 걸쳐 있어 단위 테스트만으로는 부족하다. 해결은 Vitest 50개 파일과 Playwright 8개 smoke로 계약을 분산 검증한다.
+
+## 범위 밖 발견
+
+- `git push` 출력에서 GitHub가 default branch 기준 의존성 취약점 12건(High 2, Moderate 9, Low 1)을 보고했다. 이번 회고 문서 작업 범위는 아니므로 수정하지 않는다. 필요하면 별도 보안/의존성 점검 이슈로 다뤄야 한다.
