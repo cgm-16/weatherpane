@@ -115,6 +115,28 @@ E2E 로그의 하이드레이션 diff가 이를 증명한다. 서버(`-`)는 오
 
 React가 클라이언트에서 복구하므로 E2E 34개는 전부 통과하지만, 실사용자는 첫 페인트에서 "오프라인 상태" 배너가 번쩍이는 것을 본다. 유닛 테스트는 jsdom(`navigator.onLine === true`)이라 잡지 못하고, E2E는 통과 여부만 보면 놓친다.
 
+React는 하이드레이션 경고를 dev에서만 출력하므로 프로덕션 SSR HTML을 직접 확인했다.
+
+```bash
+VITE_WEATHER_PROVIDER_MODE=mock PORT=3111 pnpm exec react-router-serve \
+  ./build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js &
+curl -s http://localhost:3111/ > home.html   # HTTP 200 / 11297 bytes
+grep -c 'role="alert"' home.html             # → 1
+grep -c '오프라인 상태' home.html             # → 1
+```
+
+온라인 상태의 프로덕션 서버가 렌더링한 홈 페이지 HTML에 오프라인 배너가 들어 있다. dev 전용 현상이 아니다.
+
+### 3.2.1 [P1] 검증 과정에서 `pnpm start` / `pnpm preview`가 깨져 있음을 발견
+
+`package.json`이 `./build/server/index.js`를 가리키지만 실제 산출물은 `build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js`에 있다. 커밋 `2528de9`가 Vercel preset을 도입하며 출력 경로가 바뀐 뒤 스크립트가 갱신되지 않았다.
+
+```
+Error: Cannot find module '/Users/ori/repos/weatherpane/build/server/index.js'
+```
+
+첫 검증 시도에서 서버가 조용히 죽고 `curl`이 HTTP 000을 반환해, **하마터면 "프로덕션에서는 재현되지 않는다"는 잘못된 결론을 낼 뻔했다.** HTTP 상태 코드를 확인하지 않았다면 오판이 그대로 남았을 것이다. 프로덕션 빌드를 실제로 띄워보는 경로가 막혀 있다는 사실 자체가 별도 결함이다 (이슈 #84).
+
 ### 3.3 [P2] 루트 `node_modules`가 git worktree 내부를 심볼릭 링크로 참조한다
 
 ```bash
@@ -156,7 +178,15 @@ readlink node_modules/react-dom
 
 약점은 문서와 운영이다. 코드는 스스로를 설명하지만, 명세 문서는 이제 코드보다 초기 구상에 더 가깝다. 그리고 `real` 모드는 지금 배포하면 안 된다.
 
-평가에서 한 가지 패턴이 반복된다. **모든 테스트 계층이 초록인데 결함이 세 개 나왔다.** API 키 노출, SSR 하이드레이션 불일치, 8.3MB 번들은 전부 빌드 산출물을 직접 열어보거나 SSR 런타임을 재현해야만 보인다. 현재 검증 체계에는 "테스트가 통과하는가"는 있지만 "배포되는 것이 무엇인가"를 확인하는 단계가 없다. 번들 예산 검사와 하이드레이션 경고 실패 처리를 CI에 넣는 것이 개별 수정보다 우선순위가 높을 수 있다.
+평가에서 한 가지 패턴이 반복된다. **모든 테스트 계층이 초록인데 결함이 네 개 나왔다.** API 키 노출, SSR 하이드레이션 불일치, 8.3MB 번들, 깨진 `pnpm start`는 전부 빌드 산출물을 직접 열어보거나 프로덕션 서버를 실제로 띄워야만 보인다. lint·typecheck·486 유닛·34 E2E 어느 것도 이 중 하나를 잡지 못했다.
+
+현재 검증 체계에는 "테스트가 통과하는가"는 있지만 **"배포되는 것이 무엇인가"를 확인하는 단계가 없다.** 개별 수정보다 아래 세 가지를 CI에 넣는 것이 우선순위가 높다.
+
+- 번들 예산 검사 (#80 재발 방지)
+- 프로덕션 번들 기동 스모크 (#84 재발 방지, 그리고 #74 같은 SSR 결함의 검증 경로 확보)
+- 하이드레이션 경고를 E2E 실패로 처리 (#74 재발 방지)
+
+`pnpm build`가 성공한다는 것과 빌드된 것이 동작한다는 것은 다른 명제다. 이번 점검에서 그 간극이 네 번 드러났다.
 
 ## 6. 도출한 후속 이슈
 
@@ -172,6 +202,7 @@ readlink node_modules/react-dom
 | #76 | P1       | 프로젝트 회고 문서를 main에 병합 (이슈 #71 산출물 미반영)                         |
 | #77 | P1       | `/settings` 화면 구현                                                             |
 | #80 | P1       | 카탈로그 청크가 클라이언트 번들 8.3MB(gzip 847KB)를 차지                          |
+| #84 | P1       | `pnpm start`·`preview`가 잘못된 서버 번들 경로를 가리켜 실행 불가                 |
 | #78 | P2       | Service Worker 기반 앱 셸·에셋 캐시 도입                                          |
 | #79 | P2       | 루트 `node_modules`가 `.worktrees/fix-korean-ime` 가상 스토어를 참조              |
 | #81 | P2       | `useFavorites`의 단일 인스턴스 가정 제거                                          |
