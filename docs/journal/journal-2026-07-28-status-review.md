@@ -162,14 +162,40 @@ readlink node_modules/react-dom
 
 우선순위 순:
 
-1. [P0] real 모드 API 키 클라이언트 노출 — 서버 프록시 라우트로 이전
-2. [P1] Node 24 SSR `navigator.onLine` 하이드레이션 불일치
-3. [P1] 명세 문서 정합성 복구 (구현/미구현 분리, cutoff 모순 해소, AGENTS.md 규칙 역기록)
-4. [P1] 회고 문서 main 병합
-5. [P1] `/settings` 화면 구현
-6. [P2] Service Worker 기반 오프라인 강화
-7. [P2] `node_modules` worktree 심볼릭 링크 해소
-8. [P2] `useFavorites` 단일 인스턴스 가정 제거
-9. [P3] `PlaceholderPage` 죽은 코드 제거
-10. [P3] stale 브랜치 정리
-11. [P3] 카탈로그 20,556개 번들 비용 측정
+| #   | 우선순위 | 제목                                                                              |
+| --- | -------- | --------------------------------------------------------------------------------- |
+| #73 | P0       | real 모드 OpenWeather API 키가 클라이언트 번들에 노출됨                           |
+| #74 | P1       | Node 24에서 `navigator.onLine`이 undefined여서 서버가 항상 오프라인 배너를 렌더링 |
+| #75 | P1       | 명세 문서와 구현 사이의 드리프트 해소                                             |
+| #76 | P1       | 프로젝트 회고 문서를 main에 병합 (이슈 #71 산출물 미반영)                         |
+| #77 | P1       | `/settings` 화면 구현                                                             |
+| #80 | P1       | 카탈로그 청크가 클라이언트 번들 8.3MB(gzip 847KB)를 차지                          |
+| #78 | P2       | Service Worker 기반 앱 셸·에셋 캐시 도입                                          |
+| #79 | P2       | 루트 `node_modules`가 `.worktrees/fix-korean-ime` 가상 스토어를 참조              |
+| #81 | P2       | `useFavorites`의 단일 인스턴스 가정 제거                                          |
+| #82 | P3       | 미사용 `PlaceholderPage` 제거                                                     |
+| #83 | P3       | squash merge 완료된 stale 브랜치 정리                                             |
+
+### 이슈 개설 중 상향된 항목
+
+카탈로그 번들 비용(#80)은 회고가 "성능 예산이 빡빡해지면 검토"로 유예했고 이 점검에서도 처음에는 P3로 두었으나, 실측 후 **P1로 상향**했다.
+
+```bash
+ls -lhS build/client/assets/*.js | head -2
+# 8.3M  unsupported-route-context-repository-57wGnOZK.js
+# 182K  entry.client-DgHsRUOR.js
+
+gzip -c build/client/assets/unsupported-route-context-repository-57wGnOZK.js | wc -c
+# 847465
+
+grep -l "unsupported-route-context-repository-57wGnOZK" build/client/assets/*.js
+# manifest-051072ec.js / location-CsHXZcMn.js / search-xjLNsgB_.js
+```
+
+두 번째로 큰 청크의 46배이고, 검색뿐 아니라 **상세 라우트(`location-*.js`)에서도 로드된다.** 북마크로 상세 페이지만 열어도 847KB gzip / 8.3MB 파싱 비용을 치른다. 유예할 수준이 아니다.
+
+### 실행 순서 제약
+
+- #79(node_modules worktree 참조) → #83(브랜치·worktree 정리). 순서를 어기면 루트 저장소 의존성이 깨진다.
+- #76(회고 병합) → #83. 병합 전에 브랜치를 지우면 572줄이 유실된다.
+- #74(SSR 오프라인 판정) → #78(Service Worker). 오프라인 판정이 틀린 상태로 SW를 얹으면 원인 분리가 어렵다.
