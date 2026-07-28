@@ -32,21 +32,33 @@ git log --oneline --follow -- docs/specs-favorites.md  # 8dd1c2b 최초 커밋 1
 
 ### 2.2 역방향 드리프트가 더 심각하다
 
-실질적 제품 규칙이 명세 문서가 아니라 `AGENTS.md`에 쌓였다. 확인:
+실질적 제품 규칙이 명세 문서가 아니라 **에이전트용 운영 문서**에 쌓였다. 확인:
 
 ```bash
 git show 8dd1c2b:docs/specs-favorites.md | grep -niE "undo|최대|6개"  # 무관한 1건만
 git show 8dd1c2b:docs/specs.md | grep -niE "undo|되돌리|6개"          # 0건
+grep -niE "max is 6|Undo restores|latest removal" docs/skills/favorites-behavior.md
+# 19: Favorites max is 6; adding beyond 6 is blocked ...
+# 25: Undo restores the exact previous favorites state ...
+# 26: Only the latest removal is undoable; undo clears ...
 ```
 
-즉 아래 규칙들은 **초기 명세 어디에도 없고**, `AGENTS.md`에만 존재한다.
+아래 규칙들은 **초기 명세 어디에도 없고**, `AGENTS.md`와 `docs/skills/favorites-behavior.md` 두 곳에만 존재한다.
 
-- Favorites max is 6
-- Undo restores exact previous favorite state
-- Only the latest removal is undoable
-- Favorites order is manual and persisted
+| 규칙                                        | `AGENTS.md` | `docs/skills/favorites-behavior.md` | 초기 명세 |
+| ------------------------------------------- | ----------- | ----------------------------------- | --------- |
+| Favorites max is 6                          | L54         | L19                                 | 없음      |
+| Undo restores exact previous favorite state | L58         | L25                                 | 없음      |
+| Only the latest removal is undoable         | L59         | L26                                 | 없음      |
 
 FAV-01~FAV-12, UX-01~UX-11 확정 결정 로그에 이 규칙들이 역기록되지 않았다. 명세 문서를 읽는 사람은 이 규칙의 존재를 알 수 없다.
+
+> **정정 (PR #86 리뷰 반영).** 최초 작성 시 두 가지를 틀렸다.
+>
+> 1. 출처를 `AGENTS.md`로만 단정했으나 `docs/skills/favorites-behavior.md`에도 동일 규칙이 있다. 최초 조사에서 `docs/skills/*`를 검색 대상에 넣지 않았다.
+> 2. `Favorites order is manual and persisted`를 목록에 넣었으나 이는 **초기 명세에 이미 있다.** `docs/specs-favorites.md`의 UX-06(드래그 핸들 + 위/아래 버튼), UX-07(편집/정렬 모드에서만 노출), `order: int` 필드 정의(L76), `favorites` store의 `order` 인덱스(L110)가 수동 정렬과 영속을 모두 확정한다. 최초 grep이 `undo|최대|6개`만 검색해 정렬 관련 표현을 놓쳤다. 목록에서 제거했다.
+>
+> 역방향 드리프트라는 결론 자체는 나머지 3개 규칙으로 유지되지만, 이슈 #75의 작업 범위는 4개가 아니라 3개다.
 
 ### 2.3 명시적 수치 모순
 
@@ -69,7 +81,8 @@ FAV-01~FAV-12, UX-01~UX-11 확정 결정 로그에 이 규칙들이 역기록되
 
 | 명세 우선순위 | 항목                                          | 상태                                                              |
 | ------------- | --------------------------------------------- | ----------------------------------------------------------------- |
-| P0            | Home / Search / Detail / Favorites            | 완료                                                              |
+| P0            | Home / Search / Favorites                     | 완료                                                              |
+| P0            | Weather Detail                                | **부분 구현** — 일별 예보 누락 (아래 참조)                        |
 | P1            | Settings (테마·단위·로컬 데이터 초기화)       | **미구현** — 라우트·`unitTemp`·`reduceMotion`·캐시 삭제 전부 없음 |
 | P1            | Service Worker (앱 셸 precache + 런타임 캐시) | **미구현** — 코드베이스에 SW/Workbox 참조 0건                     |
 | P2            | 원격 스케치 매니페스트                        | 완료                                                              |
@@ -77,6 +90,32 @@ FAV-01~FAV-12, UX-01~UX-11 확정 결정 로그에 이 규칙들이 역기록되
 | —             | Favorites 서버 동기화 (REST/ETag/SyncQueue)   | 미구현 — 로컬 저장소 MVP로 축소                                   |
 
 Favorites 서버 동기화와 SW는 의도적 범위 축소로 볼 수 있으나, 명세 문서가 그렇게 표기하지 않고 있다는 점이 문제다.
+
+### 2.5.1 [정정] Weather Detail의 일별 예보가 미구현이다
+
+최초 작성 시 P0 4개를 모두 완료로 표기했으나 틀렸다. PR #86 리뷰에서 지적받아 확인했다.
+
+`docs/specs.md`는 Detail을 두 곳에서 정의하며 둘 다 일별을 요구한다.
+
+- L19: "선택 위치의 상세 예보(**시간별/일별**)와 보조 지표"
+- L32: P0 행 — "최소한 '현재/**시간별/일별**' 표시 + 오류/스켈레톤"
+
+구현 확인:
+
+```bash
+grep -nE "daily|hourly" frontend/entities/weather/model/core-weather.ts
+# 50:  hourly: CoreWeatherHourlyEntry[];      ← daily 없음
+
+grep -n "daily" frontend/entities/weather/api/openweather.ts
+# 400:  minC: payload.daily[0].temp.min,
+# 401:  maxC: payload.daily[0].temp.max,
+```
+
+어댑터는 `payload.daily[0]`에서 **오늘의 최저/최고만** 뽑고 나머지 일별 배열은 버린다. `CoreWeather`에 `daily` 필드가 없고, `DetailDashboard`는 `HourlyStrip`(12시간)만 렌더링한다. 다일 예보 UI는 코드베이스 어디에도 없다.
+
+명세의 `WeatherDetailSnapshot`이 `daily: Array<{ date, minC, maxC, conditionCode }>`를 정의하고 있으므로, 데이터 계약 수준에서도 미충족이다.
+
+따라서 **P0는 4/4가 아니라 3.5/4**이며, 스펙 커버리지 점수와 후속 작업 목록을 함께 정정했다 (이슈 #87).
 
 ## 3. 점검 중 새로 발견한 결함
 
@@ -117,21 +156,47 @@ React가 클라이언트에서 복구하므로 E2E 34개는 전부 통과하지�
 
 React는 하이드레이션 경고를 dev에서만 출력하므로 프로덕션 SSR HTML을 직접 확인했다.
 
+`OfflineBanner`는 `frontend/shared/ui/app-shell.tsx:17`에 있고 `AppShell`은 셸 레이아웃의 모든 라우트를 감싸므로, 구조상 전 라우트가 영향받는다. 추론에 의존하지 않도록 셸 하위 4개 라우트를 모두 확인했다.
+
 ```bash
-VITE_WEATHER_PROVIDER_MODE=mock PORT=3111 pnpm exec react-router-serve \
-  ./build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js &
-curl -s http://localhost:3111/ > home.html   # HTTP 200 / 11297 bytes
-grep -c 'role="alert"' home.html             # → 1
-grep -c '오프라인 상태' home.html             # → 1
+set -euo pipefail
+VITE_WEATHER_PROVIDER_MODE=mock pnpm build >/dev/null
+
+VITE_WEATHER_PROVIDER_MODE=mock PORT=3112 pnpm exec react-router-serve \
+  ./build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js >/tmp/wp-routes.log 2>&1 &
+SRV=$!
+trap 'kill $SRV 2>/dev/null' EXIT
+
+# 기동 대기. 실패하면 grep 단계로 넘어가지 않는다.
+for i in $(seq 1 20); do
+  curl -fsS -o /dev/null "http://127.0.0.1:3112/" && break
+  sleep 1
+done
+
+for p in "/" "/search" "/favorites" "/location/loc_seoul-jongno"; do
+  n=$(curl -fsS "http://127.0.0.1:3112$p" | grep -c 'role="alert"')
+  echo "$p → $n"
+done
 ```
 
-온라인 상태의 프로덕션 서버가 렌더링한 홈 페이지 HTML에 오프라인 배너가 들어 있다. dev 전용 현상이 아니다.
+결과:
+
+```text
+/                            → 1
+/search                      → 1
+/favorites                   → 1
+/location/loc_seoul-jongno   → 1
+```
+
+온라인 상태의 프로덕션 서버가 렌더링한 **4개 라우트 전부**에 오프라인 배너가 들어 있다. dev 전용 현상이 아니다.
+
+> **리뷰 반영 (PR #86).** 최초 기록은 홈 라우트 한 곳만 확인하고 "모든 페이지"라고 썼고, 재현 명령도 PID 추적·기동 실패 감지·정리 처리가 없었다. 후자는 실제로 대가를 치렀다 — 아래 3.2.1 참조. 위 명령은 `set -euo pipefail`, `curl -fsS`, `$!` 추적, `trap` 정리, 기동 대기 루프를 포함해 서버가 죽으면 grep 단계에 도달하지 않는다.
 
 ### 3.2.1 [P1] 검증 과정에서 `pnpm start` / `pnpm preview`가 깨져 있음을 발견
 
 `package.json`이 `./build/server/index.js`를 가리키지만 실제 산출물은 `build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js`에 있다. 커밋 `2528de9`가 Vercel preset을 도입하며 출력 경로가 바뀐 뒤 스크립트가 갱신되지 않았다.
 
-```
+```text
 Error: Cannot find module '/Users/ori/repos/weatherpane/build/server/index.js'
 ```
 
@@ -166,19 +231,32 @@ readlink node_modules/react-dom
 
 | 축              | 점수   | 근거                                                                                                                                                                                                                            |
 | --------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 스펙 커버리지   | 7/10   | P0 4/4 완료. P1 2개(Settings, SW) 모두 미착수. P2 1/2.                                                                                                                                                                          |
+| 스펙 커버리지   | 6/10   | P0 3.5/4 — Detail의 일별 예보 미구현(#87). P1 2개(Settings, SW) 모두 미착수. P2 1/2.                                                                                                                                            |
 | 엔지니어링 품질 | 7.5/10 | lint·typecheck 무결, 486 유닛 + 34 E2E 통과, FSD 경계 준수, bootstrap 상태를 discriminated union으로 모델링. 감점: SSR 하이드레이션 결함이 전 테스트 계층을 통과, 8.3MB 클라이언트 청크가 상세 라우트까지 로드, 죽은 코드 잔존. |
 | 문서 정합성     | 5/10   | 가장 약한 축. `specs-favorites.md` 무갱신, cutoff 수치 모순, AGENTS.md 규칙 역기록 누락, 회고 미병합.                                                                                                                           |
 | 프로덕션 준비도 | 4/10   | API 키 노출이 `real` 모드를 차단. 번들 예산 미측정, SW 없음, 모니터링·쿼터 대응 없음. `mock` 모드 데모로는 완성.                                                                                                                |
 | 프로세스 규율   | 7/10   | 22개 태스크를 이슈→브랜치→PR로 일관 수행, 커밋 메시지 규약 준수. 감점: 브랜치 정리 부재, 종료된 이슈의 산출물 미병합.                                                                                                           |
 
-**종합: 6/10 — 잘 만들어진 MVP이나 프로덕션 준비 상태는 아니다.**
+**종합: 5.8/10 — 잘 만들어진 MVP이나 프로덕션 준비 상태는 아니다.**
+
+> **정정 (PR #86 리뷰 반영).** 스펙 커버리지를 7/10에서 6/10으로, 종합을 6.0에서 5.8로 낮췄다. P0 Weather Detail의 일별 예보가 미구현임을 리뷰에서 지적받아 확인했다 (§2.5.1). 최초 평가는 P0를 4/4로 잘못 집계했다.
 
 강점은 명확하다. 상태 경계 설계(Query 캐시 ≠ 영속 스냅샷), unsupported 위치의 active location 보호, 한국어 IME/URL 상태 분리는 이 규모 앱에서 흔히 놓치는 부분을 제대로 짚었다. 테스트가 제품 규칙을 문서화하는 수준까지 갔다.
 
 약점은 문서와 운영이다. 코드는 스스로를 설명하지만, 명세 문서는 이제 코드보다 초기 구상에 더 가깝다. 그리고 `real` 모드는 지금 배포하면 안 된다.
 
-평가에서 한 가지 패턴이 반복된다. **모든 테스트 계층이 초록인데 결함이 네 개 나왔다.** API 키 노출, SSR 하이드레이션 불일치, 8.3MB 번들, 깨진 `pnpm start`는 전부 빌드 산출물을 직접 열어보거나 프로덕션 서버를 실제로 띄워야만 보인다. lint·typecheck·486 유닛·34 E2E 어느 것도 이 중 하나를 잡지 못했다.
+평가에서 한 가지 패턴이 반복된다. **모든 테스트 계층이 초록인 상태에서, 빌드 산출물이나 실행 중인 프로덕션 서버를 직접 봐야만 보이는 결함이 4건 나왔다.**
+
+| 결함                         | 발견 수단                           |
+| ---------------------------- | ----------------------------------- |
+| API 키 클라이언트 노출 (#73) | 센티널 빌드 후 `build/client` grep  |
+| SSR 오프라인 배너 (#74)      | 프로덕션 서버 기동 후 HTML 검사     |
+| 8.3MB 카탈로그 청크 (#80)    | 번들 크기 실측 + import 그래프 확인 |
+| 깨진 `pnpm start` (#84)      | 프로덕션 번들 기동 시도             |
+
+이 4건은 "산출물 검사로만 발견되는 결함"이라는 하나의 범주다. 이번 점검이 찾은 전체 항목은 이보다 많다 — §3에는 `node_modules` worktree 참조(#79)와 미사용 `PlaceholderPage`(#82)가, §2.5.1에는 일별 예보 미구현(#87)이 추가로 있으며, 이들은 각각 `readlink`, grep, 명세 대조로 발견됐다.
+
+핵심은 개수가 아니라 범주다. lint·typecheck·486 유닛·34 E2E 어느 것도 위 표의 4건 중 하나도 잡지 못했다.
 
 현재 검증 체계에는 "테스트가 통과하는가"는 있지만 **"배포되는 것이 무엇인가"를 확인하는 단계가 없다.** 개별 수정보다 아래 세 가지를 CI에 넣는 것이 우선순위가 높다.
 
@@ -203,6 +281,7 @@ readlink node_modules/react-dom
 | #77 | P1       | `/settings` 화면 구현                                                             |
 | #80 | P1       | 카탈로그 청크가 클라이언트 번들 8.3MB(gzip 847KB)를 차지                          |
 | #84 | P1       | `pnpm start`·`preview`가 잘못된 서버 번들 경로를 가리켜 실행 불가                 |
+| #87 | P1       | Detail 화면 일별 예보 미구현 — P0 명세 미충족 (리뷰에서 발견)                     |
 | #78 | P2       | Service Worker 기반 앱 셸·에셋 캐시 도입                                          |
 | #79 | P2       | 루트 `node_modules`가 `.worktrees/fix-korean-ime` 가상 스토어를 참조              |
 | #81 | P2       | `useFavorites`의 단일 인스턴스 가정 제거                                          |
