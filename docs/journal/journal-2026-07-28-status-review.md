@@ -18,7 +18,17 @@
 | E2E              | `pnpm test:e2e`  | 34개 통과 (16.5s)                     |
 | Build            | `pnpm build`     | 성공                                  |
 
-이슈 트래커: 34개 전부 CLOSED, 열린 이슈 0개. WP-001~WP-022 태스크 22개 + 버그 6개 + 문서 6개.
+이슈 트래커: 34개 전부 CLOSED, 열린 이슈 0개.
+
+| 분류      | 개수 | 비고                                   |
+| --------- | ---- | -------------------------------------- |
+| `[Task]`  | 23   | WP-001~WP-022 22개 + #3(에이전트 문서) |
+| `[Docs]`  | 4    | #1, #5, #11, #71                       |
+| 버그/수정 | 4    | #58, #63, #67, #69                     |
+| `feat`    | 2    | #25, #60                               |
+| `[CI]`    | 1    | #16                                    |
+
+> **정정 (PR #86 4차 리뷰).** 최초 기록은 "태스크 22개 + 버그 6개 + 문서 6개"였다. 세 숫자 모두 틀렸다. 실제 제목 접두사로 집계한 결과가 위 표다. `[Task]`는 22개가 아니라 23개이고(#3은 WP 번호가 없는 태스크), 버그는 6개가 아니라 4개, `[Docs]` 제목은 6개가 아니라 4개다. 다만 #3은 제목이 `[Task]`이나 내용은 문서 작업이므로, 주제 기준으로 세면 문서 5개로도 볼 수 있다.
 
 단, E2E는 34개 전부 통과했지만 dev 서버 로그에 **하이드레이션 불일치 경고**가 남았다. 통과 여부만 보면 놓치는 신호다 (아래 3.2).
 
@@ -54,9 +64,9 @@ grep -niE "max is 6|Undo restores|latest removal" docs/skills/favorites-behavior
 | Favorites max is 6                          | L54         | L19                                 | L22                   | prompt.md L144      | 없음      |
 | Undo restores exact previous favorite state | L58         | L25                                 | L31                   | issues.md L384 인근 | 없음      |
 | Only the latest removal is undoable         | L59         | L26                                 | L29                   | issues.md L384      | 없음      |
-| Undo timeout 5s                             | 없음        | L26                                 | L30                   | —                   | 없음      |
+| Undo timeout 5s                             | 없음        | L26                                 | L30                   | prompt.md L987      | 없음      |
 
-`AGENTS.md`가 "undo timeout 5s"를 담고 있지 않다는 점도 드러난다. 이 규칙은 skill/task 문서에만 있다.
+`AGENTS.md`가 "undo timeout 5s"를 담고 있지 않다는 점도 드러난다. 이 규칙은 skill·task·legacy 문서에는 있으나 `AGENTS.md`에만 빠져 있다.
 
 FAV-01~FAV-12, UX-01~UX-11 확정 결정 로그에 이 규칙들이 역기록되지 않았다. 명세 문서를 읽는 사람은 이 규칙의 존재를 알 수 없다.
 
@@ -224,9 +234,23 @@ readlink node_modules/react-dom
 
 루트 저장소의 pnpm 가상 스토어가 `.worktrees/fix-korean-ime/` 안에 있다. 해당 worktree를 제거하면 루트 저장소의 의존성이 깨진다. E2E 스택 트레이스가 worktree 경로를 출력하는 것도 이 때문이다.
 
-### 3.4 [P2] `PlaceholderPage`가 죽은 코드로 남아 있다
+### 3.4 [P2] 죽은 컴포넌트 3개가 남아 있다
 
-`frontend/shared/ui/placeholder-page.tsx`는 어디에서도 import되지 않는다. T01 스캐폴딩 잔재로, 영문 UI 문구("South Korea weather app", "Location placeholder"), 디자인 토큰을 우회한 raw Tailwind 색상(`slate-*`, `sky-*`), 그리고 이제는 존재하지 않는 라우트 규약(`/location/seoul-jongno`, 현재는 `loc_` 접두사)을 담고 있다.
+```bash
+grep -rn "PlaceholderPage\|HomeNotFound\|HomeUnsupported" app frontend tests stories \
+  --include="*.ts" --include="*.tsx" | grep -v "export function"
+# → placeholder-page.tsx 자신의 타입 선언 3줄만 매치. 나머지 두 컴포넌트는 출력 없음.
+```
+
+죽은 컴포넌트는 하나가 아니라 **셋**이다.
+
+| 파일                                          | 상태                            |
+| --------------------------------------------- | ------------------------------- |
+| `frontend/shared/ui/placeholder-page.tsx`     | 호출 지점 0                     |
+| `frontend/pages/home/ui/home-not-found.tsx`   | 호출 지점 0 (4차 리뷰에서 발견) |
+| `frontend/pages/home/ui/home-unsupported.tsx` | 호출 지점 0 (4차 리뷰에서 발견) |
+
+`placeholder-page.tsx`는 T01 스캐폴딩 잔재로, 영문 UI 문구("South Korea weather app", "Location placeholder"), 디자인 토큰을 우회한 raw Tailwind 색상(`slate-*`, `sky-*`), 그리고 이제는 존재하지 않는 라우트 규약(`/location/seoul-jongno`, 현재는 `loc_` 접두사)을 담고 있다.
 
 ### 3.5 [P2] 살아 있는 UI에도 언어·토큰 규칙 위반이 남아 있다
 
@@ -234,37 +258,80 @@ readlink node_modules/react-dom
 >
 > 최초 조사가 놓친 이유는 grep 범위였다. `frontend/pages`와 `frontend/shared/ui`만 훑어 `app/root.tsx`를 제외했고, 색상은 `bg-*`만 검색해 `text-*`를 빠뜨렸고, 영문 문구는 따옴표로 감싼 문자열만 찾아 JSX 텍스트 노드를 통째로 놓쳤다.
 
-**raw Tailwind 색상 — `app/root.tsx`의 `ErrorBoundary`(L82에서 export되는 실사용 컴포넌트)**
+> **재정정 (PR #86 4차 리뷰).** 아래 목록은 2차에서 만들어 3차까지 살아남았으나 틀린 것이었다. **렌더 경로를 확인하지 않고 grep 결과를 그대로 "살아 있는 UI"라고 불렀다.** 실제로는 13곳 중 9곳이 도달 불가였고, 반대로 grep 정규식이 구두점·축약형·언더스코어를 배제해 살아 있는 본문 카피 3곳을 놓쳤다. 아래는 호출 지점과 prop 전달을 확인해 다시 만든 목록이다.
 
-```text
-L103  text-sky-300
-L106  text-white
-L107  text-slate-300
-L109  border-slate-800 / bg-slate-950/80 / text-slate-200
-```
-
-전역 오류 화면이므로 런타임 오류가 나면 사용자가 보는 첫 화면이다.
-
-**영문 UI 문구 — 살아 있는 화면 5개, 13곳**
+#### 확인 방법
 
 ```bash
-grep -rnE "^\s*[A-Z][a-zA-Z]+( [A-Za-z]+){1,4}\s*$" app frontend --include="*.tsx" \
-  | grep -v placeholder-page
+# 1) 컴포넌트별 호출 지점
+grep -rn "\bHomeConfigError\b" app frontend --include="*.tsx" | grep -v "export function"
+
+# 2) 호출 지점이 실제로 넘기는 prop 확인 (선택적 prop은 가드 뒤에 숨는다)
+sed -n '40,50p' frontend/app/providers/app-providers.tsx
+sed -n '15,45p' frontend/pages/home/ui/home-page.tsx
 ```
 
-| 파일                        | 문구                                                           |
-| --------------------------- | -------------------------------------------------------------- |
-| `home-not-found.tsx`        | Lost in the Mist / Take me Home / Check Forecast               |
-| `home-connection-error.tsx` | Connection Interrupted / Retry Connection / Go to Saved Places |
-| `home-unsupported.tsx`      | Feature Unavailable / Return Home / Search Locations           |
-| `home-config-error.tsx`     | Settings Update Needed / Open Settings / Try Again             |
-| `search-page.tsx`           | Korea catalog search                                           |
+#### A. 도달 가능한 영문 문구 (7곳)
 
-`AGENTS.md`의 한국어 규칙 위반이며, 죽은 코드가 아니라 **오류·빈 상태에서 실제로 렌더링되는 화면들**이다. 역설적으로 "정직한 실패 상태"를 이 프로젝트의 강점으로 꼽았는데, 그 화면들이 한국어 제품에서 영어로 말하고 있다.
+| 위치                           | 문구                                                   |
+| ------------------------------ | ------------------------------------------------------ |
+| `home-config-error.tsx:25`     | Settings Update Needed                                 |
+| `home-config-error.tsx:28`     | Your travel concierge needs a quick adjustment… (본문) |
+| `home-connection-error.tsx:41` | Connection Interrupted                                 |
+| `home-connection-error.tsx:44` | We're having trouble reaching the horizon… (본문)      |
+| `home-connection-error.tsx:54` | Retry Connection                                       |
+| `home-connection-error.tsx:71` | Error Code: CONNECTION_FAILED                          |
+| `search-page.tsx:306`          | Korea catalog search                                   |
 
-부수적으로 `home-config-error.tsx`의 "Open Settings" 버튼은 `onOpenSettings` 콜백을 호출한다. `/settings` 화면이 아직 없으므로(#77) 이 CTA가 어디로 가는지도 함께 확인이 필요하다.
+`HomeConfigError`는 `app-providers.tsx:45`(프로덕션 설정 오류 오버레이)와 `home-page.tsx:19`에서, `HomeConnectionError`는 `home-page.tsx:37`에서 렌더링된다. 본문 카피 2곳과 `Error Code:` 줄은 최초 grep이 놓쳤다 — 정규식이 마침표·`&apos;`·언더스코어를 문자 클래스에서 빼놓았다.
 
-이슈 #82(죽은 코드 제거)는 이 항목을 다루지 않는다. 별도 이슈 #88로 분리했다.
+#### B. 도달 불가 — 선택적 prop 가드 뒤 (3곳)
+
+| 위치                           | 문구               | 가드                                                               |
+| ------------------------------ | ------------------ | ------------------------------------------------------------------ |
+| `home-config-error.tsx:52`     | Open Settings      | `{onOpenSettings && …}` — 두 호출 지점 모두 `error`만 전달         |
+| `home-config-error.tsx:61`     | Try Again          | `{onRetry && …}` — 동일                                            |
+| `home-connection-error.tsx:63` | Go to Saved Places | `{onGoToSavedPlaces && …}` — `home-page.tsx:37`은 `onRetry`만 전달 |
+
+`home-connection-error.tsx:5`에 이유가 주석으로 남아 있다: "WP-017 즐겨찾기 구현 전까지는 전달하지 않으면 버튼을 숨깁니다." 즉 의도된 미연결이다. 앞선 "Open Settings CTA가 어디로 가는가"라는 질문도 여기서 해소된다 — **아무 데도 가지 않는다. 렌더링 자체가 안 된다.**
+
+#### C. 죽은 컴포넌트 — 호출 지점 0 (6곳)
+
+```bash
+grep -rn "\bHomeNotFound\b\|\bHomeUnsupported\b" app frontend --include="*.tsx" | grep -v "export function"
+# (출력 없음)
+```
+
+| 파일                   | 문구                                                 |
+| ---------------------- | ---------------------------------------------------- |
+| `home-not-found.tsx`   | Lost in the Mist / Take me Home / Check Forecast     |
+| `home-unsupported.tsx` | Feature Unavailable / Return Home / Search Locations |
+
+`PlaceholderPage`와 같은 성격의 죽은 코드다. §3.4의 범위에 포함시켜야 한다.
+
+#### D. raw Tailwind 색상 — 살아 있는 컴포넌트 3개 파일
+
+```bash
+grep -rnoE "\b(text|bg|border)-(slate|sky|zinc|gray|neutral|stone|white|black)(\/[0-9]+)?(-[0-9]{2,3}(\/[0-9]+)?)?" \
+  app frontend --include="*.tsx" | grep -v placeholder-page
+```
+
+| 파일                                     | 값                                                                                                      | 렌더 경로                                  |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `app/root.tsx` (ErrorBoundary, L103~109) | `text-sky-300`, `text-white`, `text-slate-300`, `text-slate-200`, `border-slate-800`, `bg-slate-950/80` | L82에서 export되는 전역 오류 경계          |
+| `home-config-error.tsx:12`               | `bg-white/50`                                                                                           | `app-providers.tsx:45`, `home-page.tsx:19` |
+| `detail-aqi-card.tsx`                    | `bg-black/40`                                                                                           | `detail-dashboard.tsx:152`                 |
+| `detail-uv-card.tsx`                     | `bg-black/40`                                                                                           | `detail-dashboard.tsx:153`                 |
+
+최초 목록은 `app/root.tsx` 하나만 담았다. 4차 리뷰가 `home-config-error.tsx`를 지적했고, 그 김에 `white|black`을 포함해 다시 훑으니 상세 화면 카드 2개가 더 나왔다. **이 둘은 리뷰어도 나도 놓쳤던 것이다** — 정상 경로에서 매일 렌더링되는 컴포넌트다.
+
+#### 정리
+
+- 실제 사용자 대면 부채: 영문 문구 **7곳**, raw 색상 **4개 파일**
+- 죽은 코드로 이관: 영문 문구 6곳 (`home-not-found`, `home-unsupported`)
+- 의도된 미연결: 3곳 (WP-017 대기)
+
+이슈 #88을 이 구분에 맞춰 갱신했고, #82(죽은 코드 제거)에 두 컴포넌트를 추가했다.
 
 ## 4. 프로세스 관찰
 
@@ -293,11 +360,23 @@ gh pr view 72 --json state,mergedAt
 
 **교훈:** 원격 상태에 대한 주장을 하기 전에 fetch한다. 로컬 워킹트리의 부재는 원격의 부재가 아니다. 아이러니하게도 이 점검의 주제가 "테스트 통과와 실제 배포물은 다르다"였는데, 같은 종류의 실수를 git에서 저질렀다.
 
-### 4.2 stale 브랜치 ~35개 — 전부 정리 대상
+### 4.2 stale 브랜치 36개 — 전부 정리 대상
 
-`git branch --no-merged main`이 35개를 보고하지만 squash merge 잔재다. 판별은 브랜치 고유 파일·커밋 메시지의 main 존재 여부로 했다 — 예: `fix/63-hangul-ime`의 수정은 main 커밋 `f7dc7e2`에 동일 메시지로 존재한다.
+`origin/main` 기준으로 센다. §4.1에서 로컬 `main`이 낡았음이 드러났으므로 비교 ref도 동기화된 것을 쓴다.
 
-**작업 유실은 없다.** §4.1 정정에 따라 `docs/71-project-retrospective`도 병합 완료 상태이므로, **실제 미병합 브랜치는 0개**다. 35개 전부 단순 정리 대상이다.
+```bash
+git fetch origin --prune
+git branch --no-merged origin/main | wc -l                                  # 37
+git branch --no-merged origin/main | grep -vc "docs/85-docs-status-review"  # 36
+```
+
+37개 중 1개는 이 PR의 작업 브랜치이므로 정리 대상은 **36개**다.
+
+> **정정 (PR #86 4차 리뷰).** 최초 기록은 "35개"였고 `git branch --no-merged main`(낡은 로컬 ref)으로 셌다. 기준 커밋을 `origin/main`으로 고쳐놓고 이 절의 명령만 그대로 둔 것이다. fetch·prune 후 실제 수는 37개이며, 현재 PR 브랜치를 빼면 36개다.
+
+전부 squash merge 잔재로 보인다. 판별은 브랜치 고유 파일·커밋 메시지의 `origin/main` 존재 여부로 했다 — 예: `fix/63-hangul-ime`의 수정은 `f7dc7e2`에 동일 메시지로 존재한다. **다만 36개를 전수 대조하지는 않았다. 표본 3개(`feat/wp-012-home-dashboard`, `fix/63-hangul-ime`, `feat/25-design-tokens`)만 확인했으므로 "전부"는 표본 기반 추정이다.** 실제 삭제 전에는 이슈 #83에서 개별 확인이 필요하다.
+
+**확인된 범위에서 작업 유실은 없다.** §4.1 정정에 따라 `docs/71-project-retrospective`도 병합 완료 상태이므로 **알려진 미병합 브랜치는 0개**다.
 
 다만 이 목록이 무의미해진 상태 자체는 비용이다. 진짜 미병합 브랜치가 생겨도 눈에 띄지 않고, 실제로 이번에 내가 그 노이즈 속에서 `docs/71-project-retrospective`를 "미병합"으로 오독했다.
 
@@ -309,7 +388,7 @@ gh pr view 72 --json state,mergedAt
 | --------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 스펙 커버리지   | 6/10   | P0 3.5/4 — Detail의 일별 예보 미구현(#87). P1 2개(Settings, SW) 모두 미착수. P2 1/2.                                                                                                                                            |
 | 엔지니어링 품질 | 7.5/10 | lint·typecheck 무결, 486 유닛 + 34 E2E 통과, FSD 경계 준수, bootstrap 상태를 discriminated union으로 모델링. 감점: SSR 하이드레이션 결함이 전 테스트 계층을 통과, 8.3MB 클라이언트 청크가 상세 라우트까지 로드, 죽은 코드 잔존. |
-| 문서 정합성     | 5/10   | 가장 약한 축. `specs-favorites.md` 무갱신, cutoff 수치 모순, 제품 규칙 역기록 누락, 살아 있는 UI의 한국어 규칙 위반 13곳(#88).                                                                                                  |
+| 문서 정합성     | 5/10   | 가장 약한 축. `specs-favorites.md` 무갱신, cutoff 수치 모순, 제품 규칙 역기록 누락, 살아 있는 UI의 한국어 규칙 위반 7곳(#88).                                                                                                   |
 | 프로덕션 준비도 | 4/10   | API 키 노출이 `real` 모드를 차단. 번들 예산 기준·CI 게이트 부재(크기 자체는 §6에서 실측), SW 없음, 모니터링·쿼터 대응 없음. `mock` 모드 데모로는 완성.                                                                          |
 | 프로세스 규율   | 8/10   | 22개 태스크를 이슈→브랜치→PR로 일관 수행, 커밋 메시지 규약 준수, 종료 이슈의 산출물도 전부 병합됨. 감점: 브랜치 정리 부재.                                                                                                      |
 
@@ -377,20 +456,43 @@ PR #86 리뷰에서 이 문서의 사실 주장이 **6건** 틀린 것으로 드
 
 3차 수정에서는 절별 패치 후 전체 숫자 주장(점수, 규칙 개수, 우선순위, 결함 건수)을 일괄 재검사했다.
 
-리뷰어의 지적대로 이 문서의 주장에는 자동 정합성 검사가 없다. 세 라운드에 걸쳐 총 11건이 리뷰로만 걸러졌다.
+#### 4차 리뷰: grep을 근거로 착각했다
+
+3차 수정 후 4차에서 **6건이 더** 나왔다. 이번 실패 모드는 또 달랐다.
+
+| 4차 지적                                 | 원인                                                 |
+| ---------------------------------------- | ---------------------------------------------------- |
+| "살아 있는 UI" 13곳 중 9곳이 도달 불가   | grep 히트를 렌더 경로 확인 없이 "살아 있다"고 단정   |
+| 살아 있는 본문 카피 3곳 누락             | 정규식 문자 클래스에 `.`, `&apos;`, `_` 미포함       |
+| raw 색상 목록에 `home-config-error` 누락 | `white`/`black`을 색상 패턴에서 제외                 |
+| 브랜치 35개 (실제 37)                    | 기준을 `origin/main`으로 고치고 이 절 명령만 안 고침 |
+| 이슈 분류 22/6/6 (실제 23/4/4/2/1)       | 세어보지 않고 기억으로 씀                            |
+| undo timeout legacy 출처 `—`             | `docs/legacy/prompt.md:987`에 있는데 미검색          |
+
+1·2차는 "검증 범위를 좁혀놓고 전체 결론을 냄", 3차는 "국소 패치 후 전체 미재검토", 4차는 **"grep 결과를 사실로 취급"**이다. 세 실패 모드는 다르지만 공통점이 있다. **한 번의 값싼 조회로 나온 결과를 검증된 사실처럼 문서에 썼다.**
+
+특히 §3.5는 이 문서에서 실행 가능한 이슈(#88)를 직접 만들어낸 절이라 비용이 컸다. 도달 불가 문구 9곳을 "사용자에게 보이는 부채"로 올려놨으니, 그대로 작업했다면 렌더링되지도 않는 버튼 카피를 번역하는 데 시간을 썼을 것이다.
+
+4차 수정에서는 §3.5를 호출 지점과 prop 전달 확인으로 다시 만들었고, 그 과정에서 리뷰어도 지적하지 않은 raw 색상 2개(`detail-aqi-card`, `detail-uv-card` — 상세 화면에서 매일 렌더링된다)를 추가로 찾았다.
+
+리뷰어의 지적대로 이 문서의 주장에는 자동 정합성 검사가 없다. **네 라운드에 걸쳐 총 17건이 리뷰로만 걸러졌고, 내가 스스로 찾은 것은 0건이다.**
 
 **이 문서를 읽는 사람에게 — 절별 증거 수준은 아래와 같다.**
 
-| 절                 | 증거                                     |
-| ------------------ | ---------------------------------------- |
-| §2.1, §2.2, §2.5.1 | 명령 + 출력 있음                         |
-| §3.1, §3.2, §3.5   | 명령 + 출력 있음                         |
-| §4.1               | 명령 + 출력 있음                         |
-| §6 (#80 번들 실측) | 명령 + 출력 있음 (§3이 아니라 §6에 있다) |
-| §3.2.1             | **오류 출력만 있고 실행 명령이 없다**    |
-| §2.3, §2.4         | 문서 대조 결과만 있고 재현 명령이 없다   |
+| 절                 | 증거                                                      |
+| ------------------ | --------------------------------------------------------- |
+| §2.1, §2.2, §2.5.1 | 명령 + 출력 있음                                          |
+| §3.1, §3.2, §3.5   | 명령 + 출력 있음                                          |
+| §4.1               | 명령 + 출력 있음                                          |
+| §6 (#80 번들 실측) | 명령 + 출력 있음 (§3이 아니라 §6에 있다)                  |
+| §3.2.1             | **오류 출력만 있고 실행 명령이 없다**                     |
+| §3.4               | **`PlaceholderPage` 미참조를 보이는 명령·출력이 없다**    |
+| §4.2               | **"전부 잔재"의 근거가 표본 3개뿐 (36개 전수 대조 아님)** |
+| §2.3, §2.4         | 문서 대조 결과만 있고 재현 명령이 없다                    |
 
-즉 "§3은 재현 가능하고 §2·§4는 아니다"라는 단순한 구분은 성립하지 않는다. 실제로 재현 절차가 빠진 곳은 §3.2.1과 §2.3·§2.4다. 이 세 곳의 주장을 근거로 작업하기 전에는 직접 확인하는 편이 낫다.
+즉 "§3은 재현 가능하고 §2·§4는 아니다"라는 단순한 구분은 성립하지 않는다. 근거가 빠진 곳은 **§3.2.1, §3.4, §4.2, §2.3, §2.4** 다섯 곳이다. 이 절들의 주장을 근거로 작업하기 전에는 직접 확인하는 편이 낫다.
+
+§3.4와 §4.2는 4차 리뷰에서 추가로 지적받았다. **증거 부족 절을 열거하는 표 자체가 불완전했다**는 뜻이다.
 
 교훈은 §3에서 얻은 것과 같은 모양이다. 테스트가 초록인 것과 배포물이 올바른 것이 다르듯, 문서에 근거가 적혀 있는 것과 그 근거가 맞는 것도 다르다.
 
@@ -413,7 +515,7 @@ PR #86 리뷰에서 이 문서의 사실 주장이 **6건** 틀린 것으로 드
 | #78     | P2       | Service Worker 기반 앱 셸·에셋 캐시 도입                                          |
 | #79     | P2       | 루트 `node_modules`가 `.worktrees/fix-korean-ime` 가상 스토어를 참조              |
 | #81     | P2       | `useFavorites`의 단일 인스턴스 가정 제거                                          |
-| #88     | P2       | 살아 있는 UI의 영문 문구 13곳·raw Tailwind 색상 한국어/토큰 규칙 적용             |
+| #88     | P2       | 살아 있는 영문 문구 7곳·raw 색상 4개 파일 한국어/토큰 규칙 적용                   |
 | #82     | P3       | 미사용 `PlaceholderPage` 제거 (죽은 코드만, 살아 있는 UI는 #88)                   |
 | #83     | P3       | squash merge 완료된 stale 브랜치 정리                                             |
 
