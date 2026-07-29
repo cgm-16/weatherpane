@@ -39,6 +39,7 @@ describe('v1/weather/core loader', () => {
     expect(calledUrl.searchParams.get('lat')).toBe('37.5');
     expect(calledUrl.searchParams.get('lon')).toBe('127');
     expect(calledUrl.searchParams.get('units')).toBe('metric');
+    expect(calledUrl.searchParams.get('exclude')).toBe('minutely,alerts');
     expect(calledUrl.searchParams.get('appid')).toBe('test-key');
   });
 });
@@ -72,6 +73,8 @@ describe('v1/weather/aqi loader', () => {
       'https://api.openweathermap.org/data/2.5/air_pollution'
     );
     expect(calledUrl.searchParams.get('appid')).toBe('test-key');
+    expect(calledUrl.searchParams.get('lat')).toBe('37.5');
+    expect(calledUrl.searchParams.get('lon')).toBe('127');
   });
 });
 
