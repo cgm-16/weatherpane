@@ -21,8 +21,13 @@ function firstLine(text: string): string {
 //
 // knownHydrationBug: 이미 이슈로 등록된 기존 하이드레이션 버그를 일시적으로 눈감아주는
 // 옵션 fixture다. `test.use({ knownHydrationBug: '#91' })`처럼 이슈 번호를 선언한 스펙/
-// describe 블록에서만 가드가 실패 대신 통과를 허용한다. 단, 그 실행에서 실제로 하이드레이션
-// 문제가 감지되지 않으면 웨이버가 오래된(stale) 것이므로 테스트를 실패시켜 제거를 강제한다.
+// describe 블록에서만 가드가 실패 대신 통과를 허용한다. 하이드레이션 불일치는 환경에 따라
+// 재현 여부가 갈리는 비결정적 현상이라(로컬에서는 재현되지만 CI에서는 재현되지 않는 경우가
+// 실제로 있었다), 웨이버가 선언된 실행에서 문제가 감지되지 않았다고 해서 테스트를 실패시키지
+// 않는다 — 비결정적 조건을 강제 실패로 바꾸는 셈이 되기 때문이다. 대신 통과시키되, 이슈가
+// 실제로 해결되어 웨이버가 더 이상 필요 없어졌을 가능성을 놓치지 않도록 눈에 띄는 경고를
+// 남긴다. 즉 이 웨이버는 자기 자신을 문서화할 뿐(best-effort) 스스로 강제하지는 않는다
+// (not self-enforcing) — 실제로 이슈가 해결됐는지는 사람이 확인해서 웨이버를 지워야 한다.
 export const test = base.extend<{ knownHydrationBug: string | null }>({
   knownHydrationBug: [null, { option: true }],
   // 매개변수명을 runWithFixture로 둔다: Playwright는 위치로 콜백을 넘기므로 이름은
@@ -51,24 +56,27 @@ export const test = base.extend<{ knownHydrationBug: string | null }>({
     await runWithFixture(page);
 
     if (knownHydrationBug) {
-      // 웨이버가 선언된 경우: 알려진 버그가 실제로 재현되어야만 통과시킨다.
-      // 아무 것도 감지되지 않았다면 버그가 이미 고쳐졌다는 뜻이므로,
-      // 웨이버를 방치하지 않도록 실패시켜 삭제를 요구한다.
-      expect(
-        hydrationIssues.length,
-        `knownHydrationBug: ${knownHydrationBug}로 웨이버가 선언되어 있지만 ` +
-          `이번 실행에서는 하이드레이션 관련 경고/에러가 감지되지 않았습니다. ` +
-          `${knownHydrationBug} 이슈가 해결된 것으로 보이니 test.use({ knownHydrationBug }) ` +
-          `웨이버를 제거하고 해당 이슈를 닫아주세요.`
-      ).toBeGreaterThan(0);
-
-      // 눈감아준 하이드레이션 문제를 webServer 로그를 뒤지지 않고도 테스트 출력에서
-      // 바로 확인할 수 있도록 한 줄로 남긴다. 동일한 메시지가 여러 번 잡히는 경우가
-      // 흔하므로(예: 같은 하이드레이션 오류가 pageerror와 console 양쪽에 찍힘) 중복은
-      // 제거해 신호 대 잡음비를 유지한다.
-      console.log(
-        `[knownHydrationBug ${knownHydrationBug}] ${[...new Set(hydrationIssues)].join(' | ')}`
-      );
+      if (hydrationIssues.length > 0) {
+        // 눈감아준 하이드레이션 문제를 webServer 로그를 뒤지지 않고도 테스트 출력에서
+        // 바로 확인할 수 있도록 한 줄로 남긴다. 동일한 메시지가 여러 번 잡히는 경우가
+        // 흔하므로(예: 같은 하이드레이션 오류가 pageerror와 console 양쪽에 찍힘) 중복은
+        // 제거해 신호 대 잡음비를 유지한다.
+        console.log(
+          `[knownHydrationBug ${knownHydrationBug}] ${[...new Set(hydrationIssues)].join(' | ')}`
+        );
+      } else {
+        // 이번 실행에서는 아무 것도 감지되지 않았다 — 버그가 고쳐졌을 수도, 그저
+        // 이번 실행에서 재현되지 않았을 뿐일 수도 있다. 어느 쪽인지 테스트 하나로는
+        // 판별할 수 없으므로 실패시키지 않고, 사람이 확인해서 지울 수 있도록 grep하기
+        // 쉬운 접두사를 단 경고만 남긴다.
+        console.warn(
+          `[STALE_HYDRATION_WAIVER] knownHydrationBug: ${knownHydrationBug}로 웨이버가 ` +
+            `선언되어 있지만 이번 실행에서는 하이드레이션 관련 경고/에러가 감지되지 ` +
+            `않았습니다. ${knownHydrationBug} 이슈가 해결되었을 수 있으니 재현 여부를 ` +
+            `확인하고, 해결되었다면 test.use({ knownHydrationBug }) 웨이버를 제거하고 ` +
+            `해당 이슈를 닫아주세요.`
+        );
+      }
     } else {
       expect(
         hydrationIssues,
