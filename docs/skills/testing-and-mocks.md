@@ -22,6 +22,7 @@
 - Unit and component tests use Vitest and RTL.
 - End-to-end smoke tests use Playwright.
 - Every `tests/*.e2e.ts` file must import `test`/`expect` from `tests/fixtures.ts`, never directly from `@playwright/test`. The shared fixture fails any test where the page emits a hydration-related console error/warning or `pageerror` (matched by `/hydrat/i`), so SSR/client mismatches fail CI instead of only appearing in dev server stdout.
+- The guard can be waived for a pre-existing, already-tracked hydration bug via `test.use({ knownHydrationBug: '#<issue>' })`, scoped to the narrowest `test`/`test.describe` block that actually reproduces the bug (never to a whole file or describe block that also holds unaffected passing tests). The waiver is self-cleaning: if the run does not detect a hydration issue while a waiver is declared, the test fails with a message to delete the waiver and close the issue. Do not add a waiver for a bug you are introducing — fix it instead.
 - Before proposing completion, run lint, typecheck, unit or integration checks for touched behavior, and Playwright smoke when the flow changed.
 - Attach screenshots or traces for UI changes.
 

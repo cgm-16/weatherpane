@@ -24,6 +24,10 @@ const seoulActiveLocation = JSON.stringify({
   },
 });
 
+// #93: 홈 로딩 상태가 SSR과 클라이언트에서 서로 달라지는 기존 하이드레이션 버그.
+// 이 파일의 모든 테스트가 활성 위치가 설정된 홈 대시보드 렌더링을 검증하며 재현된다.
+test.use({ knownHydrationBug: '#93' });
+
 test('위치가 설정된 홈에서 날씨 대시보드가 표시된다', async ({ page }) => {
   await page.addInitScript(
     ({ key, value }) => localStorage.setItem(key, value),
