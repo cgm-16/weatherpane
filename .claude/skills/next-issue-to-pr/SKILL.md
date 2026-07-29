@@ -9,8 +9,8 @@ Carry one issue from the board to an open PR, autonomously, in five stages:
 
 ```
 1 SELECT    pick the issue, claim it with status:in-progress
-2 PLAN      read the issue, write an implementation plan file
-3 ISOLATE   worktree + branch off origin/main
+2 ISOLATE   worktree + branch off origin/main
+3 PLAN      read the issue, write the plan file inside the worktree
 4 BUILD     superpowers:subagent-driven-development over the plan
 5 SHIP      push -> PR, template filled, issue metadata synced
 ```
@@ -88,7 +88,33 @@ the label again — a stale `status:in-progress` starves the issue silently.
 Done-check: one issue number, its full body read, `status:in-progress` applied,
 and a one-line statement of why it beat the field (the script's `reason`).
 
-### 2. Turn the issue into a plan file
+### 2. Isolate the work
+
+Intent: get an isolated worktree on a correctly named branch without touching `main`.
+
+```bash
+git fetch origin main
+git worktree add .worktrees/<slug> -b <type/issue-area-slug> origin/main
+```
+
+Branching from the fetched `origin/main` ref means `main` is never checked out and
+the current working tree — which may be dirty, on another branch — is untouched.
+Build the branch name from the script's `branch_prefix`, replacing `<slug>` with a
+few words describing the change. `.worktrees/` is already git-ignored.
+
+Isolation comes before planning because the plan file lives inside the worktree
+(stage 3 writes it to `docs/superpowers/plans/`). Do the rest of the run in there.
+Install dependencies only if the task needs package commands and `node_modules` is
+missing.
+
+Establish the baseline before any edit: run the checks the task's surface depends
+on. A check that already fails is either in scope or a blocker — decide which, and
+say which in the PR body. Discovering a pre-existing failure after implementation
+makes it impossible to tell what your change broke.
+
+Done-check: worktree on the right branch, clean status, baseline known.
+
+### 3. Turn the issue into a plan file
 
 Intent: SDD is parameterized on a plan file, so one must exist before stage 4.
 
@@ -120,30 +146,6 @@ the diff — the reviewer's attention is the scarce resource the PR is competing
 Done-check: a plan file exists at that path with numbered tasks, each independently
 implementable, and Global Constraints quoting the binding rules verbatim.
 
-### 3. Isolate the work
-
-Intent: get an isolated worktree on a correctly named branch without touching `main`.
-
-```bash
-git fetch origin main
-git worktree add .worktrees/<slug> -b <type/issue-area-slug> origin/main
-```
-
-Branching from the fetched `origin/main` ref means `main` is never checked out and
-the current working tree — which may be dirty, on another branch — is untouched.
-Build the branch name from the script's `branch_prefix`, replacing `<slug>` with a
-few words describing the change. `.worktrees/` is already git-ignored.
-
-Do the rest of the run inside the worktree. Install dependencies there only if the
-task needs package commands and `node_modules` is missing.
-
-Establish the baseline before any edit: run the checks the task's surface depends
-on. A check that already fails is either in scope or a blocker — decide which, and
-say which in the PR body. Discovering a pre-existing failure after implementation
-makes it impossible to tell what your change broke.
-
-Done-check: worktree on the right branch, clean status, baseline known.
-
 ### 4. Build it with subagent-driven development
 
 Intent: implement through subagents, with a review gate per task.
@@ -152,6 +154,32 @@ Invoke `superpowers:subagent-driven-development` with the plan file and follow i
 Let the harness resolve the skill's scripts — several plugin versions are cached, so
 hardcoded script paths rot. That skill owns the loop: ledger, per-task implementer,
 per-task review, the fix loop and its cap, and the final whole-branch review.
+
+**When a review finding collides with the plan, ask who wrote the constraint.**
+SDD treats plan conflicts as the human's call, but most of the plan is text *you*
+wrote minutes earlier — escalating your own draft to Ori is noise. Split it:
+
+- The constraint came from **your plan** → amend the plan, record why in the ledger,
+  and dispatch the fix. A plan constraint that review proves wrong is just a bug in
+  the plan.
+- The constraint came from **the issue, AGENTS.md, or a product rule** → that is
+  Ori's, and it is a stop even mid-run.
+
+**Anything whose job is to detect a fault must be observed failing.** A regression
+test that never failed, a lint rule never seen to fire, a CI guard nobody watched
+trip — none are known to work; they are only known to be green, which is the exact
+condition that let the bug ship in the first place. So when you dispatch a fix for
+this class of work, name the *falsifying condition* rather than describing the
+problem: "this test must fail when `getServerSnapshot` is reverted to X." Without a
+stated discriminator, implementers satisfy one property by trading away another —
+and the trade is invisible in a green suite.
+
+**When a subagent dies mid-task** (session limit, crash), do not re-dispatch blind.
+Its uncommitted work is usually intact and worth keeping. First verify integrity:
+`git status`, and specifically confirm that any file it reverted *temporarily* for
+testing was restored — an implementer killed between "revert to prove the guard
+fires" and "restore" leaves the bug reinstated in the worktree. Then resume the same
+agent with what remains; its context survives.
 
 What this repo adds on top of it:
 
@@ -179,6 +207,9 @@ so run it directly:
 
 ```bash
 git push -u origin <branch>
+# If the push fails with "could not read Username" the osxkeychain helper is locked.
+# Route this one command through gh's token instead of writing config to the machine:
+#   git -c credential.helper='!gh auth git-credential' push -u origin <branch>
 gh pr create --title "<Korean conventional-commit title>" --body-file <file>
 gh issue view <N> --json assignees,labels,milestone
 gh pr edit <PR> --add-assignee ... --add-label ... --milestone ...
@@ -242,5 +273,5 @@ you reached, what exists on disk and on the remote, and what you need.
   `Skill` to invoke `superpowers:*`; `Agent` for subagent dispatch.
 - Codex: same shell commands directly. Codex has no `superpowers:*` skills — follow
   [docs/skills/task-to-pr-automation.md](../../../docs/skills/task-to-pr-automation.md)
-  for stages 3-5 and implement stage 4 single-threaded, keeping the per-task review
+  for stages 2-5 and implement stage 4 single-threaded, keeping the per-task review
   gate as a self-review pass against the plan's Global Constraints.
