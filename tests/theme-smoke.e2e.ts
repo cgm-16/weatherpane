@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test.describe('테마 시스템 — 스모크', () => {
   test('첫 방문: 시스템 어두운 모드 설정 시 dark 테마로 진입', async ({

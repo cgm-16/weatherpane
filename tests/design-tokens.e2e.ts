@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 function getCssVar(
   page: import('@playwright/test').Page,
