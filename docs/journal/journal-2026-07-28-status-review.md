@@ -7,7 +7,7 @@
 모두 실제로 실행해서 확인했다.
 
 | 항목             | 명령             | 결과                                  |
-| --- | --- | --- |
+| ---------------- | ---------------- | ------------------------------------- |
 | Lint             | `pnpm lint`      | 통과 (exit 0)                         |
 | Typecheck        | `pnpm typecheck` | 통과 (exit 0)                         |
 | Unit/Integration | `pnpm test:unit` | 50개 파일 / 486개 테스트 통과 (6.16s) |
@@ -17,7 +17,7 @@
 이슈 트래커: 34개 전부 CLOSED, 열린 이슈 0개.
 
 | 분류      | 개수 | 비고                                   |
-| --- | --- | --- |
+| --------- | ---- | -------------------------------------- |
 | `[Task]`  | 23   | WP-001~WP-022 22개 + #3(에이전트 문서) |
 | `[Docs]`  | 4    | #1, #5, #11, #71                       |
 | 버그/수정 | 4    | #58, #63, #67, #69                     |
@@ -43,11 +43,11 @@ git rev-list --count 8dd1c2b..origin/main -- docs/specs-favorites.md  # 0
 실질적 제품 규칙이 명세 문서가 아니라 구현 단계에서 생성된 문서들에 쌓였다.
 
 | 규칙                                        | `AGENTS.md` | `docs/skills/favorites-behavior.md` | `docs/tasks/T16-*.md` | `docs/legacy/*`     | 초기 명세 |
-| --- | --- | --- | --- | --- | --- |
+| ------------------------------------------- | ----------- | ----------------------------------- | --------------------- | ------------------- | --------- |
 | Favorites max is 6                          | L54         | L19                                 | L22                   | prompt.md L144      | 없음      |
 | Undo restores exact previous favorite state | L58         | L25                                 | L31                   | issues.md L384 인근 | 없음      |
 | Only the latest removal is undoable         | L59         | L26                                 | L29                   | issues.md L384      | 없음      |
-| Undo timeout 5s | **없음** | L26 | L30 | prompt.md L987 | 없음 |
+| Undo timeout 5s                             | **없음**    | L26                                 | L30                   | prompt.md L987      | 없음      |
 
 ```bash
 git show 8dd1c2b:docs/specs.md | grep -niE "undo|되돌리|6개"   # 0건
@@ -61,14 +61,14 @@ FAV-01~FAV-12, UX-01~UX-11 확정 결정 로그에 이 규칙들이 역기록되
 ### 2.3 명시적 수치 모순
 
 | 항목                     | `docs/specs.md`            | `AGENTS.md`             | 구현                    |
-| --- | --- | --- | --- |
+| ------------------------ | -------------------------- | ----------------------- | ----------------------- |
 | Weather 스냅샷 cutoff    | Summary 24h                | 24h                     | 24h                     |
 | Detail/AQI 스냅샷 cutoff | **Detail 48h**             | **AQI 12h**             | AQI 12h                 |
 | staleTime                | Summary 10분 / Detail 30분 | Weather 10분 / AQI 30분 | Weather 10분 / AQI 30분 |
 
 명세는 Summary/Detail 축으로, 구현은 Weather/AQI 축으로 나뉘었다. 두 문서가 모두 "현재"를 주장하면서 다른 숫자를 말한다.
 
-*(이 절은 문서 대조 결과만 있고 재현 명령이 없다. §5.2 참조.)*
+_(이 절은 문서 대조 결과만 있고 재현 명령이 없다. §5.2 참조.)_
 
 ### 2.4 라우트 목록 불일치
 
@@ -77,16 +77,16 @@ FAV-01~FAV-12, UX-01~UX-11 확정 결정 로그에 이 규칙들이 역기록되
 
 `/settings`는 끝내 만들어지지 않았고, `/favorites`는 명세 라우트 목록에 없는 채로 출시됐다.
 
-*(이 절도 재현 명령 없음.)*
+_(이 절도 재현 명령 없음.)_
 
 ### 2.5 미구현으로 남은 초기 명세 범위
 
 | 명세 우선순위 | 항목                                          | 상태                                                              |
-| --- | --- | --- |
+| ------------- | --------------------------------------------- | ----------------------------------------------------------------- |
 | P0            | Home / Search / Favorites                     | 완료                                                              |
-| P0 | Weather Detail | **부분 구현** — 일별 예보 누락 (§2.5.1) |
+| P0            | Weather Detail                                | **부분 구현** — 일별 예보 누락 (§2.5.1)                           |
 | P1            | Settings (테마·단위·로컬 데이터 초기화)       | **미구현** — 라우트·`unitTemp`·`reduceMotion`·캐시 삭제 전부 없음 |
-| P1 | Service Worker (앱 셸 precache + 런타임 캐시) | **미구현** — SW/Workbox 참조 0건 |
+| P1            | Service Worker (앱 셸 precache + 런타임 캐시) | **미구현** — SW/Workbox 참조 0건                                  |
 | P2            | 원격 스케치 매니페스트                        | 완료                                                              |
 | P2            | 고급 오프라인 동기화                          | 미구현 (의도된 범위 밖)                                           |
 | —             | Favorites 서버 동기화 (REST/ETag/SyncQueue)   | 미구현 — 로컬 저장소 MVP로 축소                                   |
@@ -193,7 +193,7 @@ Error: Cannot find module '/Users/ori/repos/weatherpane/build/server/index.js'
 
 §3.2 검증 첫 시도에서 서버가 조용히 죽고 `curl`이 HTTP 000을 반환해, 하마터면 "프로덕션에서는 재현되지 않는다"는 결론을 낼 뻔했다. 프로덕션 빌드를 띄워보는 경로가 막혀 있다는 사실 자체가 별도 결함이다 (#84).
 
-*(이 절은 오류 출력만 있고 실행 명령이 기록돼 있지 않다. §5.2 참조.)*
+_(이 절은 오류 출력만 있고 실행 명령이 기록돼 있지 않다. §5.2 참조.)_
 
 ### 3.3 [P2] 루트 `node_modules`가 git worktree 내부를 심볼릭 링크로 참조한다
 
@@ -212,15 +212,15 @@ grep -rn "PlaceholderPage\|HomeNotFound\|HomeUnsupported" app frontend tests sto
 # → placeholder-page.tsx 자신의 타입 선언 3줄만 매치. 나머지 둘은 출력 없음.
 ```
 
-| 파일 | 담고 있는 영문 문구 |
-| --- | --- |
-| `frontend/shared/ui/placeholder-page.tsx` | South Korea weather app / Location placeholder 등 |
-| `frontend/pages/home/ui/home-not-found.tsx` | Lost in the Mist / Take me Home / Check Forecast |
+| 파일                                          | 담고 있는 영문 문구                                  |
+| --------------------------------------------- | ---------------------------------------------------- |
+| `frontend/shared/ui/placeholder-page.tsx`     | South Korea weather app / Location placeholder 등    |
+| `frontend/pages/home/ui/home-not-found.tsx`   | Lost in the Mist / Take me Home / Check Forecast     |
 | `frontend/pages/home/ui/home-unsupported.tsx` | Feature Unavailable / Return Home / Search Locations |
 
 `placeholder-page.tsx`는 T01 스캐폴딩 잔재다. raw Tailwind 색상과 폐기된 라우트 규약(`/location/seoul-jongno`, 현재는 `loc_` 접두사)도 담고 있다.
 
-나머지 둘은 성격이 다를 수 있다. `useDetailBootstrap`의 상태 union에 `not-found`와 `unsupported`가 있으므로, **의도적 미연결인지 누락인지 판단이 필요하다** (#82).
+`HomeNotFound`와 `HomeUnsupported`도 호출 지점이 0인 죽은 코드다. `useDetailBootstrap`의 `not-found`와 `unsupported` 상태는 `LocationPage`가 각각 `LocationNotFound`와 `LocationUnsupported`로 이미 처리한다 (#82).
 
 ### 3.5 [P2] 살아 있는 UI의 언어·토큰 규칙 위반
 
@@ -238,7 +238,7 @@ sed -n '15,45p' frontend/pages/home/ui/home-page.tsx
 #### A. 도달 가능한 영문 문구 (7곳)
 
 | 위치                           | 문구                                                   |
-| --- | --- |
+| ------------------------------ | ------------------------------------------------------ |
 | `home-config-error.tsx:25`     | Settings Update Needed                                 |
 | `home-config-error.tsx:28`     | Your travel concierge needs a quick adjustment… (본문) |
 | `home-connection-error.tsx:41` | Connection Interrupted                                 |
@@ -252,9 +252,9 @@ sed -n '15,45p' frontend/pages/home/ui/home-page.tsx
 #### B. 도달 불가 — 선택적 prop 가드 뒤 (3곳)
 
 | 위치                           | 문구               | 가드                                                               |
-| --- | --- | --- |
+| ------------------------------ | ------------------ | ------------------------------------------------------------------ |
 | `home-config-error.tsx:52`     | Open Settings      | `{onOpenSettings && …}` — 두 호출 지점 모두 `error`만 전달         |
-| `home-config-error.tsx:61` | Try Again | `{onRetry && …}` |
+| `home-config-error.tsx:61`     | Try Again          | `{onRetry && …}`                                                   |
 | `home-connection-error.tsx:63` | Go to Saved Places | `{onGoToSavedPlaces && …}` — `home-page.tsx:37`은 `onRetry`만 전달 |
 
 `home-connection-error.tsx:5`에 의도가 주석으로 있다: "WP-017 즐겨찾기 구현 전까지는 전달하지 않으면 버튼을 숨깁니다." 번역해도 화면에 나오지 않으므로 연결할지 제거할지 판단이 먼저다.
@@ -267,8 +267,8 @@ grep -rnoE "\b(text|bg|border)-(slate|sky|zinc|gray|neutral|stone|white|black)(\
 ```
 
 | 파일                                     | 값                                                                                                      | 렌더 경로                                  |
-| --- | --- | --- |
-| `app/root.tsx` (ErrorBoundary, L103~109) | `text-sky-300`, `text-white`, `text-slate-300`, `text-slate-200`, `border-slate-800`, `bg-slate-950/80` | L82 export, 전역 오류 경계 |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `app/root.tsx` (ErrorBoundary, L103~109) | `text-sky-300`, `text-white`, `text-slate-300`, `text-slate-200`, `border-slate-800`, `bg-slate-950/80` | L82 export, 전역 오류 경계                 |
 | `home-config-error.tsx:12`               | `bg-white/50`                                                                                           | `app-providers.tsx:45`, `home-page.tsx:19` |
 | `detail-aqi-card.tsx`                    | `bg-black/40`                                                                                           | `detail-dashboard.tsx:152`                 |
 | `detail-uv-card.tsx`                     | `bg-black/40`                                                                                           | `detail-dashboard.tsx:153`                 |
@@ -301,13 +301,13 @@ git branch --no-merged origin/main | grep -vc "docs/85-docs-status-review"  # 36
 
 단일 점수는 반증 불가능하므로 축별로 나눈다.
 
-| 축              | 점수   | 근거                                                                                                                                                                                                                            |
-| --- | --- | --- |
-| 스펙 커버리지 | 6/10 | P0 3.5/4 — Detail 일별 예보 미구현(#87). P1 2개(Settings, SW) 미착수. P2 1/2. |
+| 축              | 점수   | 근거                                                                                                                                                                                                              |
+| --------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 스펙 커버리지   | 6/10   | P0 3.5/4 — Detail 일별 예보 미구현(#87). P1 2개(Settings, SW) 미착수. P2 1/2.                                                                                                                                     |
 | 엔지니어링 품질 | 7.5/10 | lint·typecheck 무결, 486 유닛 + 34 E2E 통과, FSD 경계 준수, bootstrap 상태를 discriminated union으로 모델링. 감점: SSR 하이드레이션 결함이 전 테스트 계층 통과, 8.3MB 청크가 상세 라우트까지 로드, 죽은 코드 3개. |
-| 문서 정합성 | 5/10 | 가장 약한 축. `specs-favorites.md` 무갱신, cutoff 수치 모순, 제품 규칙 역기록 누락, 살아 있는 UI의 한국어 규칙 위반 7곳. |
-| 프로덕션 준비도 | 4/10 | API 키 노출이 `real` 모드를 차단. 번들 예산 기준·CI 게이트 부재, SW 없음, 모니터링·쿼터 대응 없음. `mock` 모드 데모로는 완성. |
-| 프로세스 규율 | 8/10 | 22개 태스크를 이슈→브랜치→PR로 일관 수행, 커밋 메시지 규약 준수, 종료 이슈 산출물도 전부 병합됨. 감점: 브랜치 정리 부재. |
+| 문서 정합성     | 5/10   | 가장 약한 축. `specs-favorites.md` 무갱신, cutoff 수치 모순, 제품 규칙 역기록 누락, 살아 있는 UI의 한국어 규칙 위반 7곳.                                                                                          |
+| 프로덕션 준비도 | 4/10   | API 키 노출이 `real` 모드를 차단. 번들 예산 기준·CI 게이트 부재, SW 없음, 모니터링·쿼터 대응 없음. `mock` 모드 데모로는 완성.                                                                                     |
+| 프로세스 규율   | 8/10   | 22개 태스크를 이슈→브랜치→PR로 일관 수행, 커밋 메시지 규약 준수, 종료 이슈 산출물도 전부 병합됨. 감점: 브랜치 정리 부재.                                                                                          |
 
 **종합: 6/10 — 잘 만들어진 MVP이나 프로덕션 준비 상태는 아니다.**
 
@@ -320,7 +320,7 @@ git branch --no-merged origin/main | grep -vc "docs/85-docs-status-review"  # 36
 **모든 테스트 계층이 통과하는 상태에서, 빌드 산출물이나 실행 중인 프로덕션 서버를 직접 봐야만 보이는 결함이 4건 나왔다.**
 
 | 결함                         | 발견 수단                           |
-| --- | --- |
+| ---------------------------- | ----------------------------------- |
 | API 키 클라이언트 노출 (#73) | 센티널 빌드 후 `build/client` grep  |
 | SSR 오프라인 배너 (#74)      | 프로덕션 서버 기동 후 HTML 검사     |
 | 8.3MB 카탈로그 청크 (#80)    | 번들 크기 실측 + import 그래프 확인 |
@@ -336,26 +336,26 @@ lint·typecheck·486 유닛·34 E2E 어느 것도 이 중 하나를 잡지 못�
 
 ### 5.2 이 문서의 신뢰 수준
 
-이 문서는 PR #86 리뷰에서 사실 주장 17건이 정정됐다. 전부 리뷰로 걸러졌고 자체 발견은 0건이다. 실패 원인은 셋으로 나뉜다.
+이 문서는 PR #86의 네 차례 리뷰에서 총 17건이 정정됐다. 이 가운데 3차 리뷰의 5건은 사실 오류가 아니라 문서 내부 불일치였다. 전부 리뷰로 걸러졌고 자체 발견은 0건이다. 실패 원인은 셋으로 나뉜다.
 
-| 원인 | 예 |
-| --- | --- |
+| 원인                                | 예                                                     |
+| ----------------------------------- | ------------------------------------------------------ |
 | 검증 범위를 좁혀놓고 전체 결론을 냄 | `git fetch` 없이 로컬 `main`만 보고 "회고 미병합" 단정 |
-| 국소 수정 후 전체 미재검토 | 표에 행을 추가하고 그 수를 참조하는 문장을 안 고침 |
-| grep 결과를 사실로 취급 | 렌더 경로 확인 없이 grep 히트를 "살아 있는 UI"로 분류 |
+| 국소 수정 후 전체 미재검토          | 표에 행을 추가하고 그 수를 참조하는 문장을 안 고침     |
+| grep 결과를 사실로 취급             | 렌더 경로 확인 없이 grep 히트를 "살아 있는 UI"로 분류  |
 
-셋의 공통점은 **한 번의 값싼 조회 결과를 검증된 사실처럼 기록했다는 것**이다. 특히 마지막 항목은 실행 가능한 이슈(#88)를 잘못된 형태로 만들어냈다 — 렌더링되지 않는 버튼 문구 9곳이 "사용자 대면 부채"로 올라가 있었다.
+셋의 공통점은 **한 번의 값싼 조회 결과를 검증된 사실처럼 기록했다는 것**이다. 특히 마지막 항목은 실행 가능한 이슈(#88)를 잘못된 형태로 만들어냈다 — 도달 불가 영문 문구 9곳(버튼 라벨 7곳, 제목 2곳)이 "사용자 대면 부채"로 올라가 있었다.
 
 절별 증거 수준은 아래와 같다.
 
-| 절                 | 증거                                                      |
-| --- | --- |
-| §2.1, §2.2, §2.5.1 | 명령 + 출력 있음                                          |
-| §3.1, §3.2, §3.3, §3.4, §3.5 | 명령 + 출력 있음 |
-| §4.1 | 명령 + 출력 있음 (단 "전부 잔재"는 표본 3개 기반 추정) |
-| §6 (#80 번들 실측) | 명령 + 출력 있음 |
-| §3.2.1 | **오류 출력만 있고 실행 명령 없음** |
-| §2.3, §2.4 | **문서 대조 결과만 있고 재현 명령 없음** |
+| 절                           | 증거                                                   |
+| ---------------------------- | ------------------------------------------------------ |
+| §2.1, §2.2, §2.5.1           | 명령 + 출력 있음                                       |
+| §3.1, §3.2, §3.3, §3.4, §3.5 | 명령 + 출력 있음                                       |
+| §4.1                         | 명령 + 출력 있음 (단 "전부 잔재"는 표본 3개 기반 추정) |
+| §6 (#80 번들 실측)           | 명령 + 출력 있음                                       |
+| §3.2.1                       | **오류 출력만 있고 실행 명령 없음**                    |
+| §2.3, §2.4                   | **문서 대조 결과만 있고 재현 명령 없음**               |
 
 §3.2.1, §2.3, §2.4의 주장과 §4.1의 "전부"를 근거로 작업하기 전에는 직접 확인하는 편이 낫다.
 
@@ -365,21 +365,21 @@ lint·typecheck·486 유닛·34 E2E 어느 것도 이 중 하나를 잡지 못�
 
 회고 §8의 6개 항목을 뼈대로 HEAD 대비 재검증하고 누락분을 추가했다. 회고가 다루지 않은 것: Settings 화면 부재, API 키 노출(회고는 "운영 수준으로 끌어올린다"로 완화), SSR 하이드레이션 결함, `node_modules` 심볼릭 링크, 일별 예보 미구현.
 
-| #       | 우선순위 | 제목                                                                              |
-| --- | --- | --- |
-| #73     | P0       | real 모드 OpenWeather API 키가 클라이언트 번들에 노출됨                           |
-| #74     | P1       | Node 24에서 `navigator.onLine`이 undefined여서 서버가 항상 오프라인 배너를 렌더링 |
-| #75     | P1       | 명세 문서와 구현 사이의 드리프트 해소                                             |
-| #77     | P1       | `/settings` 화면 구현                                                             |
-| #80     | P1       | 카탈로그 청크가 클라이언트 번들 8.3MB(gzip 847KB)를 차지                          |
-| #84     | P1       | `pnpm start`·`preview`가 잘못된 서버 번들 경로를 가리켜 실행 불가                 |
-| #87 | P1 | Detail 화면 일별 예보 미구현 — P0 명세 미충족 |
-| #78     | P2       | Service Worker 기반 앱 셸·에셋 캐시 도입                                          |
-| #79     | P2       | 루트 `node_modules`가 `.worktrees/fix-korean-ime` 가상 스토어를 참조              |
-| #81     | P2       | `useFavorites`의 단일 인스턴스 가정 제거                                          |
-| #88     | P2       | 살아 있는 영문 문구 7곳·raw 색상 4개 파일 한국어/토큰 규칙 적용                   |
-| #82 | P3 | 죽은 컴포넌트 3개 정리 (`home-not-found`·`home-unsupported`는 연결 여부 판단 필요) |
-| #83 | P3 | squash merge 완료된 stale 브랜치 36개 정리 |
+| #   | 우선순위 | 제목                                                                              |
+| --- | -------- | --------------------------------------------------------------------------------- |
+| #73 | P0       | real 모드 OpenWeather API 키가 클라이언트 번들에 노출됨                           |
+| #74 | P1       | Node 24에서 `navigator.onLine`이 undefined여서 서버가 항상 오프라인 배너를 렌더링 |
+| #75 | P1       | 명세 문서와 구현 사이의 드리프트 해소                                             |
+| #77 | P1       | `/settings` 화면 구현                                                             |
+| #80 | P1       | 카탈로그 청크가 클라이언트 번들 8.3MB(gzip 847KB)를 차지                          |
+| #84 | P1       | `pnpm start`·`preview`가 잘못된 서버 번들 경로를 가리켜 실행 불가                 |
+| #87 | P1       | Detail 화면 일별 예보 미구현 — P0 명세 미충족                                     |
+| #78 | P2       | Service Worker 기반 앱 셸·에셋 캐시 도입                                          |
+| #79 | P2       | 루트 `node_modules`가 `.worktrees/fix-korean-ime` 가상 스토어를 참조              |
+| #81 | P2       | `useFavorites`의 단일 인스턴스 가정 제거                                          |
+| #88 | P2       | 살아 있는 영문 문구 7곳·raw 색상 4개 파일 한국어/토큰 규칙 적용                   |
+| #82 | P3       | 죽은 컴포넌트 3개 정리                                                            |
+| #83 | P3       | squash merge 완료된 stale 브랜치 36개 정리                                        |
 
 ### 카탈로그 번들 비용(#80)을 P1로 둔 근거
 
