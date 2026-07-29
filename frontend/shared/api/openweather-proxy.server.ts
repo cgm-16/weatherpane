@@ -19,11 +19,15 @@ export async function proxyOpenWeatherRequest(
     );
   }
 
-  upstreamUrl.searchParams.set('appid', apiKey);
+  // upstreamUrl은 호출자가 소유한 객체이므로 원본을 직접 변형하지 않는다.
+  // 복제하지 않고 mutate하면 호출자가 이후 그 URL을 로깅하거나 재사용할 때
+  // (오늘은 아무도 그렇게 하지 않지만) 이 함수의 반환값과 무관하게 키가 새어나간다.
+  const requestUrl = new URL(upstreamUrl);
+  requestUrl.searchParams.set('appid', apiKey);
 
   let response: Response;
   try {
-    response = await fetch(upstreamUrl.toString());
+    response = await fetch(requestUrl.toString());
   } catch {
     return Response.json(
       { code: 'INVALID_PROVIDER_RESPONSE', message: errorMessage },
