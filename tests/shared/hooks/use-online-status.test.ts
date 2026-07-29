@@ -89,15 +89,35 @@ describe('useOnlineStatus - Node 24 SSR 환경 (navigator는 있지만 onLine이
   });
 
   it('react-dom/server의 renderToString으로 렌더링해도 isOnline은 true다', () => {
-    // getServerSnapshot이 navigator에 전혀 접근하지 않음을 강제하기 위해
-    // navigator 자체를 없앤 상태로 렌더링한다. 접근한다면 TypeError로 실패한다.
+    // 두 가지를 동시에 검증해야 한다.
+    // 1) 실제 Node 24와 동일하게 navigator는 존재하되 onLine이 없는 상태에서도
+    //    렌더링 결과가 true여야 한다. navigator를 아예 undefined로 만들면
+    //    typeof navigator === 'undefined' || navigator.onLine 같은 예전 표현식이
+    //    early-return으로 우회되어 버그를 재현하지 못한다.
+    // 2) getServerSnapshot이 navigator의 어떤 프로퍼티도 읽지 않아야 한다(SSR은
+    //    navigator에 의존해서는 안 된다).
+    // Proxy로 프로퍼티 접근을 기록하면서도 Node 24와 동일한 모양(onLine 없음)을
+    // 유지해 두 요구를 동시에 만족시킨다.
+    const accessedProperties: PropertyKey[] = [];
+    const nodeLikeNavigator = new Proxy(
+      { userAgent: 'node' },
+      {
+        get(target, prop, receiver) {
+          accessedProperties.push(prop);
+          return Reflect.get(target, prop, receiver);
+        },
+      }
+    );
+
     Object.defineProperty(globalThis, 'navigator', {
-      value: undefined,
+      value: nodeLikeNavigator,
       configurable: true,
       writable: true,
     });
 
     const html = renderToString(createElement(OnlineStatusProbe));
+
+    expect(accessedProperties).toEqual([]);
     expect(html).toBe('<span>true</span>');
   });
 });
