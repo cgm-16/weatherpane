@@ -4,7 +4,14 @@ test.describe('테마 시스템 — 스모크', () => {
   test.describe('dark 모드 진입/유지', () => {
     // #91: 테마 초기값을 클라이언트에서만 읽어 SSR과 어긋나는 기존 하이드레이션 버그.
     // 이 하위 describe의 테스트만 dark 모드 진입을 검증하며 해당 버그를 재현한다.
-    test.use({ knownHydrationBug: '#91' });
+    // pattern: 테마 토글 버튼의 data-theme-toggle/aria-label과 아이콘의 dark_mode/
+    // light_mode가 서버·클라이언트 간 diff에 남는 #91 고유 서명이다.
+    test.use({
+      knownHydrationBug: {
+        issue: '#91',
+        pattern: 'data-theme-toggle|dark_mode',
+      },
+    });
 
     test('첫 방문: 시스템 어두운 모드 설정 시 dark 테마로 진입', async ({
       page,
