@@ -35,6 +35,9 @@ describe('useOnlineStatus', () => {
   it('offline 이벤트 수신 시 isOnline이 false로 변한다', () => {
     const { result } = renderHook(() => useOnlineStatus());
     act(() => {
+      // HTML 표준상 브라우저는 navigator.onLine 값을 먼저 반영한 뒤 이벤트를
+      // 발생시킨다. mock도 이벤트 발생 직전에 값을 갱신해 그 순서를 재현한다.
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
       window.dispatchEvent(new Event('offline'));
     });
     expect(result.current.isOnline).toBe(false);
@@ -44,6 +47,7 @@ describe('useOnlineStatus', () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     const { result } = renderHook(() => useOnlineStatus());
     act(() => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(true);
       window.dispatchEvent(new Event('online'));
     });
     expect(result.current.isOnline).toBe(true);
@@ -85,7 +89,15 @@ describe('useOnlineStatus - Node 24 SSR 환경 (navigator는 있지만 onLine이
   });
 
   it('react-dom/server의 renderToString으로 렌더링해도 isOnline은 true다', () => {
+    // getServerSnapshot이 navigator에 전혀 접근하지 않음을 강제하기 위해
+    // navigator 자체를 없앤 상태로 렌더링한다. 접근한다면 TypeError로 실패한다.
+    Object.defineProperty(globalThis, 'navigator', {
+      value: undefined,
+      configurable: true,
+      writable: true,
+    });
+
     const html = renderToString(createElement(OnlineStatusProbe));
-    expect(html).toContain('true');
+    expect(html).toBe('<span>true</span>');
   });
 });

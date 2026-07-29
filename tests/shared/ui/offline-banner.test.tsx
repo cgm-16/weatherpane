@@ -21,6 +21,9 @@ describe('OfflineBanner', () => {
   it('offline 이벤트 수신 시 배너가 표시된다', () => {
     render(<OfflineBanner />);
     act(() => {
+      // HTML 표준상 브라우저는 navigator.onLine 값을 먼저 반영한 뒤 이벤트를
+      // 발생시킨다. mock도 이벤트 발생 직전에 값을 갱신해 그 순서를 재현한다.
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
       window.dispatchEvent(new Event('offline'));
     });
     expect(screen.getByRole('alert')).toBeInTheDocument();
@@ -32,6 +35,7 @@ describe('OfflineBanner', () => {
     render(<OfflineBanner />);
     expect(screen.getByRole('alert')).toBeInTheDocument();
     act(() => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(true);
       window.dispatchEvent(new Event('online'));
     });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
