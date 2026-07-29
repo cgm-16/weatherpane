@@ -56,49 +56,59 @@ test.describe('Favorites page', () => {
     ).toBeVisible();
   });
 
-  test('renders a saved location after seeding localStorage', async ({
-    page,
-  }) => {
-    await page.addInitScript(
-      ({ key, value }) => localStorage.setItem(key, value),
-      { key: FAVORITES_KEY, value: favoritesPayload([seoulFav]) }
-    );
-    await page.goto('/favorites');
-    await expect(page.getByText('서울')).toBeVisible();
-  });
+  test.describe('저장된 즐겨찾기가 있을 때', () => {
+    // #92: 즐겨찾기 목록을 클라이언트에서만 localStorage로부터 읽는 기존 하이드레이션 버그.
+    // localStorage를 미리 심어 즐겨찾기를 렌더링하는 테스트에서만 재현된다.
+    test.use({ knownHydrationBug: '#92' });
 
-  test('renders nickname when favorite has one', async ({ page }) => {
-    await page.addInitScript(
-      ({ key, value }) => localStorage.setItem(key, value),
-      { key: FAVORITES_KEY, value: favoritesPayload([busanFav]) }
-    );
-    await page.goto('/favorites');
-    await expect(page.getByText('해운대')).toBeVisible();
-  });
+    test('renders a saved location after seeding localStorage', async ({
+      page,
+    }) => {
+      await page.addInitScript(
+        ({ key, value }) => localStorage.setItem(key, value),
+        { key: FAVORITES_KEY, value: favoritesPayload([seoulFav]) }
+      );
+      await page.goto('/favorites');
+      await expect(page.getByText('서울')).toBeVisible();
+    });
 
-  test('favorites persist across page reload', async ({ page }) => {
-    await page.addInitScript(
-      ({ key, value }) => localStorage.setItem(key, value),
-      { key: FAVORITES_KEY, value: favoritesPayload([seoulFav]) }
-    );
-    await page.goto('/favorites');
-    await expect(page.getByText('서울')).toBeVisible();
-    await page.reload();
-    await expect(page.getByText('서울')).toBeVisible();
-  });
+    test('renders nickname when favorite has one', async ({ page }) => {
+      await page.addInitScript(
+        ({ key, value }) => localStorage.setItem(key, value),
+        { key: FAVORITES_KEY, value: favoritesPayload([busanFav]) }
+      );
+      await page.goto('/favorites');
+      await expect(page.getByText('해운대')).toBeVisible();
+    });
 
-  test('renders multiple favorites as a grid', async ({ page }) => {
-    await page.addInitScript(
-      ({ key, value }) => localStorage.setItem(key, value),
-      { key: FAVORITES_KEY, value: favoritesPayload([seoulFav, busanFav]) }
-    );
-    await page.goto('/favorites');
-    await expect(page.getByText('서울')).toBeVisible();
-    await expect(page.getByText('해운대')).toBeVisible();
+    test('favorites persist across page reload', async ({ page }) => {
+      await page.addInitScript(
+        ({ key, value }) => localStorage.setItem(key, value),
+        { key: FAVORITES_KEY, value: favoritesPayload([seoulFav]) }
+      );
+      await page.goto('/favorites');
+      await expect(page.getByText('서울')).toBeVisible();
+      await page.reload();
+      await expect(page.getByText('서울')).toBeVisible();
+    });
+
+    test('renders multiple favorites as a grid', async ({ page }) => {
+      await page.addInitScript(
+        ({ key, value }) => localStorage.setItem(key, value),
+        { key: FAVORITES_KEY, value: favoritesPayload([seoulFav, busanFav]) }
+      );
+      await page.goto('/favorites');
+      await expect(page.getByText('서울')).toBeVisible();
+      await expect(page.getByText('해운대')).toBeVisible();
+    });
   });
 });
 
 test.describe('Favorites page — 편집/정렬 모드', () => {
+  // #92: 즐겨찾기 목록을 클라이언트에서만 localStorage로부터 읽는 기존 하이드레이션 버그.
+  // 이 describe 블록의 모든 테스트가 localStorage에 즐겨찾기를 미리 심어 재현한다.
+  test.use({ knownHydrationBug: '#92' });
+
   test('편집 button appears when favorites exist', async ({ page }) => {
     await page.addInitScript(
       ({ key, value }) => localStorage.setItem(key, value),

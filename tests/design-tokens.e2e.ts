@@ -93,6 +93,10 @@ test.describe('디자인 토큰 — Haet-Ssal (밝은 모드)', () => {
 });
 
 test.describe('디자인 토큰 — Dal-Bit Night (어두운 모드)', () => {
+  // #91: 테마 초기값을 클라이언트에서만 읽어 SSR과 어긋나는 기존 하이드레이션 버그.
+  // dark 모드로 진입하는 이 describe 블록의 테스트에서만 재현된다.
+  test.use({ knownHydrationBug: '#91' });
+
   test.beforeEach(async ({ page }) => {
     // 내비게이션 전 스토리지 키를 설정해 ThemeProvider가 정상 초기화 경로로 다크 모드를 적용하도록 한다
     await page.addInitScript(() => {
