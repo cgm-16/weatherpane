@@ -245,6 +245,19 @@ environment-dependent — so suppression mechanisms warn, and only the detection
 fails. Retries do not save you: they rescue a test that passes on retry, not one
 that fails identically three times.
 
+A third rule, if you ever suppress a known failure to get a suite green: **key the
+suppression to the specific fault, not to its location.** "Ignore hydration errors
+in this file" also ignores the next, unrelated one that lands there — the
+suppression silently widens into a blind spot. "Ignore the hydration error whose
+diff contains `data-theme-toggle`" does not. The signature you need is usually
+already in the error text you are discarding for readability, so match on the full
+message and truncate only for display.
+
+Automated PR reviewers are worth reading, but verify each claim against the code as
+it is now — they review a snapshot and will confidently ask you to restore something
+you deliberately removed two commits ago. Apply what is still true, skip the rest
+with a stated reason.
+
 If CI fails, fix it before reporting. The PR is yours until it is green.
 
 Done-check: a PR URL, no placeholders in the body, metadata matching the issue,
