@@ -1,0 +1,60 @@
+{
+  "skill_name": "next-issue-to-pr",
+  "notes": "Selection correctness is covered offline by tests/test_pick_issue.py. These evals cover the agent-driven stages. Every prompt forbids GitHub writes and pushes so eval runs cannot open PRs or mutate the real board; the stage-1 claim step and stage-5 PR creation are therefore verified manually, not by these evals.",
+  "evals": [
+    {
+      "id": 0,
+      "name": "picks-top-issue-and-plans-it",
+      "prompt": "what should I pick up next? grab whatever's at the top of the backlog and get it planned out and set up so I can start on it.\n\nHard limits for this run: do NOT push anything, do NOT open a PR, and do NOT run any gh command that writes (no gh issue edit, no gh pr create, no label changes). Read-only gh is fine. Stop once the plan file and the branch/worktree exist.\n\nWhen you stop, write <OUTPUT_DIR>/run-summary.md containing: which issue you picked and why it beat the others, the exact branch name you created, the path to your plan file, and the branch you were on at the end (git status --short --branch output). Also copy your plan file into <OUTPUT_DIR>/.",
+      "expected_output": "Selects issue #73 (the only priority:p0, and also the oldest). Creates a worktree on branch fix/73-weather-<something>. Writes a plan file with numbered tasks and a Global Constraints section. Never checks out main.",
+      "files": [],
+      "assertions": [
+        "Selected issue #73 — the only priority:p0 on the board and also the oldest open issue",
+        "Explained why #73 beat the field, naming its priority tier rather than just asserting it",
+        "Branch name starts with 'fix/73-weather' — the type:bug label correctly mapped to branch type 'fix', not 'bug'",
+        "Work was isolated in a git worktree under .worktrees/ rather than in the main checkout",
+        "The main checkout at /Users/ori/repos/weatherpane is still on its original branch — main was never checked out",
+        "A plan file exists containing numbered, independently implementable tasks",
+        "The plan file has a Global Constraints section quoting binding rules from AGENTS.md or the relevant area skill",
+        "Nothing was pushed and no gh write command (issue edit / pr create / label change) was run"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "named-issue-skips-selection",
+      "prompt": "implement issue #84 for me and take it as far as you can toward a PR.\n\nHard limits for this run: do NOT push anything, do NOT open a PR, and do NOT run any gh command that writes (no gh issue edit, no gh pr create, no label changes). Read-only gh is fine. Stop once the plan file and the branch/worktree exist — do not start implementing.\n\nWhen you stop, write <OUTPUT_DIR>/run-summary.md containing: the issue you worked on, the exact branch name you created, the path to your plan file, and the branch you were on at the end (git status --short --branch output). Also copy your plan file into <OUTPUT_DIR>/.",
+      "expected_output": "Works on #84 without re-running selection. Branch name is fix/84-ci-<something> (type:bug maps to branch type fix). Plan file exists with numbered tasks and Global Constraints.",
+      "files": [],
+      "assertions": [
+        "Worked on issue #84 directly without re-running backlog selection",
+        "Branch name starts with 'fix/84-ci' — type:bug mapped to 'fix' and area:ci carried through",
+        "Work was isolated in a git worktree under .worktrees/ rather than in the main checkout",
+        "The main checkout at /Users/ori/repos/weatherpane is still on its original branch — main was never checked out",
+        "A plan file exists containing numbered, independently implementable tasks",
+        "The plan file has a Global Constraints section quoting binding rules from AGENTS.md or the relevant area skill",
+        "Stopped before implementing — no source files were modified or committed",
+        "Nothing was pushed and no gh write command was run"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "small-issue-implemented-via-subagents",
+      "prompt": "take issue #82 and actually do it — implement it properly, with the work reviewed, right up to the point of opening a PR.\n\nHard limits for this run: do NOT push anything, do NOT open a PR, and do NOT run any gh command that writes (no gh issue edit, no gh pr create, no label changes). Read-only gh is fine. Commit locally on your branch, but stop before git push.\n\nWhen you stop, write <OUTPUT_DIR>/run-summary.md containing: the exact branch name, git log --oneline output for your commits, the verification commands you ran with their results, how the implementation work was carried out (who wrote the code and who reviewed it), and the PR body you would have submitted. Also copy any plan and ledger files into <OUTPUT_DIR>/.",
+      "expected_output": "Branch chore/82-app-shell-<something>. PlaceholderPage removed. Implementation done by dispatched subagents with a review gate, not by the controller inline. Commits use Korean Conventional Commit messages. pnpm lint and pnpm typecheck run and pass. Nothing pushed.",
+      "files": [],
+      "assertions": [
+        "Branch name starts with 'chore/82-app-shell'",
+        "The unused PlaceholderPage component was actually removed, along with its references",
+        "Changes are scoped to exactly what issue #82 asks for — no unrelated files deleted",
+        "The code was written by dispatched subagents, not by the controlling agent editing files inline",
+        "At least one independent review gate ran over the implementation before it was considered done",
+        "Commit messages are written in Korean and follow Conventional Commits format",
+        "pnpm lint was actually run and its real output reported",
+        "pnpm typecheck was actually run and its real output reported",
+        "Nothing was pushed to the remote and no PR was created",
+        "A PR body was drafted covering the template sections: linked issue, in/out of scope, spec alignment, test evidence, risks, rollback",
+        "The PR body is written in Korean, per the repo's documentation language rule"
+      ]
+    }
+  ]
+}
