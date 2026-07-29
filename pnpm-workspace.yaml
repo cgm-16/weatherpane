@@ -1,3 +1,8 @@
+# 단일 패키지 저장소이므로 루트만 명시한다. 이 필드가 없으면 pnpm이
+# .worktrees/* 하위의 체크아웃도 워크스페이스 멤버로 잘못 인식할 수 있다.
+packages:
+  - '.'
+
 allowBuilds:
   esbuild: true
   msw: true
