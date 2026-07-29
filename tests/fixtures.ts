@@ -61,6 +61,14 @@ export const test = base.extend<{ knownHydrationBug: string | null }>({
           `${knownHydrationBug} 이슈가 해결된 것으로 보이니 test.use({ knownHydrationBug }) ` +
           `웨이버를 제거하고 해당 이슈를 닫아주세요.`
       ).toBeGreaterThan(0);
+
+      // 눈감아준 하이드레이션 문제를 webServer 로그를 뒤지지 않고도 테스트 출력에서
+      // 바로 확인할 수 있도록 한 줄로 남긴다. 동일한 메시지가 여러 번 잡히는 경우가
+      // 흔하므로(예: 같은 하이드레이션 오류가 pageerror와 console 양쪽에 찍힘) 중복은
+      // 제거해 신호 대 잡음비를 유지한다.
+      console.log(
+        `[knownHydrationBug ${knownHydrationBug}] ${[...new Set(hydrationIssues)].join(' | ')}`
+      );
     } else {
       expect(
         hydrationIssues,
