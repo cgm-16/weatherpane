@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('검색 결과 선택 시 Detail로 이동하고 날씨가 표시된다', async ({
   page,

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 // 오프라인 배너 표시 및 온라인 복구 시나리오 스모크 테스트.
 // mock 모드에서 실행되므로 실제 네트워크 없이도 날씨 데이터가 표시됩니다.

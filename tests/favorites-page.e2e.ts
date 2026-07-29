@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { storageKeys } from '../frontend/shared/lib/storage/storage-keys';
 
 const FAVORITES_KEY = storageKeys.favorites;
