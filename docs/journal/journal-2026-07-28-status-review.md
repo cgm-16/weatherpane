@@ -50,8 +50,22 @@ git rev-list --count 8dd1c2b..origin/main -- docs/specs-favorites.md  # 0
 | Undo timeout 5s                             | **없음**    | L26                                 | L30                   | prompt.md L987      | 없음      |
 
 ```bash
-git show 8dd1c2b:docs/specs.md | grep -niE "undo|되돌리|6개"   # 0건
-grep -niE "max is 6|Undo restores|latest removal" docs/skills/favorites-behavior.md
+git grep -n -E "undo|되돌리|6개" 8dd1c2b -- docs/specs.md docs/specs-favorites.md
+```
+
+```text
+출력 없음 (exit 1)
+```
+
+```bash
+grep -nE "^- (Favorites max is 6|Undo restores|Only the latest removal)" \
+  docs/skills/favorites-behavior.md
+```
+
+```text
+19:- Favorites max is 6; adding beyond 6 is blocked silently or with a cap UI, never a crash
+25:- Undo restores the exact previous favorites state including position and nickname (not just "re-adds") (FAV-09 area)
+26:- Only the latest removal is undoable; undo clears when a new removal happens or after 5 seconds
 ```
 
 FAV-01~FAV-12, UX-01~UX-11 확정 결정 로그에 이 규칙들이 역기록되지 않았다. 명세 문서만 읽는 사람은 존재를 알 수 없다. `Undo timeout 5s`는 `AGENTS.md`에도 없어 skill·task·legacy 문서에만 있다.
@@ -105,12 +119,33 @@ Favorites 서버 동기화와 SW는 의도적 범위 축소로 볼 수 있으나
 - L32: P0 행 — "최소한 '현재/**시간별/일별**' 표시 + 오류/스켈레톤"
 
 ```bash
-grep -nE "daily|hourly" frontend/entities/weather/model/core-weather.ts
-# 50:  hourly: CoreWeatherHourlyEntry[];      ← daily 없음
+grep -nE "daily:|hourly:" frontend/entities/weather/model/core-weather.ts
+```
 
-grep -n "daily" frontend/entities/weather/api/openweather.ts
-# 400:  minC: payload.daily[0].temp.min,
-# 401:  maxC: payload.daily[0].temp.max,
+```text
+50:  hourly: CoreWeatherHourlyEntry[];
+```
+
+```bash
+grep -nE "payload\.daily\[0\]|payload\.daily\.(slice|map)" \
+  frontend/entities/weather/api/openweather.ts
+```
+
+```text
+400:        minC: payload.daily[0].temp.min,
+401:        maxC: payload.daily[0].temp.max,
+```
+
+```bash
+grep -nE "HourlyStrip|hourly=|count=\{12\}" \
+  frontend/pages/location/ui/detail-dashboard.tsx
+```
+
+```text
+3:import { HourlyStrip } from '~/shared/ui/hourly-strip';
+142:          <HourlyStrip
+143:            hourly={weather.hourly}
+145:            count={12}
 ```
 
 어댑터는 `payload.daily[0]`에서 **오늘의 최저/최고만** 뽑고 나머지 일별 배열을 버린다. `CoreWeather`에 `daily` 필드가 없고, `DetailDashboard`는 `HourlyStrip`(12시간)만 렌더링한다. 명세의 `WeatherDetailSnapshot`이 `daily: Array<{ date, minC, maxC, conditionCode }>`를 정의하므로 데이터 계약 수준에서도 미충족이다.
@@ -227,12 +262,30 @@ grep -rn "PlaceholderPage\|HomeNotFound\|HomeUnsupported" app frontend tests sto
 grep 히트가 아니라 호출 지점과 prop 전달을 확인해 분류했다.
 
 ```bash
-# 1) 컴포넌트별 호출 지점
-grep -rn "\bHomeConfigError\b" app frontend --include="*.tsx" | grep -v "export function"
+sed -n '43,46p' frontend/app/providers/app-providers.tsx
+```
 
-# 2) 호출 지점이 실제로 넘기는 prop (선택적 prop은 가드 뒤에 숨는다)
-sed -n '40,50p' frontend/app/providers/app-providers.tsx
-sed -n '15,45p' frontend/pages/home/ui/home-page.tsx
+```tsx
+    return (
+      <ThemeProvider>
+        <HomeConfigError error={configError} />
+      </ThemeProvider>
+```
+
+```bash
+sed -n '17,20p;35,40p' frontend/pages/home/ui/home-page.tsx
+```
+
+```tsx
+  if (bootstrap.kind === 'config-error') {
+    return <HomeConfigError error={bootstrap.error} />;
+  }
+  if (bootstrap.kind === 'recoverable-error') {
+    return (
+      <HomeConnectionError
+        onRetry={() => refresh(bootstrap.location.locationId)}
+      />
+    );
 ```
 
 #### A. 도달 가능한 영문 문구 (7곳)
@@ -264,6 +317,18 @@ sed -n '15,45p' frontend/pages/home/ui/home-page.tsx
 ```bash
 grep -rnoE "\b(text|bg|border)-(slate|sky|zinc|gray|neutral|stone|white|black)(\/[0-9]+)?(-[0-9]{2,3}(\/[0-9]+)?)?" \
   app frontend --include="*.tsx" | grep -v placeholder-page
+```
+
+```text
+app/root.tsx:103:text-sky-300
+app/root.tsx:106:text-white
+app/root.tsx:107:text-slate-300
+app/root.tsx:109:border-slate-800
+app/root.tsx:109:bg-slate-950/80
+app/root.tsx:109:text-slate-200
+frontend/pages/home/ui/home-config-error.tsx:13:bg-white/50
+frontend/pages/location/ui/detail-aqi-card.tsx:74:bg-black/40
+frontend/pages/location/ui/detail-uv-card.tsx:61:bg-black/40
 ```
 
 | 파일                                     | 값                                                                                                      | 렌더 경로                                  |
@@ -348,14 +413,16 @@ lint·typecheck·486 유닛·34 E2E 어느 것도 이 중 하나를 잡지 못�
 
 절별 증거 수준은 아래와 같다.
 
-| 절                           | 증거                                                   |
-| ---------------------------- | ------------------------------------------------------ |
-| §2.1, §2.2, §2.5.1           | 명령 + 출력 있음                                       |
-| §3.1, §3.2, §3.3, §3.4, §3.5 | 명령 + 출력 있음                                       |
-| §4.1                         | 명령 + 출력 있음 (단 "전부 잔재"는 표본 3개 기반 추정) |
-| §6 (#80 번들 실측)           | 명령 + 출력 있음                                       |
-| §3.2.1                       | **오류 출력만 있고 실행 명령 없음**                    |
-| §2.3, §2.4                   | **문서 대조 결과만 있고 재현 명령 없음**               |
+| 절                           | 증거                                                      |
+| ---------------------------- | --------------------------------------------------------- |
+| §2.1, §3.1, §3.2, §3.3, §3.4 | 명령 + 출력 있음                                          |
+| §2.2                         | 초기 명세 검색 무결과 + 현재 skill 출력 + 출처별 위치 표  |
+| §2.5.1                       | 모델·어댑터·렌더 경로별 명령 + 출력 있음                  |
+| §3.5                         | 호출부 코드 발췌 + raw 색상 검색 출력 + 문구·렌더 경로 표 |
+| §4.1                         | 명령 + 출력 있음 (단 "전부 잔재"는 표본 3개 기반 추정)    |
+| §6 (#80 번들 실측)           | 명령 + 출력 있음                                          |
+| §3.2.1                       | **오류 출력만 있고 실행 명령 없음**                       |
+| §2.3, §2.4                   | **문서 대조 결과만 있고 재현 명령 없음**                  |
 
 §3.2.1, §2.3, §2.4의 주장과 §4.1의 "전부"를 근거로 작업하기 전에는 직접 확인하는 편이 낫다.
 
