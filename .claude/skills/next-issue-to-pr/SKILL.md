@@ -225,8 +225,30 @@ what turn one review into three.
 Carry the issue's assignees, labels, and milestone onto the PR. Leave the issue
 open — the PR closes it on merge.
 
+**The run is not finished when the PR opens — it finishes when CI passes.** Watch it:
+
+```bash
+gh run watch <run-id> --exit-status
+```
+
+A suite that is green on your machine is evidence about your machine. CI runs on
+different hardware, headless, with different timing, and any behaviour that depends
+on those — hydration mismatches, races, animation, anything timing-sensitive —
+can appear or vanish there. This is not hypothetical: a run of this skill opened a
+PR after 34/34 passed locally, and CI failed three tests immediately, because a
+check had been built to *require* a nondeterministic condition that simply did not
+occur on the runner.
+
+Two rules follow. First, never report a PR as done on local output alone. Second, a
+mechanism that asserts a fault *must* occur will fail wherever that fault is
+environment-dependent — so suppression mechanisms warn, and only the detection path
+fails. Retries do not save you: they rescue a test that passes on retry, not one
+that fails identically three times.
+
+If CI fails, fix it before reporting. The PR is yours until it is green.
+
 Done-check: a PR URL, no placeholders in the body, metadata matching the issue,
-`status:review` on the issue.
+`status:review` on the issue, and CI observed passing.
 
 ## Verification
 
