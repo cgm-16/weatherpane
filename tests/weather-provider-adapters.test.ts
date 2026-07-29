@@ -168,6 +168,20 @@ describe('realWeatherProvider', () => {
       });
     });
 
+    test('프록시 오류 응답이 JSON이 아니어도 INVALID_PROVIDER_RESPONSE 오류를 발생시킨다', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response('<html>502 Bad Gateway</html>', { status: 502 })
+      );
+
+      await expect(
+        realWeatherProvider.getCoreWeather(resolvedLocation)
+      ).rejects.toMatchObject({
+        name: 'WeatherProviderError',
+        code: 'INVALID_PROVIDER_RESPONSE',
+        provider: 'openweather',
+      });
+    });
+
     test('네트워크 오류 시 INVALID_PROVIDER_RESPONSE 오류를 발생시킨다', async () => {
       vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(
         new TypeError('Failed to fetch')
