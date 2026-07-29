@@ -31,10 +31,10 @@ cp .env.example .env
 
 ## 2. 환경 변수 설정
 
-| 변수                         | 필수 여부           | 설명               |
-| ---------------------------- | ------------------- | ------------------ |
-| `VITE_WEATHER_PROVIDER_MODE` | 필수                | `mock` 또는 `real` |
-| `VITE_OPENWEATHER_API_KEY`   | `real` 모드 시 필수 | OpenWeather API 키 |
+| 변수                         | 필수 여부           | 설명                                                               |
+| ---------------------------- | ------------------- | ------------------------------------------------------------------ |
+| `VITE_WEATHER_PROVIDER_MODE` | 필수                | `mock` 또는 `real`                                                 |
+| `OPENWEATHER_API_KEY`        | `real` 모드 시 필수 | OpenWeather API 키 (서버 전용 — 클라이언트 번들에 포함되지 않는다) |
 
 프로덕션 빌드에서 `VITE_WEATHER_PROVIDER_MODE`가 설정되지 않거나 잘못된 값이면
 앱은 데모 모드로 조용히 폴백하지 **않는다** — 명시적 설정 오류 화면을 표시한다.
@@ -55,11 +55,13 @@ VITE_WEATHER_PROVIDER_MODE=mock
 ### Real 모드
 
 OpenWeather API에 실제 요청을 보낸다. API 키가 필요하다.
+서버 전용 프록시 라우트(`/v1/weather/core`, `/v1/weather/aqi`, `/v1/geocode`)를 거쳐 호출되므로
+API 키는 클라이언트 번들에 포함되지 않는다.
 
 ```bash
 # .env
 VITE_WEATHER_PROVIDER_MODE=real
-VITE_OPENWEATHER_API_KEY=your_key_here
+OPENWEATHER_API_KEY=your_key_here
 ```
 
 ### 개발 중 빠른 전환
@@ -124,7 +126,7 @@ pnpm dev
 
 ```bash
 VITE_WEATHER_PROVIDER_MODE=real \
-VITE_OPENWEATHER_API_KEY=your_key \
+OPENWEATHER_API_KEY=your_key \
 pnpm build
 ```
 
@@ -139,6 +141,10 @@ pnpm preview
 
 `build/client/` 디렉터리를 정적 호스트(Vercel, Netlify, S3 등)에 배포한다.
 SPA 라우팅을 위해 모든 경로를 `index.html`로 폴백하도록 호스트를 설정한다.
+
+`real` 모드는 OpenWeather 호출을 서버 전용 프록시 라우트(`/v1/weather/core` 등)로 처리하므로,
+`build/client/`만 배포하는 순수 정적 호스팅에서는 동작하지 않는다. `real` 모드를 쓰려면
+React Router SSR 서버(`pnpm start`)나 Vercel Functions처럼 서버 런타임이 있는 배포 대상이 필요하다.
 
 React Router SSR을 활성화한 경우, `pnpm start`로 Node.js 서버를 실행한다.
 
