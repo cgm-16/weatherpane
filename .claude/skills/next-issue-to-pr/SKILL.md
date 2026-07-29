@@ -12,7 +12,7 @@ Carry one issue from the board to an open PR, autonomously, in five stages:
 2 PLAN      read the issue, write an implementation plan file
 3 ISOLATE   worktree + branch off origin/main
 4 BUILD     superpowers:subagent-driven-development over the plan
-5 SHIP      finishing-a-development-branch -> PR, template filled, metadata synced
+5 SHIP      push -> PR, template filled, issue metadata synced
 ```
 
 Ori reviews at the PR, not before it. Run all five stages without checking in.
@@ -78,6 +78,9 @@ gh issue edit <N> --add-label status:in-progress --remove-label status:ready
 gh issue view <N> --json title,body,labels,assignees,milestone,comments
 ```
 
+`--remove-label` on a label the issue does not carry is a no-op that exits 0, so the
+claim works on any issue regardless of which `status:*` label it started with.
+
 The claim is what makes the skip rule self-enforcing. Without it this skill
 re-selects the same issue every run. If you abort before opening the PR, remove
 the label again — a stale `status:in-progress` starves the issue silently.
@@ -107,7 +110,14 @@ and the area skill that bind this work — exact values, exact formats. Task
 reviewers in stage 4 use that section as their attention lens, so a rule missing
 there is a rule nobody checks.
 
-Done-check: a plan file exists with numbered tasks, each independently
+Write the plan to `docs/superpowers/plans/<date>-<slug>.local.md`. The `.local.md`
+suffix matters: `*.local.*` is git-ignored, which keeps the plan out of the PR diff
+and out of the `docs/` Korean-language rule, so the plan can be written in English
+for the subagents that consume it. A plan committed into the branch turns a
+one-file fix into a review with tens of thousands of characters of scaffolding in
+the diff — the reviewer's attention is the scarce resource the PR is competing for.
+
+Done-check: a plan file exists at that path with numbered tasks, each independently
 implementable, and Global Constraints quoting the binding rules verbatim.
 
 ### 3. Isolate the work
@@ -162,7 +172,10 @@ residual findings parked with written rulings.
 
 Intent: land a PR that a reviewer can act on without asking questions.
 
-Use `superpowers:finishing-a-development-branch`, then:
+Do not use `superpowers:finishing-a-development-branch` here. That skill's job is to
+present merge/PR/cleanup options and let a human choose — which is exactly the
+interrupt this pipeline is meant not to raise. The destination is already decided,
+so run it directly:
 
 ```bash
 git push -u origin <branch>
