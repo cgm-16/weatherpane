@@ -50,7 +50,7 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 - **날씨 공급자**: (A) 자체 백엔드 집계(권장) 또는 (B) 클라이언트 직접 서드파티 호출(권장하지 않음: 키 노출/쿼터).
 - **플랫폼**: 웹(PWA) 우선. 서비스 워커/Geolocation은 HTTPS 보안 컨텍스트 전제. citeturn1search3turn6search0
 
-> **구현 상태(전제 → 실제):** 백엔드 기술/호스팅은 더 이상 불명이 아니다 — 별도의 자체 도메인 백엔드가 아니라 앱 자체 서버 라우트가 OpenWeather API를 프록시하는 구조로 확정되었다(다음 문장의 “날씨 공급자” 정정과 동일한 사실). 이 전제가 말하는 “REST 기준 계약”은 이 프록시가 아니라 별도로 구상했던 자체 도메인 REST 계약을 가리키며, “엔드포인트 목록(권장)” 절의 표와 마찬가지로 대부분 미구현 — 차기 범위로 남아 있다. 검색 데이터 소스는 (A) 로컬 카탈로그로 확정 구현됨(`AGENTS.md`: “Search is Korea-catalog-driven and instant”). 날씨 공급자는 (A)·(B) 어느 쪽도 아니라, **서버가 OpenWeather API 키를 숨기고 위치별 요청을 그대로 프록시**하는 방식으로 구현됨(자체 도메인 집계 백엔드 아님; `/v1/weather/core`, `/v1/weather/aqi`, `/v1/geocode` — `app/routes/v1.weather.core.ts`). 인증 방식(Bearer token/OAuth2)은 미구현 — 차기 범위(계정 기능 자체가 없음). 서비스 워커 전제는 미구현 — 차기 범위(`docs/legacy/service-worker-caching-design.md` 참고). Geolocation의 HTTPS 보안 컨텍스트 요구사항 자체는 유효하다.
+> **구현 상태(전제 → 실제):** 백엔드 기술/호스팅은 더 이상 불명이 아니다 — 별도의 자체 도메인 백엔드가 아니라 앱 자체 서버 라우트가 OpenWeather API를 프록시하는 구조로 확정되었다(아래 “날씨 공급자” 정정과 동일한 사실). 이 전제가 말하는 “REST 기준 계약”은 이 프록시가 아니라 별도로 구상했던 자체 도메인 REST 계약을 가리키며, “엔드포인트 목록(권장)” 절의 표와 마찬가지로 대부분 미구현 — 차기 범위로 남아 있다. 검색 데이터 소스는 (A) 로컬 카탈로그로 확정 구현됨(`AGENTS.md`: “Search is Korea-catalog-driven and instant”). 날씨 공급자는 (A)·(B) 어느 쪽도 아니라, **서버가 OpenWeather API 키를 숨기고 위치별 요청을 그대로 프록시**하는 방식으로 구현됨(자체 도메인 집계 백엔드 아님; `/v1/weather/core`, `/v1/weather/aqi`, `/v1/geocode` — `app/routes/v1.weather.core.ts`). 인증 방식(Bearer token/OAuth2)은 미구현 — 차기 범위(계정 기능 자체가 없음). 서비스 워커 전제는 미구현 — 차기 범위(`docs/legacy/service-worker-caching-design.md` 참고). Geolocation의 HTTPS 보안 컨텍스트 요구사항 자체는 유효하다.
 
 ---
 
