@@ -99,7 +99,7 @@ API 계약은 (1) 즐겨찾기 컬렉션 CRUD 및 정렬 저장, (2) 즐겨찾�
 
 ### 카드 스냅샷(로컬 영속) 엔티티
 
-> **구현 상태: 미구현 — 차기 범위.** 아래 `FavoriteWeatherSnapshot`(영속 스냅샷 구조: `schemaVersion`, `lastError`, `conditionCode`, 저장 필드로서의 `sketchKey` 등)은 실제로 만들어진 적이 없다. 즐겨찾기 카드는 이런 형태의 로컬 영속 날씨 스냅샷 저장소를 전혀 갖지 않는다. 실제로는 `useCoreWeather()`(TanStack Query, `frontend/features/weather-queries/use-core-weather.ts`)가 반환하는 인메모리 쿼리 결과인 `CoreWeather` 타입(`frontend/entities/weather/model/core-weather.ts`)을 그대로 렌더링에 사용하며, 필드 구성도 다르다(예: `tempC` → `current.temperatureC`, `todayMinC`/`todayMaxC` → `today.minC`/`today.maxC`). 세션을 넘어 영속되는 즐겨찾기 전용 날씨 캐시는 없다 — ‘캐시·오프라인·스테일 규칙과 카드 렌더링 상태’ 절의 ‘용어 참고’(아래)와 같은 사실을 가리킨다.
+> **구현 상태: 미구현 — 차기 범위.** 아래 `FavoriteWeatherSnapshot`(영속 스냅샷 구조: `schemaVersion`, `lastError`, `conditionCode`, 저장 필드로서의 `sketchKey` 등)은 실제로 만들어진 적이 없다. 즐겨찾기 카드는 이런 형태의 로컬 영속 날씨 스냅샷 저장소를 전혀 갖지 않는다. 실제로는 `useCoreWeather()`(TanStack Query, `frontend/features/weather-queries/use-core-weather.ts`)가 반환하는 인메모리 쿼리 결과인 `CoreWeather` 타입(`frontend/entities/weather/model/core-weather.ts`)을 그대로 렌더링에 사용하며, 필드 구성도 다르다(예: `tempC` → `current.temperatureC`, `todayMinC`/`todayMaxC` → `today.minC`/`today.maxC`). 세션을 넘어 영속되는 즐겨찾기 전용 날씨 캐시는 없다(자세한 내용은 아래 ‘캐시·오프라인·스테일 규칙과 카드 렌더링 상태’ 절의 ‘용어 참고’ 참고).
 
 **FavoriteWeatherSnapshot (Persisted)**
 
@@ -120,7 +120,7 @@ API 계약은 (1) 즐겨찾기 컬렉션 CRUD 및 정렬 저장, (2) 즐겨찾�
 
 ### 로컬 저장소 선택 및 구조
 
-**구현 상태: 구현됨.**
+> **구현 상태: 구현됨.**
 
 웹 클라이언트는 브라우저 `localStorage`를 저장소로 사용한다(`frontend/shared/lib/storage/browser-storage.ts`의 `getLocalStorage()`). IndexedDB는 사용하지 않는다 — 원래 IndexedDB 설계는 `docs/legacy/favorites-server-sync-design.md`에 보존되어 있다.
 
@@ -201,7 +201,7 @@ API 계약은 (1) 즐겨찾기 컬렉션 CRUD 및 정렬 저장, (2) 즐겨찾�
 
 ### Stale(오래됨) 판정 규칙(고정값)
 
-**구현 상태: 구현됨.** 아래 10분/60분 값은 실제 구현과 일치한다 — 정정 사항은 출처 표기뿐이다.
+> **구현 상태: 구현됨.** 아래 10분/60분 값은 실제 구현과 일치한다 — 정정 사항은 출처 표기뿐이다.
 
 날씨 데이터는 업데이트 주기가 짧으므로, 아래 값을 MVP 고정값으로 둔다:
 
@@ -227,7 +227,7 @@ API 계약은 (1) 즐겨찾기 컬렉션 CRUD 및 정렬 저장, (2) 즐겨찾�
 - 1시간~23시간: “N시간 전”
 - 그 이상: “YYYY.MM.DD HH:mm”
 
-> **구현 상태 참고:** 이 상대/절대 시각 포맷(방금/N분 전/N시간 전/절대 날짜)은 즐겨찾기 카드에는 적용되지 않는다. 즐겨찾기 카드는 정성적 배지(“오래된 정보”/“매우 오래된 정보”)만 표시하며, 숫자 경과 시간이나 절대 타임스탬프를 노출하지 않는다(`frontend/pages/favorites/ui/favorite-card.tsx`의 `StaleIndicator`). 이 포맷 자체는 Home/Detail 화면에서 `frontend/shared/ui/last-updated.tsx`로 구현되어 있다(구현됨, 이 문서의 범위 밖).
+> **구현 상태:** 이 상대/절대 시각 포맷(방금/N분 전/N시간 전/절대 날짜)은 즐겨찾기 카드에는 적용되지 않는다. 즐겨찾기 카드는 정성적 배지(“오래된 정보”/“매우 오래된 정보”)만 표시하며, 숫자 경과 시간이나 절대 타임스탬프를 노출하지 않는다(`frontend/pages/favorites/ui/favorite-card.tsx`의 `StaleIndicator`). 이 포맷 자체는 Home/Detail 화면에서 `frontend/shared/ui/last-updated.tsx`로 구현되어 있다(구현됨, 이 문서의 범위 밖).
 
 ### UI 상태 매트릭스(공식 렌더링)
 
@@ -303,7 +303,7 @@ flowchart TD
 
 ### 정렬/닉네임 서버 저장 타이밍(권장 고정)
 
-**구현 상태: 미구현 — 차기 범위**(서버가 없으므로 이 절이 설명하는 동기화 타이밍은 적용되지 않는다). 실제로는 닉네임/정렬 변경이 즉시 `replaceAll()`로 로컬 저장소에 반영된다(`frontend/features/favorites/use-favorites.ts`). 원래 설계는 `docs/legacy/favorites-server-sync-design.md` 참고.
+> **구현 상태: 미구현 — 차기 범위**(서버가 없으므로 이 절이 설명하는 동기화 타이밍은 적용되지 않는다). 실제로는 닉네임/정렬 변경이 즉시 `replaceAll()`로 로컬 저장소에 반영된다(`frontend/features/favorites/use-favorites.ts`). 원래 설계는 `docs/legacy/favorites-server-sync-design.md` 참고.
 
 - 닉네임: 커밋 이벤트(blur/Enter/완료)마다 `syncQueue`에 `RENAME` 적재 후 즉시 동기화 시도(온라인이면).
 - 정렬: 편집 모드에서 순서 변경이 일어나면 로컬 반영 후, (a) 800ms 디바운스 또는 (b) “완료” 탭 시점에 `REORDER` 1회 호출. **MVP 권장**은 “완료 시 1회 호출”이다(요청 수↓, 구현·테스트 단순).
@@ -354,7 +354,7 @@ flowchart TD
 
 ### 보안/프라이버시 고려
 
-- 위치 정보(특히 좌표/정확한 주소)는 민감 데이터다. 즐겨찾기/스냅샷 로컬 저장에는 최소한의 식별자(`locationId`)만 저장하고, 분석 이벤트에는 원본 ID 대신 해시/익명화 값을 사용한다.
+- 위치 정보(특히 좌표/정확한 주소)는 민감 데이터다. _(정정: 이전 버전은 즐겨찾기/스냅샷 로컬 저장에 최소한의 식별자(`locationId`)만 저장한다고 서술했으나 실제 구현과 다르다. 실제 `FavoriteLocation.location`은 `ResolvedLocation` 전체이며, 여기에는 실제 `latitude`/`longitude` 좌표가 포함된다(`frontend/entities/location/model/types.ts`) — 이 절이 전제하는 “최소 식별자만 저장”이라는 프라이버시 설계는 현재 구현에 적용되지 않는다.)_ 분석 이벤트에는 원본 ID 대신 해시/익명화 값을 사용한다.
 - 로그아웃/계정 전환 시 로컬에 남아있는 캐시/스토리지 삭제가 필요하다(미구현 — 차기 범위: 현재 앱에는 계정/인증 기능 자체가 없다). 도입 시 서버가 `Clear-Site-Data` 헤더로 캐시·쿠키·`localStorage` 삭제를 지시할 수 있다.
 - 네트워크 오류/서버 오류의 상세 `detail`은 개인정보(주소 문자열, 좌표 등)를 포함하지 않도록 서버·클라이언트 모두 필터링한다(RFC 9457 확장 필드 사용 시 특히 주의). citeturn2search0turn2search1 (RFC 9457은 미구현 — 차기 범위; 현재 `/v1/*` 프록시는 `{ code, message }` 형태의 단순 오류를 반환한다. 오류 메시지에 위치 정보를 노출하지 않는다는 원칙 자체는 여전히 유효하다.)
 
@@ -362,11 +362,11 @@ flowchart TD
 
 **UI**
 
-- [ ] 즐겨찾기 카드 컴포넌트: Fresh/Stale/VeryStale/Offline 표기 포함
-- [ ] 스켈레톤 카드 상태 구현(스냅샷 없음+로딩)
-- [ ] 인라인 오류 상태 구현(스냅샷 없음+실패) + `다시 시도` + 네비게이션 차단
-- [ ] ‘편집/완료’ 토글 + 편집 모드 전용 컨트롤 표시
-- [ ] 닉네임 입력 20자 하드 캡 + blur/Enter/Done 커밋
+- [x] 즐겨찾기 카드 컴포넌트: Stale/VeryStale 배지 표기(Fresh는 배지 없음, 카드에 별도 “Offline” 표기도 없다 — 오프라인 문구는 스냅샷 없음 인라인 오류 상태에서만 노출된다. 위 ‘Stale(오래됨) 판정 규칙(고정값)’ 절의 ‘오프라인’ 항목 참고) — 구현됨(`frontend/pages/favorites/ui/favorite-card.tsx`의 `CardSkeleton`/`CardError`/`CardSnapshot`, `StaleIndicator`)
+- [x] 스켈레톤 카드 상태 구현(스냅샷 없음+로딩) — 구현됨(`favorite-card.tsx`의 `CardSkeleton`; `FavoriteCard`가 `weatherQuery.data`가 없고 `isLoading`이면 렌더)
+- [x] 인라인 오류 상태 구현(스냅샷 없음+실패) + `다시 시도` + 네비게이션 차단 — 구현됨(`favorite-card.tsx`의 `CardError`; 네비게이션 가능한 `<button>`은 `CardSnapshot`에만 존재하므로 `CardError`/`CardSkeleton` 렌더 시 네비게이션이 없다)
+- [x] ‘편집/완료’ 토글 + 편집 모드 전용 컨트롤 표시 — 구현됨(`frontend/pages/favorites/ui/favorites-page.tsx`의 `handleEnterEdit`/`handleExitEdit` 토글 핸들러; 편집 모드 전용 컨트롤은 `favorite-card.tsx`의 `editProps` 분기)
+- [x] 닉네임 입력 20자 하드 캡 + blur/Enter/Done 커밋 — 구현됨(`favorite-card.tsx` 입력의 `maxLength={20}`과 `handleKeyDown`/`handleBlur`; ‘완료’ 시 자동 blur→커밋은 `favorites-page.tsx`의 `handleExitEdit`)
 
 **데이터/스토리지**
 
