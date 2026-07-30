@@ -16,12 +16,12 @@ replaced_by: 미구현 — 차기 범위. 멀티 디바이스 동기화가 필�
 
 **IndexedDB DB명(예시):** `app_weather_v1`
 
-| Object Store | Key | 주요 필드 | 인덱스(권장) |
-|---|---|---|---|
-| `favorites` | `favoriteId` | `locationId, nickname, order, updatedAt, syncState` | `order`(정렬), `locationId`(중복 방지 조회) |
-| `favoriteSnapshots` | `locationId` | 위 스냅샷 전체 | `fetchedAt` |
-| `syncQueue` | `opId` | 오퍼레이션(추가/삭제/닉/정렬), 재시도 메타 | `nextRetryAt`, `type` |
-| `recents` *(독립, 참고)* | `locationId` 또는 `recentId` | 최근 본 위치 | `lastOpenedAt` |
+| Object Store             | Key                          | 주요 필드                                           | 인덱스(권장)                                |
+| ------------------------ | ---------------------------- | --------------------------------------------------- | ------------------------------------------- |
+| `favorites`              | `favoriteId`                 | `locationId, nickname, order, updatedAt, syncState` | `order`(정렬), `locationId`(중복 방지 조회) |
+| `favoriteSnapshots`      | `locationId`                 | 위 스냅샷 전체                                      | `fetchedAt`                                 |
+| `syncQueue`              | `opId`                       | 오퍼레이션(추가/삭제/닉/정렬), 재시도 메타          | `nextRetryAt`, `type`                       |
+| `recents` _(독립, 참고)_ | `locationId` 또는 `recentId` | 최근 본 위치                                        | `lastOpenedAt`                              |
 
 ---
 
@@ -30,6 +30,7 @@ replaced_by: 미구현 — 차기 범위. 멀티 디바이스 동기화가 필�
 즐겨찾기 변경(추가/삭제/닉/정렬)은 오프라인에서도 발생 가능하므로, 로컬에서 즉시 반영(Optimistic) 후 `syncQueue`에 적재한다.
 
 **SyncOperation**
+
 - `opId: string` (UUID)
 - `type: "ADD" | "REMOVE" | "RENAME" | "REORDER"`
 - `payload: object` (아래 예시)
@@ -70,14 +71,14 @@ replaced_by: 미구현 — 차기 범위. 멀티 디바이스 동기화가 필�
 
 ### 엔드포인트 요약(권장 계약)
 
-| 목적 | Method/Path | 요청 | 응답(성공) | 주요 실패 |
-|---|---|---|---|---|
-| 즐겨찾기 목록 조회 | `GET /v1/favorites` | 헤더: `If-None-Match?` | `200` + 리스트 + `ETag` / 또는 `304` | `401`, `500` |
-| 즐겨찾기 추가 | `POST /v1/favorites` | `{ locationId, nickname? }` | `201` + Favorite + `ETag`(컬렉션) | `409(중복)`, `422`, `412`(옵션) |
-| 즐겨찾기 삭제 | `DELETE /v1/favorites/{favoriteId}` | 헤더: `If-Match`(컬렉션 ETag) | `204` + `ETag`(컬렉션) | `404`, `412` |
-| 닉네임 수정 | `PATCH /v1/favorites/{favoriteId}` | 헤더: `If-Match`(컬렉션 ETag) + `{ nickname }` | `200` + Favorite + `ETag` | `404`, `412`, `422` |
-| 정렬 저장(일괄) | `PUT /v1/favorites/reorder` | 헤더: `If-Match`(컬렉션 ETag) + `{ orderedFavoriteIds }` | `200` + `{ favorites }` + `ETag` | `412`, `422` |
-| 카드용 날씨 요약(배치) | `GET /v1/weather/summaries?locationIds=...` | 쿼리: 최대 N개 | `200` + `{ generatedAt, summaries[] }` | `400`, `429`, `503` |
+| 목적                   | Method/Path                                 | 요청                                                     | 응답(성공)                             | 주요 실패                       |
+| ---------------------- | ------------------------------------------- | -------------------------------------------------------- | -------------------------------------- | ------------------------------- |
+| 즐겨찾기 목록 조회     | `GET /v1/favorites`                         | 헤더: `If-None-Match?`                                   | `200` + 리스트 + `ETag` / 또는 `304`   | `401`, `500`                    |
+| 즐겨찾기 추가          | `POST /v1/favorites`                        | `{ locationId, nickname? }`                              | `201` + Favorite + `ETag`(컬렉션)      | `409(중복)`, `422`, `412`(옵션) |
+| 즐겨찾기 삭제          | `DELETE /v1/favorites/{favoriteId}`         | 헤더: `If-Match`(컬렉션 ETag)                            | `204` + `ETag`(컬렉션)                 | `404`, `412`                    |
+| 닉네임 수정            | `PATCH /v1/favorites/{favoriteId}`          | 헤더: `If-Match`(컬렉션 ETag) + `{ nickname }`           | `200` + Favorite + `ETag`              | `404`, `412`, `422`             |
+| 정렬 저장(일괄)        | `PUT /v1/favorites/reorder`                 | 헤더: `If-Match`(컬렉션 ETag) + `{ orderedFavoriteIds }` | `200` + `{ favorites }` + `ETag`       | `412`, `422`                    |
+| 카드용 날씨 요약(배치) | `GET /v1/weather/summaries?locationIds=...` | 쿼리: 최대 N개                                           | `200` + `{ generatedAt, summaries[] }` | `400`, `429`, `503`             |
 
 > `PATCH` 메서드는 부분 수정을 위한 표준 메서드로 사용 가능하며, 멱등성은 구현 방식에 따라 달라질 수 있음을 유의한다. citeturn6search2turn6search13
 
@@ -110,11 +111,13 @@ replaced_by: 미구현 — 차기 범위. 멀티 디바이스 동기화가 필�
 ```
 
 헤더:
+
 - `ETag: "favlist-etag-170"`
 
 **PUT /v1/favorites/reorder**
 
 요청 헤더:
+
 - `If-Match: "favlist-etag-170"`
 
 요청 바디:
@@ -128,8 +131,20 @@ replaced_by: 미구현 — 차기 범위. 멀티 디바이스 동기화가 필�
 ```json
 {
   "favorites": [
-    { "favoriteId": "fav_b", "locationId": "loc_77aa21d0", "nickname": null, "order": 0, "updatedAt": "2026-04-09T08:15:00+09:00" },
-    { "favoriteId": "fav_a", "locationId": "loc_3f2c1a8b", "nickname": "회사", "order": 1, "updatedAt": "2026-04-09T08:15:00+09:00" }
+    {
+      "favoriteId": "fav_b",
+      "locationId": "loc_77aa21d0",
+      "nickname": null,
+      "order": 0,
+      "updatedAt": "2026-04-09T08:15:00+09:00"
+    },
+    {
+      "favoriteId": "fav_a",
+      "locationId": "loc_3f2c1a8b",
+      "nickname": "회사",
+      "order": 1,
+      "updatedAt": "2026-04-09T08:15:00+09:00"
+    }
   ]
 }
 ```
@@ -169,22 +184,20 @@ RFC 9457은 HTTP API 오류를 기계가 읽을 수 있는 표준 구조로 전�
   "instance": "/v1/favorites/fav_a",
   "code": "FAV_NICKNAME_TOO_LONG",
   "retryable": false,
-  "fields": [
-    { "name": "nickname", "reason": "maxLength", "limit": 20 }
-  ]
+  "fields": [{ "name": "nickname", "reason": "maxLength", "limit": 20 }]
 }
 ```
 
 ### 오류 코드/상태 코드 매핑(권장)
 
-| 상황 | HTTP | code(예시) | retryable | 클라이언트 동작 |
-|---|---:|---|---|---|
-| 인증 만료/미인증 | 401 | AUTH_UNAUTHORIZED | false | 로그인/토큰 갱신 플로우 |
-| 즐겨찾기 중복 추가 | 409 | FAV_ALREADY_EXISTS | false | UI에서 “이미 추가됨” 안내 |
-| 닉네임 검증 실패 | 422 | FAV_NICKNAME_INVALID | false | 입력 유지 + 오류 메시지 |
-| 정렬 충돌(ETag 불일치) | 412 | FAV_ETAG_MISMATCH | true | 최신 목록 재조회 후 머지/재시도 |
-| 레이트 리밋 | 429 | RATE_LIMITED | true | `Retry-After` 준수 후 재시도 citeturn3search2turn3search6turn3search0 |
-| 일시적 장애 | 503 | SERVICE_UNAVAILABLE | true | `Retry-After` 있으면 준수 citeturn3search0turn3search7 |
+| 상황                   | HTTP | code(예시)           | retryable | 클라이언트 동작                                                       |
+| ---------------------- | ---: | -------------------- | --------- | --------------------------------------------------------------------- |
+| 인증 만료/미인증       |  401 | AUTH_UNAUTHORIZED    | false     | 로그인/토큰 갱신 플로우                                               |
+| 즐겨찾기 중복 추가     |  409 | FAV_ALREADY_EXISTS   | false     | UI에서 “이미 추가됨” 안내                                             |
+| 닉네임 검증 실패       |  422 | FAV_NICKNAME_INVALID | false     | 입력 유지 + 오류 메시지                                               |
+| 정렬 충돌(ETag 불일치) |  412 | FAV_ETAG_MISMATCH    | true      | 최신 목록 재조회 후 머지/재시도                                       |
+| 레이트 리밋            |  429 | RATE_LIMITED         | true      | `Retry-After` 준수 후 재시도 citeturn3search2turn3search6turn3search0 |
+| 일시적 장애            |  503 | SERVICE_UNAVAILABLE  | true      | `Retry-After` 있으면 준수 citeturn3search0turn3search7                |
 
 ---
 
@@ -197,6 +210,7 @@ RFC 9457은 HTTP API 오류를 기계가 읽을 수 있는 표준 구조로 전�
 - 불일치 시 서버는 `412 Precondition Failed`를 반환한다. citeturn2search5turn2search33
 
 **412 처리 알고리즘(권장)**
+
 1. 로컬의 pending operations(`syncQueue`)는 유지
 2. `GET /v1/favorites`로 최신 상태와 새 ETag 획득
 3. 로컬 변경을 “리베이스”:
