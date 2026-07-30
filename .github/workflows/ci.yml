@@ -79,7 +79,19 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      - name: Build (real mode, sentinel key)
+        run: |
+          VITE_WEATHER_PROVIDER_MODE=real \
+          VITE_OPENWEATHER_API_KEY=SENTINEL_KEY_XYZ123 \
+          OPENWEATHER_API_KEY=SENTINEL_KEY_XYZ123 \
+          pnpm build
+      - name: Verify OpenWeather API key is not in the client bundle
+        run: |
+          test -d build/client || { echo "::error::build/client not found — leak gate cannot run"; exit 1; }
+          if grep -rl "SENTINEL_KEY_XYZ123" build/client; then
+            echo "::error::OpenWeather API key leaked into the client bundle (issue #73 regression)"
+            exit 1
+          fi
 
   e2e:
     name: E2E Tests
