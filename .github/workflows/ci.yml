@@ -79,6 +79,10 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
+      # Vite는 VITE_ 접두사 변수만 클라이언트 번들에 정적으로 인라인한다.
+      # 수정된 코드는 더 이상 VITE_OPENWEATHER_API_KEY를 읽지 않지만, 바로 그렇기 때문에
+      # 이 값을 함께 설정해야 다음 grep 단계가 회귀 감지 게이트로서 의미를 갖는다.
+      # 이 변수를 제거하면 게이트가 항상 통과해 유출이 재발해도 잡아내지 못한다.
       - name: Build (real mode, sentinel key)
         run: |
           VITE_WEATHER_PROVIDER_MODE=real \
