@@ -125,15 +125,18 @@ pnpm dev
 ### 프로덕션 빌드
 
 ```bash
-VITE_WEATHER_PROVIDER_MODE=real \
-OPENWEATHER_API_KEY=your_key \
-pnpm build
+VITE_WEATHER_PROVIDER_MODE=real pnpm build
 ```
+
+`OPENWEATHER_API_KEY`는 빌드 시점이 아니라 서버가 요청을 처리하는 시점에 읽힌다
+(`frontend/shared/api/openweather-proxy.server.ts`). 빌드 명령에 포함해도 효과가 없다 —
+아래처럼 실제로 서버를 실행하는 환경(`pnpm start`/`pnpm preview`, 또는 배포 플랫폼의
+환경 변수 설정)에 설정해야 한다.
 
 ### 로컬 프리뷰
 
 ```bash
-pnpm preview
+OPENWEATHER_API_KEY=your_key pnpm preview
 # http://localhost:4173
 ```
 
