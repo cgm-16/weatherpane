@@ -6,7 +6,7 @@ replaced_by: 미구현 — 차기 범위. 멀티 디바이스 동기화가 필�
 
 # Favorites 서버 동기화 설계 (아카이브)
 
-이 문서는 `docs/specs-favorites.md`의 초기 버전에 있던 서버 API·ETag 기반 동시성 제어·IndexedDB 다중 오브젝트 스토어·로컬 SyncQueue 설계를 원문 그대로 보존한 것이다. 실제 구현에서는 이 중 어느 것도 만들어지지 않았으며, 즐겨찾기는 단일 기기 로컬 `localStorage` 저장소만으로 동작한다(`frontend/shared/lib/storage/repositories/location-repositories.ts`). 아래 내용은 변경 없이 원문 그대로 옮긴 것이며, 현재 시점에서 사실이 아니다 — 미래에 멀티 디바이스 동기화를 설계할 때 참고용으로만 남긴다.
+이 문서는 `docs/specs-favorites.md`의 초기 버전에 있던 서버 API·ETag 기반 동시성 제어·IndexedDB 다중 오브젝트 스토어·로컬 SyncQueue 설계를 원문 그대로 보존한 것이다. 실제 구현에서는 이 중 어느 것도 만들어지지 않았으며, 즐겨찾기는 단일 기기 로컬 `localStorage` 저장소만으로 동작한다(`frontend/shared/lib/storage/repositories/location-repositories.ts`). 아래 내용은 변경 없이 원문 그대로 옮긴 것이며, 현재 시점에서 사실이 아니다 — 미래에 멀티 디바이스 동기화를 설계할 때 참고용으로만 남긴다. 아래 IndexedDB 표의 `favoriteSnapshots` 행이 가리키는 “위 스냅샷 전체”는 이 아카이브로 옮겨지지 않았다 [`docs/specs-favorites.md`의 ‘FavoriteWeatherSnapshot’ 절 참고].
 
 ---
 
