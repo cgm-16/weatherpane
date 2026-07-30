@@ -45,6 +45,14 @@ export async function proxyOpenWeatherRequest(
     );
   }
 
-  const data: unknown = await response.json();
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    return Response.json(
+      { code: 'INVALID_PROVIDER_RESPONSE', message: errorMessage },
+      { status: 502 }
+    );
+  }
   return Response.json(data);
 }
