@@ -99,6 +99,8 @@ API 계약은 (1) 즐겨찾기 컬렉션 CRUD 및 정렬 저장, (2) 즐겨찾�
 
 ### 카드 스냅샷(로컬 영속) 엔티티
 
+> **구현 상태: 미구현 — 차기 범위.** 아래 `FavoriteWeatherSnapshot`(영속 스냅샷 구조: `schemaVersion`, `lastError`, `conditionCode`, 저장 필드로서의 `sketchKey` 등)은 실제로 만들어진 적이 없다. 즐겨찾기 카드는 이런 형태의 로컬 영속 날씨 스냅샷 저장소를 전혀 갖지 않는다. 실제로는 `useCoreWeather()`(TanStack Query, `frontend/features/weather-queries/use-core-weather.ts`)가 반환하는 인메모리 쿼리 결과인 `CoreWeather` 타입(`frontend/entities/weather/model/core-weather.ts`)을 그대로 렌더링에 사용하며, 필드 구성도 다르다(예: `tempC` → `current.temperatureC`, `todayMinC`/`todayMaxC` → `today.minC`/`today.maxC`). 세션을 넘어 영속되는 즐겨찾기 전용 날씨 캐시는 없다 — ‘캐시·오프라인·스테일 규칙과 카드 렌더링 상태’ 절의 ‘용어 참고’(아래)와 같은 사실을 가리킨다.
+
 **FavoriteWeatherSnapshot (Persisted)**
 
 - `locationId: string`
@@ -140,6 +142,8 @@ API 계약은 (1) 즐겨찾기 컬렉션 CRUD 및 정렬 저장, (2) 즐겨찾�
 - `updatedAt: string`(ISO 8601)
 
 ### 예시 JSON: 로컬 영속 스냅샷
+
+> **구현 상태: 미구현 — 차기 범위.** 위 ‘카드 스냅샷(로컬 영속) 엔티티’ 절과 동일하게, 아래 JSON이 나타내는 구조는 실제로 저장된 적이 없다(참고용 원 설계 예시). 실제 즐겨찾기 카드가 사용하는 데이터 형태는 `CoreWeather`(`frontend/entities/weather/model/core-weather.ts`)다.
 
 ```json
 {
