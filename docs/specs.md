@@ -573,12 +573,12 @@ PATCH는 리소스의 부분 수정을 위한 HTTP 메서드로 RFC 5789에 정�
 
 권장 재시도 규칙(클라이언트):
 
-> **구현 상태: 대부분 미구현 — 차기 범위.** 실제 클라이언트 재시도는 TanStack Query의 `retry: 1`(기본 지수 백오프, 커스텀 지터 없음)이며, 429/503의 `Retry-After` 준수나 Favorites 412 리베이스는 구현되어 있지 않다(`frontend/features/weather-queries/weather-query-options.ts`). 아래는 원래 권장 설계다.
+> **구현 상태: 대부분 미구현 — 차기 범위.** 실제 클라이언트 재시도는 오류 종류와 무관하게 TanStack Query의 `retry: 1`(기본 지수 백오프, 커스텀 지터 없음)이 균일 적용된다(HTTP status로 분기하지 않음) — `frontend/features/weather-queries/weather-query-options.ts`의 `QUERY_RETRY`는 숫자 그대로 전달되고, `frontend/shared/api/real-weather-provider.ts`의 `fetchProxy`는 4xx/5xx를 구분하지 않고 모든 비정상 응답에 동일한 `WeatherProviderError`를 던진다. 즉 4xx도 다른 오류와 마찬가지로 1회 재시도되며, 429/503의 `Retry-After` 준수나 Favorites 412 리베이스는 구현되어 있지 않다. 아래는 원래 권장 설계다.
 
 - GET Weather:
-  - 네트워크 오류/타임아웃: **1회 재시도**(지수 백오프 + 지터) — 미구현(실제는 TanStack Query 기본 재시도 전략)
+  - 네트워크 오류/타임아웃: **1회 재시도**(지수 백오프 + 지터) — 미구현 — 차기 범위
   - 429/503: Retry-After 있으면 준수 후 1회 재시도 — 미구현 — 차기 범위
-  - 4xx(인증/검증): 자동 재시도 금지 — 구현됨(TanStack Query 기본 동작과 일치)
+  - 4xx(인증/검증): 자동 재시도 금지 — 미구현 — 차기 범위
 - Favorites Sync:
   - 412(ETag 불일치): 즉시 목록 재조회 후 리베이스/재시도(자동 1회) — 미구현 — 차기 범위(서버 동기화 자체가 없음, `docs/legacy/favorites-server-sync-design.md` 참고)
   - 409(중복): 성공 처리(멱등) 또는 사용자 피드백 — 미구현 — 차기 범위
@@ -601,7 +601,7 @@ Weatherpane는 “스냅샷 즉시 제공 + 백그라운드 갱신”을 기본 
 - refetch: 포커스 시 stale한 경우에만 재조회(TQ v5 `refetchOnWindowFocus: true`; `'if-stale'`는 v5에서 제거됨)
 - 스냅샷 fallback cutoff: Weather 24시간, AQI 12시간(`frontend/features/app-bootstrap/snapshot-cutoff.ts:2-3`의 `isWeatherSnapshotFresh`/`isAqiSnapshotFresh`가 단일 출처)
 
-> **참고:** 위 “Stale 60분”이라는 표현은 시스템 전역 TTL이 아니라 즐겨찾기 카드 전용 “매우 오래됨” 배지 임계값이다 — `frontend/pages/favorites/ui/favorite-card.tsx`의 `VERY_STALE_MS = 60 * 60_000`으로 구현되어 있으며 `docs/specs-favorites.md`가 이 값의 정본이다. “Detail 48시간”이라는 별도 cutoff는 실제 구현에 존재하지 않으므로 제거한다.
+> **참고:** 즐겨찾기 카드에는 이와 별도로 60분 임계값의 “매우 오래됨” 배지가 있다 — `frontend/pages/favorites/ui/favorite-card.tsx`의 `VERY_STALE_MS = 60 * 60_000`으로 구현되어 있으며, 이는 위 시스템 전역 staleTime과는 다른 축이다. `docs/specs-favorites.md`가 이 값의 정본이다. “Detail 48시간”이라는 별도 cutoff는 위 “Summary/Detail” 축(정정됨)의 잔재로, 실제 구현에는 존재하지 않으므로 제거한다.
 
 last-updated 표시 규칙 예:
 
