@@ -363,7 +363,7 @@ Solution: provider mode를 명시적 환경 변수로 만들었다.
 
 - `VITE_WEATHER_PROVIDER_MODE=mock`
 - `VITE_WEATHER_PROVIDER_MODE=real`
-- real mode에서는 `VITE_OPENWEATHER_API_KEY` 필요
+- real mode에서는 `OPENWEATHER_API_KEY` 필요
 
 `parseAppConfig`는 mode가 없거나 잘못되면 ConfigError를 반환한다. production에서는 설정 오류 화면을 보여주고, 개발/테스트에서는 mock path를 사용할 수 있다.
 
