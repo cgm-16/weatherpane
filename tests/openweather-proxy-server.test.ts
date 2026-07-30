@@ -55,6 +55,22 @@ describe('proxyOpenWeatherRequest', () => {
     expect(body).toEqual({ current: { temp: 17.2 } });
   });
 
+  test('업스트림이 200과 함께 JSON이 아닌 본문을 반환하면 INVALID_PROVIDER_RESPONSE를 반환한다', async () => {
+    vi.stubEnv('OPENWEATHER_API_KEY', 'test-key');
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('<html>not json</html>', { status: 200 })
+    );
+
+    const response = await proxyOpenWeatherRequest(
+      new URL('https://api.openweathermap.org/data/3.0/onecall'),
+      '날씨 API 네트워크 오류가 발생했습니다'
+    );
+
+    expect(response.status).toBe(502);
+    const body = await response.json();
+    expect(body.code).toBe('INVALID_PROVIDER_RESPONSE');
+  });
+
   test('업스트림이 오류 상태를 반환하면 상태 코드를 그대로 전달하고 INVALID_PROVIDER_RESPONSE를 반환한다', async () => {
     vi.stubEnv('OPENWEATHER_API_KEY', 'test-key');
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
