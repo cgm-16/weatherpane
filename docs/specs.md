@@ -6,6 +6,8 @@ Weatherpane는 **대한민국 지역을 중심으로** 사용자에게 “현재
 
 본 문서는 사용자와의 이전 대화에서 확정된 **Favorites UX 결정**(카드 스켈레톤/인라인 오류/재시도/비네비게이션/편집 모드/위·아래 버튼/닉네임 20자 하드캡 등)을 **“변경 금지(확정)”**로 고정하고, 그 외 화면/기능은 “MVP 가정(Assumptions)”과 “권장 설계(Recommendations)”를 명확히 구분해 개발자가 즉시 구현 가능한 수준의 **아키텍처·데이터 모델·API 계약·오프라인 전략·테스트 계획**을 통합한다. API 오류 포맷은 표준화된 Problem Details(RFC 9457)를 기본으로 하여 클라이언트/테스트/관측을 단순화한다. citeturn0search2
 
+> **구현 상태: 정정.** 위 두 문단이 언급하는 **설정(Settings)** 화면, **서비스워커** 기반 오프라인 프록시, **RFC 9457** 오류 포맷은 모두 미구현 — 차기 범위다(Settings는 이슈 #77; 서비스워커 원 설계는 `docs/legacy/service-worker-caching-design.md` 참고). 실제 오류 포맷은 `/v1/*` 프록시가 반환하는 단순한 `{ code, message }` 구조다(`app/routes/v1.weather.core.ts`). 아래 각 절에서 항목별 구현 여부를 다시 표기한다.
+
 ---
 
 ## 제품 범위와 우선순위
@@ -23,18 +25,20 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 - **Offline behavior**: 스냅샷 기반 렌더, stale/오프라인 표시, 실패 복구 UX.
 - **Assets / Sketch pipeline**: 상태(맑음/비/눈 등)와 주야에 따른 스케치 키-에셋 매핑 및 캐시.
 
+> **구현 상태:** Home/Search/Weather Detail/Favorites/Recents는 구현됨. Settings는 미구현 — 차기 범위(이슈 #77). Offline behavior는 스냅샷 fallback + last-updated 배지 수준까지 구현됨 — 서비스워커 기반 PWA 캐싱은 미구현(`docs/legacy/service-worker-caching-design.md` 참고).
+
 ### MVP 우선순위(권장)
 
-| 우선순위 | 기능                   | MVP 목표                                               | 비고                                                |
-| -------- | ---------------------- | ------------------------------------------------------ | --------------------------------------------------- |
-| P0       | Home/Active Location   | 즉시 렌더 + 스냅샷 fallback + stale 표시               | 오프라인 핵심                                       |
-| P0       | Search                 | 위치 선택 → Active Location 전환 + Recents 기록        | 검색 데이터 소스는 가정 필요                        |
-| P0       | Weather Detail         | 최소한 “현재/시간별/일별” 표시 + 오류/스켈레톤         | 데이터 계약 필요                                    |
-| P0       | Favorites              | **확정 UX** 준수(편집/정렬, 위·아래, 스켈레톤/오류 등) | 본 문서에서 고정                                    |
-| P1       | Settings               | 테마/단위 + 캐시/로컬 데이터 초기화                    | 개인정보/보안과 연계                                |
-| P1       | Service Worker         | 앱 셸 precache + 런타임 캐시                           | PWA 캐싱 권장 citeturn0search3                   |
-| P2       | 원격 스케치 매니페스트 | 다음 세션에 적용되는 원격 오버라이드                   | 운영 편의                                           |
-| P2       | 고급 오프라인 동기화   | Periodic Background Sync 등                            | 브라우저 지원 고려 citeturn5search2turn5search6 |
+| 우선순위 | 기능                   | MVP 목표                                               | 구현 상태                                                                                              | 비고                                                |
+| -------- | ---------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------- |
+| P0       | Home/Active Location   | 즉시 렌더 + 스냅샷 fallback + stale 표시               | 구현됨                                                                                                 | 오프라인 핵심                                       |
+| P0       | Search                 | 위치 선택 → Active Location 전환 + Recents 기록        | 구현됨                                                                                                 | 검색 데이터 소스는 가정 필요                        |
+| P0       | Weather Detail         | 최소한 “현재/시간별/일별” 표시 + 오류/스켈레톤         | 구현됨                                                                                                 | 데이터 계약 필요                                    |
+| P0       | Favorites              | **확정 UX** 준수(편집/정렬, 위·아래, 스켈레톤/오류 등) | 구현됨                                                                                                 | 본 문서에서 고정                                    |
+| P1       | Settings               | 테마/단위 + 캐시/로컬 데이터 초기화                    | 미구현 — 차기 범위(이슈 #77)                                                                           | 개인정보/보안과 연계                                |
+| P1       | Service Worker         | 앱 셸 precache + 런타임 캐시                           | 미구현 — 차기 범위(`docs/legacy/service-worker-caching-design.md`)                                     | PWA 캐싱 권장 citeturn0search3                   |
+| P2       | 원격 스케치 매니페스트 | 다음 세션에 적용되는 원격 오버라이드                   | 부분 구현(`/v1/assets/manifest`는 오버라이드 로직은 구현되어 있으나 현재 `{}` 반환 — 활성 데이터 없음) | 운영 편의                                           |
+| P2       | 고급 오프라인 동기화   | Periodic Background Sync 등                            | 미구현 — 차기 범위                                                                                     | 브라우저 지원 고려 citeturn5search2turn5search6 |
 
 ### 명시적 전제(Assumptions)
 
@@ -45,6 +49,8 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 - **검색 데이터 소스**: (A) 로컬 내장 대한민국 지명 카탈로그(권장) 또는 (B) 서버/서드파티 지오코딩 API.
 - **날씨 공급자**: (A) 자체 백엔드 집계(권장) 또는 (B) 클라이언트 직접 서드파티 호출(권장하지 않음: 키 노출/쿼터).
 - **플랫폼**: 웹(PWA) 우선. 서비스 워커/Geolocation은 HTTPS 보안 컨텍스트 전제. citeturn1search3turn6search0
+
+> **구현 상태(전제 → 실제):** 검색 데이터 소스는 (A) 로컬 카탈로그로 확정 구현됨(`AGENTS.md`: “Search is Korea-catalog-driven and instant”). 날씨 공급자는 (A)·(B) 어느 쪽도 아니라, **서버가 OpenWeather API 키를 숨기고 위치별 요청을 그대로 프록시**하는 방식으로 구현됨(자체 도메인 집계 백엔드 아님; `/v1/weather/core`, `/v1/weather/aqi`, `/v1/geocode` — `app/routes/v1.weather.core.ts`). 인증 방식(Bearer token/OAuth2)은 미구현 — 차기 범위(계정 기능 자체가 없음). 서비스 워커 전제는 미구현 — 차기 범위(`docs/legacy/service-worker-caching-design.md` 참고). Geolocation의 HTTPS 보안 컨텍스트 요구사항 자체는 유효하다.
 
 ---
 
@@ -71,7 +77,8 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 
 ### 전역 내비게이션 규칙(권장)
 
-- 기본 라우트: `/`(Home), `/search`, `/location/:locationId`, `/settings`
+- 기본 라우트: `/`(Home), `/search`, `/favorites`, `/location/:resolvedLocationId`(`app/routes.ts`)
+  - `/settings`는 미구현 — 차기 범위(이슈 #77이 구현을 추적한다).
 - Active Location 변경은 **사용자의 명시적 선택(검색/최근/즐겨찾기 클릭)**으로만 발생(권장).
   - 예외: 최초 실행에서 “현재 위치” 허용 시 Active Location을 현재 위치로 초기화.
 
@@ -142,15 +149,17 @@ Favorites의 카드 상태는 “경영 요약”의 확정 규칙(FAV-03~06)을
 
 ### 주요 런타임 컴포넌트
 
-- **Router**: 화면 전환과 URL 상태
-- **ActiveLocationStore**: 현재 선택 위치, 권한/초기화 상태
-- **WeatherQueryLayer**: 네트워크 fetch + 오류 정규화 + 모델 변환
-- **SnapshotRepository(Web Storage)**: 요약/상세/즐겨찾기 카드 스냅샷 저장
-- **FavoritesStore + SyncQueue**: 즐겨찾기 CRUD/정렬/닉네임 + 서버 동기화(ETag 기반)
-- **RefreshQueue(Weather)**: 화면 진입/포커스 등 트리거로 날씨 갱신(= 단일 패스 실행 단위)
-- **Service Worker**: 앱 셸 precache + 런타임 캐시(스케치/정적 리소스)
+- **Router**: 화면 전환과 URL 상태 — 구현됨
+- **ActiveLocationStore**: 현재 선택 위치, 권한/초기화 상태 — 구현됨
+- **WeatherQueryLayer**: 네트워크 fetch + 오류 정규화 + 모델 변환 — 구현됨(TanStack Query 기반, `frontend/features/weather-queries/`)
+- **SnapshotRepository(Web Storage)**: 날씨/AQI 스냅샷 저장 — 구현됨. 원문은 “요약/상세” 축으로 서술되어 있었으나 실제 축은 Weather/AQI다(`frontend/shared/lib/storage/repositories/snapshot-repositories.ts`)
+- **FavoritesStore**: 즐겨찾기 CRUD/정렬/닉네임 — 구현됨(로컬 `localStorage`만; `frontend/features/favorites/use-favorites.ts`). **SyncQueue + 서버 동기화(ETag 기반)**는 미구현 — 차기 범위(`docs/legacy/favorites-server-sync-design.md` 참고)
+- **RefreshQueue(Weather)**: 화면 진입/포커스 등 트리거로 날씨 갱신 — 구현됨. 개념은 일치하나 `passId` 단위 실행이 아니라 concurrency=2 배치 refetch로 구현됨(`frontend/features/favorites/use-refresh-queue.ts`)
+- **Service Worker**: 앱 셸 precache + 런타임 캐시(스케치/정적 리소스) — 미구현 — 차기 범위. 원래 설계는 `docs/legacy/service-worker-caching-design.md` 참고
 
 ### 컴포넌트 다이어그램(mermaid)
+
+> **구현 상태:** 아래 다이어그램의 `SW`(Service Worker)/`Cache`(CacheStorage)/`Loc`(Location API)/`Fav`(Favorites API)/`SyncQ`(SyncQueue)는 미구현 — 차기 범위다. `Wx`(Weather API)는 자체 집계 백엔드가 아니라 서버가 프록시하는 OpenWeather 호출로 구현되어 있다(`/v1/weather/core`, `/v1/weather/aqi` — `app/routes.ts`). `Assets`(Manifest API)는 `/v1/assets/manifest`로 구현되어 있으나 현재 `{}`만 반환한다(부분 구현). 다이어그램 자체는 원래 설계를 보존하기 위해 수정하지 않는다.
 
 ```mermaid
 flowchart LR
@@ -191,6 +200,8 @@ flowchart LR
 
 ### 런타임 상호작용 시퀀스(mermaid)
 
+> **구현 상태:** 아래 시퀀스의 `W`(Service Worker) 참여자는 미구현 — 차기 범위다. 나머지 흐름(스냅샷 로드 → 렌더 → RefreshQueue → 갱신/폴백)은 실제 구현과 개념적으로 일치한다(구현됨).
+
 ```mermaid
 sequenceDiagram
   participant U as UI(Home)
@@ -227,23 +238,27 @@ sequenceDiagram
 
 MVP 단계의 영속 상태는 **기능별 버전드 Web Storage** 를 표준으로 한다. `favorites`, `recents`, `active location`, `theme`, `weather snapshots`, `AQI snapshots` 는 `localStorage` 에 저장하고, unsupported temp-route context 는 세션 범위여야 하므로 `sessionStorage` 에 저장한다. 각 저장소는 키 버전과 payload `version` 을 함께 사용하고, 파싱 실패 또는 버전 불일치 시 해당 기능 키를 안전하게 리셋한다.
 
+> **구현 상태: 구현됨.** 위 문단은 실제 구현과 일치한다 — 버전드 `localStorage`/`sessionStorage`이며 IndexedDB가 아니다(`frontend/shared/lib/storage/browser-storage.ts`, `frontend/shared/lib/storage/repositories/`).
+
 ### 엔티티 목록
 
-- `Location`: 위치 식별/표시명/좌표(선택)
-- `ActiveLocationState`: 현재 선택 위치 + 선택 출처 + 마지막 전환 시각
-- `CurrentLocationRecoveryState`: 현재 위치 조회 실패 시 복구 사유(`permission-denied`, `position-unavailable`, `timeout`)
-- `CoreWeather`: 쿼리/어댑터 계층이 반환하는 정규화된 핵심 날씨 모델
-- `Aqi`: 쿼리/어댑터 계층이 반환하는 정규화된 AQI 모델
-- `WeatherSummarySnapshot`: 홈/즐겨찾기 카드용 요약 스냅샷
-- `WeatherDetailSnapshot`: 상세 화면용 시간별/일별 스냅샷
-- `Favorite`: 즐겨찾기 메타(닉네임, order)
-- `Recent`: 최근 조회 기록
-- `Settings`: 단위/테마/접근성 설정
-- `SyncOperation`: 즐겨찾기 변경사항 동기화 큐
+- `Location`: 위치 식별/표시명/좌표(선택) — 구현됨
+- `ActiveLocationState`: 현재 선택 위치 + 선택 출처 + 마지막 전환 시각 — 구현됨
+- `CurrentLocationRecoveryState`: 현재 위치 조회 실패 시 복구 사유(`permission-denied`, `position-unavailable`, `timeout`) — 구현됨
+- `CoreWeather`: 쿼리/어댑터 계층이 반환하는 정규화된 핵심 날씨 모델 — 구현됨(`frontend/entities/weather/model/core-weather.ts`)
+- `Aqi`: 쿼리/어댑터 계층이 반환하는 정규화된 AQI 모델 — 구현됨(`frontend/entities/aqi/model/aqi.ts`)
+- `WeatherSummarySnapshot`: 날씨 스냅샷 — 구현됨(실제 타입명은 `PersistedWeatherSnapshot`, `frontend/entities/weather/model/persisted-weather-snapshot.ts`)
+- `WeatherDetailSnapshot`: 상세 화면 전용 시간별/일별 영속 스냅샷 — 미구현. Detail 화면의 오프라인 폴백도 `WeatherSummarySnapshot`과 동일한 스냅샷을 재사용하며, 별도의 시간별/일별 영속 스냅샷은 없다(`frontend/features/app-bootstrap/use-detail-bootstrap.ts`)
+- `Favorite`: 즐겨찾기 메타(닉네임, order) — 구현됨. 단, 실제 필드는 `locationId` 하나가 아니라 `location: ResolvedLocation` 전체를 포함한다(`frontend/entities/location/model/types.ts`의 `FavoriteLocation`; 아래 TypeScript 인터페이스 절 참고)
+- `Recent`: 최근 조회 기록 — 구현됨. 단, 실제 필드는 `locationId`/`openCount`가 아니라 `location`/`lastOpenedAt`이며 `openCount`는 없다(`frontend/entities/location/model/types.ts`의 `RecentLocation`; `MAX_RECENTS = 10`)
+- `Settings`: 단위/테마/접근성 설정 — 미구현 — 차기 범위(이슈 #77)
+- `SyncOperation`: 즐겨찾기 변경사항 동기화 큐 — 미구현 — 차기 범위. 원래 설계는 `docs/legacy/favorites-server-sync-design.md` 참고
 
 ### TypeScript 인터페이스(예시)
 
 아래 인터페이스는 저장 래퍼를 제외한 도메인 값 예시다. 실제 Web Storage payload는 `VersionedPayload<T>` 형태로 `version` 과 `data` 를 함께 저장한다.
+
+> **구현 상태(코드 블록 내부, 항목별):** `WeatherSummarySnapshot`은 구현됨(실제 이름 `PersistedWeatherSnapshot`). `WeatherDetailSnapshot`은 미구현 — Detail 오프라인 폴백도 동일한 요약 스냅샷을 재사용한다. `CoreWeather`/`Aqi`는 구현됨이며 실제 `frontend/entities/weather/model/core-weather.ts`, `frontend/entities/aqi/model/aqi.ts`와 필드까지 일치한다. `Location`/`RawGpsFallbackLocation`/`CurrentLocationResult` 계열은 구현됨(`frontend/entities/location/model/types.ts`, 단 실제 타입명은 `ResolvedLocation`/`CatalogLocation` 등으로 세분화되어 있다).
 
 ```ts
 export type ISODateTime = string;
@@ -387,6 +402,8 @@ export interface Aqi {
 
 ### Favorites / Recents / Settings 모델(예시)
 
+> **구현 상태:** `Favorite`는 구현됨이나 실제 필드는 `locationId` 단일 문자열이 아니라 `location: ResolvedLocation` 전체다(`FavoriteLocation`, `frontend/entities/location/model/types.ts`). `Recent`는 구현됨이나 실제 필드는 `locationId`/`openCount`가 아니라 `location`/`lastOpenedAt`이며 `openCount`는 존재하지 않는다(`RecentLocation`, 동일 파일; `MAX_RECENTS = 10`). `Settings`는 미구현 — 차기 범위(이슈 #77).
+
 ```ts
 export interface Favorite {
   favoriteId: string;
@@ -426,6 +443,8 @@ export interface Settings {
 
 #### persisted summary snapshot
 
+> **구현 상태: 구현됨.** 아래 필드 구조는 실제 `PersistedWeatherSnapshot`과 정확히 일치한다(`frontend/entities/weather/model/persisted-weather-snapshot.ts`; `frontend/entities/weather/model/core-weather-to-snapshot.ts`). 실제 저장 키는 `weatherpane.weather-snapshots.v1`이며 `Record<locationId, PersistedWeatherSnapshot>` 형태로 저장된다(위 “로컬 저장 키 스키마” 표 참고).
+
 ```json
 {
   "version": 1,
@@ -444,6 +463,8 @@ export interface Settings {
 ```
 
 #### favorites list payload
+
+> **구현 상태: 구현됨.** 아래 구조는 실제 `FavoriteLocation`(`frontend/entities/location/model/types.ts`)과 일치한다.
 
 ```json
 {
@@ -473,52 +494,11 @@ export interface Settings {
 
 ### 동기화 큐와 충돌 해결
 
-#### ETag/If-Match 기반 낙관적 동시성
-
-서버 리소스 충돌 방지는 ETag + If-Match를 사용한다. MDN은 ETag와 If-Match로 “mid-air collision”을 방지하고, 불일치 시 412를 반환하는 흐름을 설명한다. citeturn7search8turn7search6turn7search0  
-조건부 요청 전반의 동작(If-Match/If-Unmodified-Since 불일치 → 412)은 MDN 조건부 요청 가이드에도 정리되어 있다. citeturn7search12
-
-#### SyncOperation 모델
-
-```ts
-export type SyncOpType = 'ADD' | 'REMOVE' | 'RENAME' | 'REORDER';
-
-export interface SyncOperation {
-  opId: string;
-  type: SyncOpType;
-  createdAt: ISODateTime;
-  attempt: number;
-  nextRetryAt: ISODateTime | null;
-  baseEtag?: string; // server favorites collection ETag
-  payload: Record<string, unknown>;
-  lastError?: { at: ISODateTime; code: string; httpStatus?: number };
-}
-```
-
-#### 재정렬 충돌 병합(의사코드)
-
-```ts
-// 입력:
-// - serverList: 최신 서버 favorites (favoriteId 기준)
-// - localOrder: 로컬이 의도한 orderedFavoriteIds
-// 출력: 병합된 orderedFavoriteIds (서버에 존재하는 것만 유지)
-function mergeReorder(serverList, localOrder) {
-  const serverIds = new Set(serverList.map((f) => f.favoriteId));
-
-  // 1) 로컬 순서에서 서버에 존재하는 것만 유지
-  const kept = localOrder.filter((id) => serverIds.has(id));
-
-  // 2) 서버에만 존재(새로 추가된 항목 등)하는 것은 서버 order를 유지한 채 뒤에 append
-  const keptSet = new Set(kept);
-  const appended = serverList
-    .map((f) => f.favoriteId)
-    .filter((id) => !keptSet.has(id));
-
-  return [...kept, ...appended];
-}
-```
+> **구현 상태: 미구현 — 차기 범위.** 전체 설계는 `docs/legacy/favorites-server-sync-design.md` 참고.
 
 #### “같은 패스에서 추가 재시도 금지”(FAV-12) 구현 힌트
+
+> **구현 상태: 구현됨.** 개념 일치, 실제 구현은 `frontend/features/favorites/use-refresh-queue.ts`의 concurrency=2 배치 refetch — passId/markFailed 없이 `Promise.allSettled`로 동일 효과를 냄.
 
 ```ts
 // RefreshQueue는 "passId" 단위로 실행한다.
@@ -541,6 +521,8 @@ function runRefreshPass(passId, locationIds) {
 
 RFC 9457은 HTTP API 오류를 기계가 읽을 수 있는 표준 구조로 전달하기 위한 “problem detail” 포맷을 정의하며 RFC 7807을 대체한다. citeturn0search2turn0search6
 
+> **구현 상태: 미구현 — 차기 범위.** 실제 `/v1/*` 프록시는 RFC 9457이 아니라 단순한 `{ code, message }` 형태의 오류를 반환한다(`app/routes/v1.weather.core.ts`). 아래 스키마는 원래 권장 설계로 남겨둔다.
+
 권장 기본 스키마(확장 필드 포함):
 
 ```json
@@ -558,19 +540,21 @@ RFC 9457은 HTTP API 오류를 기계가 읽을 수 있는 표준 구조로 전�
 
 ### 엔드포인트 목록(권장)
 
-| 도메인       | Method | Path                                    | 목적                    | 캐시/조건부             |
-| ------------ | ------ | --------------------------------------- | ----------------------- | ----------------------- |
-| Locations    | GET    | `/v1/locations/:locationId`             | 위치 메타 조회          | ETag/If-None-Match 가능 |
-| Search(선택) | GET    | `/v1/locations/search?q=`               | 원격 검색(가정)         | 캐시 짧게               |
-| Weather      | GET    | `/v1/weather/summary?locationId=`       | 홈/카드 요약            | ETag 가능(선택)         |
-| Weather      | GET    | `/v1/weather/detail?locationId=`        | 상세(시간/일)           | ETag 가능(선택)         |
-| Weather      | GET    | `/v1/weather/summaries?locationIds=...` | 즐겨찾기 배치 요약      | 배치 사이즈 제한        |
-| Favorites    | GET    | `/v1/favorites`                         | 즐겨찾기 목록           | **ETag 필수**           |
-| Favorites    | POST   | `/v1/favorites`                         | 추가                    | 컬렉션 ETag 갱신        |
-| Favorites    | PATCH  | `/v1/favorites/:favoriteId`             | 닉네임 수정             | **If-Match 필수**       |
-| Favorites    | DELETE | `/v1/favorites/:favoriteId`             | 삭제                    | **If-Match 필수**       |
-| Favorites    | PUT    | `/v1/favorites/reorder`                 | 정렬 저장               | **If-Match 필수**       |
-| Assets       | GET    | `/v1/assets/manifest`                   | 스케치 매니페스트(선택) | ETag/Cache-Control      |
+| 도메인       | Method | Path                                    | 목적                    | 캐시/조건부             | 구현 상태                                                                                               |
+| ------------ | ------ | --------------------------------------- | ----------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------- |
+| Locations    | GET    | `/v1/locations/:locationId`             | 위치 메타 조회          | ETag/If-None-Match 가능 | 미구현 — 차기 범위                                                                                      |
+| Search(선택) | GET    | `/v1/locations/search?q=`               | 원격 검색(가정)         | 캐시 짧게               | 미구현 — 차기 범위(실제 검색은 로컬 카탈로그 기반)                                                      |
+| Weather      | GET    | `/v1/weather/summary?locationId=`       | 홈/카드 요약            | ETag 가능(선택)         | 미구현 — 차기 범위                                                                                      |
+| Weather      | GET    | `/v1/weather/detail?locationId=`        | 상세(시간/일)           | ETag 가능(선택)         | 미구현 — 차기 범위                                                                                      |
+| Weather      | GET    | `/v1/weather/summaries?locationIds=...` | 즐겨찾기 배치 요약      | 배치 사이즈 제한        | 미구현 — 차기 범위                                                                                      |
+| Favorites    | GET    | `/v1/favorites`                         | 즐겨찾기 목록           | **ETag 필수**           | 미구현 — `docs/legacy/favorites-server-sync-design.md` 참고                                             |
+| Favorites    | POST   | `/v1/favorites`                         | 추가                    | 컬렉션 ETag 갱신        | 미구현 — 상동                                                                                           |
+| Favorites    | PATCH  | `/v1/favorites/:favoriteId`             | 닉네임 수정             | **If-Match 필수**       | 미구현 — 상동                                                                                           |
+| Favorites    | DELETE | `/v1/favorites/:favoriteId`             | 삭제                    | **If-Match 필수**       | 미구현 — 상동                                                                                           |
+| Favorites    | PUT    | `/v1/favorites/reorder`                 | 정렬 저장               | **If-Match 필수**       | 미구현 — 상동                                                                                           |
+| Assets       | GET    | `/v1/assets/manifest`                   | 스케치 매니페스트(선택) | ETag/Cache-Control      | 구현됨(`app/routes/v1.assets.manifest.ts`) — 단, ETag/Cache-Control 조건부 요청은 없고 현재 `{}`만 반환 |
+
+> **구현 상태: 이 표는 “권장(recommended)” 설계이며 대부분 미구현이다.** 실제로 구현된 것은 이 표가 그리는 자체 도메인 백엔드가 아니라, OpenWeather를 그대로 얇게 감싸는 per-request 프록시다: `/v1/weather/core`(One Call 프록시), `/v1/weather/aqi`(Air Pollution 프록시), `/v1/geocode`(지오코딩 프록시)(`app/routes.ts`). 이 프록시들은 클라이언트의 쿼리 레이어가 호출하며, 오류는 위 RFC 9457이 아니라 단순한 `{ code, message }` 형태로 반환한다(`app/routes/v1.weather.core.ts`). 즐겨찾기 CRUD 행(GET/POST/PATCH/DELETE/PUT)은 `docs/legacy/favorites-server-sync-design.md` 참고.
 
 PATCH는 리소스의 부분 수정을 위한 HTTP 메서드로 RFC 5789에 정의되어 있다. citeturn1search1
 
@@ -580,6 +564,8 @@ PATCH는 리소스의 부분 수정을 위한 HTTP 메서드로 RFC 5789에 정�
 - 서버 변경을 적용하는 메서드에서 조건 실패는 412 Precondition Failed로 응답할 수 있다. citeturn7search1turn7search0
 - HTTP 의미/아키텍처는 RFC 9110이 정리한다(참조). citeturn7search2
 
+> **구현 상태: 미구현 — 차기 범위.** 위 조건부 요청 의미는 일반 HTTP 표준 설명이며, Weatherpane API 레이어에는 적용되어 있지 않다. 실제 `/v1/*` 프록시는 ETag/If-None-Match/If-Match를 사용하지 않는다.
+
 ### 재시도/레이트리밋
 
 - 429 Too Many Requests는 “주어진 시간에 너무 많은 요청”을 의미하며, 응답에 Retry-After를 포함할 수 있다. citeturn1search2turn1search6
@@ -587,14 +573,16 @@ PATCH는 리소스의 부분 수정을 위한 HTTP 메서드로 RFC 5789에 정�
 
 권장 재시도 규칙(클라이언트):
 
+> **구현 상태: 대부분 미구현 — 차기 범위.** 실제 클라이언트 재시도는 TanStack Query의 `retry: 1`(기본 지수 백오프, 커스텀 지터 없음)이며, 429/503의 `Retry-After` 준수나 Favorites 412 리베이스는 구현되어 있지 않다(`frontend/features/weather-queries/weather-query-options.ts`). 아래는 원래 권장 설계다.
+
 - GET Weather:
-  - 네트워크 오류/타임아웃: **1회 재시도**(지수 백오프 + 지터)
-  - 429/503: Retry-After 있으면 준수 후 1회 재시도
-  - 4xx(인증/검증): 자동 재시도 금지
+  - 네트워크 오류/타임아웃: **1회 재시도**(지수 백오프 + 지터) — 미구현(실제는 TanStack Query 기본 재시도 전략)
+  - 429/503: Retry-After 있으면 준수 후 1회 재시도 — 미구현 — 차기 범위
+  - 4xx(인증/검증): 자동 재시도 금지 — 구현됨(TanStack Query 기본 동작과 일치)
 - Favorites Sync:
-  - 412(ETag 불일치): 즉시 목록 재조회 후 리베이스/재시도(자동 1회)
-  - 409(중복): 성공 처리(멱등) 또는 사용자 피드백
-- **중요:** Favorites 카드 새로고침 실패는 같은 패스에서 큐 레벨로 추가 재시도 금지(FAV-12)
+  - 412(ETag 불일치): 즉시 목록 재조회 후 리베이스/재시도(자동 1회) — 미구현 — 차기 범위(서버 동기화 자체가 없음, `docs/legacy/favorites-server-sync-design.md` 참고)
+  - 409(중복): 성공 처리(멱등) 또는 사용자 피드백 — 미구현 — 차기 범위
+- **중요:** Favorites 카드 새로고침 실패는 같은 패스에서 큐 레벨로 추가 재시도 금지(FAV-12) — 구현됨(`frontend/features/favorites/use-refresh-queue.ts`)
 
 ---
 
@@ -604,15 +592,20 @@ PATCH는 리소스의 부분 수정을 위한 HTTP 메서드로 RFC 5789에 정�
 
 Weatherpane는 “스냅샷 즉시 제공 + 백그라운드 갱신”을 기본 UX로 한다. HTTP 캐시 확장인 stale-while-revalidate는 백그라운드 재검증 동안 오래된 응답을 제공하는 개념을 정의한다. citeturn1search0turn0search7
 
-권장 TTL(기본):
+> **구현 상태: 정정.** 아래는 원래 “Summary/Detail” 축으로 서술되어 있었으나 실제 구현에는 그런 축이 없다. 실제 축은 Weather(핵심 날씨)/AQI이며, `AGENTS.md`의 Query and persistence rules와 `frontend/features/app-bootstrap/snapshot-cutoff.ts`가 단일 출처다.
 
-- Summary(홈/즐겨찾기 카드): Fresh 10분, Stale 60분
-- Detail(상세): Fresh 30분, Stale 6시간
-- 스냅샷 “최대 허용(offline fallback cutoff)”:
-  - Summary: 24시간
-  - Detail: 48시간
+실제 정책(구현됨):
+
+- staleTime: Weather(핵심 날씨) 10분, AQI 30분(`frontend/features/weather-queries/weather-query-options.ts:7-8`)
+- retry: 1회
+- refetch: 포커스 시 stale한 경우에만 재조회(TQ v5 `refetchOnWindowFocus: true`; `'if-stale'`는 v5에서 제거됨)
+- 스냅샷 fallback cutoff: Weather 24시간, AQI 12시간(`frontend/features/app-bootstrap/snapshot-cutoff.ts:2-3`의 `isWeatherSnapshotFresh`/`isAqiSnapshotFresh`가 단일 출처)
+
+> **참고:** 위 “Stale 60분”이라는 표현은 시스템 전역 TTL이 아니라 즐겨찾기 카드 전용 “매우 오래됨” 배지 임계값이다 — `frontend/pages/favorites/ui/favorite-card.tsx`의 `VERY_STALE_MS = 60 * 60_000`으로 구현되어 있으며 `docs/specs-favorites.md`가 이 값의 정본이다. “Detail 48시간”이라는 별도 cutoff는 실제 구현에 존재하지 않으므로 제거한다.
 
 last-updated 표시 규칙 예:
+
+> **구현 상태: 구현됨.** Home/Detail 화면에서 `frontend/shared/ui/last-updated.tsx`로 구현되어 있다.
 
 - 1분 미만: “방금”
 - 1~59분: “N분 전”
@@ -621,60 +614,11 @@ last-updated 표시 규칙 예:
 
 ### 서비스워커 캐싱 전략
 
-MDN은 PWA 캐싱의 주요 기술로 Fetch API, Service Worker API, Cache API를 제시한다. citeturn0search3turn5search1  
-CacheStorage/Cache는 오프라인 에셋 저장과 사용자화 응답을 가능하게 한다. citeturn5search0turn5search4
-
-#### 캐시 분류(권장)
-
-- `cache-app-shell-vX`: HTML/CSS/JS 번들(precaching)
-- `cache-assets-vX`: 스케치/아이콘/폰트(정적)
-- `cache-http-vX`: GET API 응답(선택; 스냅샷이 주 저장소이므로 보조)
-
-#### 전략 매핑
-
-| 리소스             | 전략                                    | 이유                       |
-| ------------------ | --------------------------------------- | -------------------------- |
-| App shell          | Cache-first + 업데이트 시 새 버전       | 즉시 로딩                  |
-| Sketch assets      | Cache-first(버전 해시 파일)             | 리소스 안정                |
-| Locations metadata | Stale-while-revalidate(선택)            | 사용자 체감 속도           |
-| Weather GET        | Network-first + 실패 시 스냅샷 fallback | 최신성 우선, 오프라인 대응 |
-| Manifest           | Network-first + 캐시                    | 운영 중 교체 가능          |
-
-Workbox 문서는 stale-while-revalidate 패턴(캐시 즉시 응답 + 네트워크로 갱신)을 설명한다. citeturn5search3  
-단, Weatherpane는 API 응답의 “신뢰 가능한 영속 상태”를 명시적 버전드 스냅샷 저장소에 두므로 Cache API는 보조로 제한한다.
-
-### 서비스워커 fetch 핸들러 의사코드
-
-```ts
-self.addEventListener('fetch', (event) => {
-  const req = event.request;
-  const url = new URL(req.url);
-
-  // 1) App shell / static assets
-  if (url.origin === self.location.origin) {
-    if (url.pathname.startsWith('/assets/') || url.pathname.endsWith('.webp')) {
-      event.respondWith(cacheFirst('cache-assets-v3', req));
-      return;
-    }
-    // navigation requests
-    if (req.mode === 'navigate') {
-      event.respondWith(
-        networkFirstWithFallbackToCache('cache-app-shell-v3', req)
-      );
-      return;
-    }
-  }
-
-  // 2) API calls (GET only)
-  if (url.pathname.startsWith('/v1/') && req.method === 'GET') {
-    // Prefer network, fall back to cache; UI will fall back to persisted snapshots anyway
-    event.respondWith(networkFirstWithFallbackToCache('cache-http-v3', req));
-    return;
-  }
-});
-```
+서비스 워커는 아직 구현되지 않았다(미구현 — 차기 범위). 원래 설계는 `docs/legacy/service-worker-caching-design.md` 참고.
 
 ### 초기 로드 및 재시도 플로우(mermaid)
+
+> **구현 상태: 구현됨.** 이 플로우는 서비스 워커가 아니라 app-bootstrap 훅(`frontend/features/app-bootstrap/use-home-bootstrap.ts`, `use-detail-bootstrap.ts`)이 구현한다 — 스냅샷 즉시 렌더 → 백그라운드 갱신 → 실패 시 스냅샷 유지/인라인 오류라는 개념은 실제 구현과 일치한다.
 
 ```mermaid
 flowchart TD
@@ -724,7 +668,11 @@ Favorites 편집 모드의 접근성 이름(권장):
 - 서비스워커/CacheStorage/Geolocation 등은 보안 컨텍스트(HTTPS) 요구가 있으므로 배포 파이프라인에서 HTTPS를 전제한다. citeturn1search3turn5search0turn6search0
 - API 오류 응답(RFC 9457)의 `detail`에 **주소/좌표 등 민감정보를 포함하지 않는다**. citeturn0search2
 
+> **구현 상태:** Geolocation 동의 요구사항(1번째 항목)은 실제로 유효하다(HTTPS 전제 포함). 나머지는 미구현 — 차기 범위다: 계정/로그아웃 기능이 없어 Clear-Site-Data 항목은 적용 대상이 없고, 서비스워커/CacheStorage는 만들어진 적이 없으며(`docs/legacy/service-worker-caching-design.md` 참고), 오류 포맷은 RFC 9457이 아니라 `{ code, message }`다(단, “민감정보를 응답에 포함하지 않는다”는 원칙 자체는 여전히 유효하다).
+
 ### 텔레메트리/메트릭(권장)
+
+> **구현 상태: 미구현 — 차기 범위.** 코드베이스에 텔레메트리/분석 이벤트 전송 로직이 존재하지 않는다. 아래는 향후 계측 설계 초안이다.
 
 측정 목표는 “사용자 체감(속도/안정성) + 운영 품질(오류율/지연) + 기능 사용성(검색/즐겨찾기 전환)”이다.
 
@@ -746,38 +694,38 @@ PR/이슈 템플릿, CODEOWNERS, 보호 브랜치는 entity["company","Git
 
 ### 구현 체크리스트(요약)
 
-- UI
-  - Home/Search/Detail/Favorites/Recents/Settings의 스켈레톤/오류/stale 상태 구현
-  - Favorites “편집/정렬” 모드 토글, 위/아래 버튼, 닉네임 20자 하드캡, 완료 auto-blur 커밋
-- 데이터
-  - 버전드 Web Storage 키/payload `version` 관리
-  - 스냅샷 저장/로드 및 staleness 판정 로직
-  - Recents 기록(즐겨찾기와 독립)
-- 네트워크/동기화
-  - RFC 9457 오류 파서 + 표준화된 error handling
-  - Favorites 동기화: ETag/If-Match, 412 리베이스 흐름
-  - RefreshQueue 단위 패스 실행 + “같은 패스 재시도 금지”
-- 오프라인
-  - 서비스워커 설치/업데이트/캐시 버전 관리
-  - API 실패 시 스냅샷 fallback, 오프라인 배지 표시
-- 접근성
-  - 키보드 조작/포커스 링/스크린리더 라벨 점검(2.1.1/2.4.7/2.5.7)
+- [x] UI
+  - [x] Home/Search/Detail/Favorites/Recents의 스켈레톤/오류/stale 상태 구현 — 구현됨. Settings는 미구현 — 차기 범위(이슈 #77)
+  - [x] Favorites “편집/정렬” 모드 토글, 위/아래 버튼, 닉네임 20자 하드캡, 완료 auto-blur 커밋 — 구현됨
+- [x] 데이터
+  - [x] 버전드 Web Storage 키/payload `version` 관리 — 구현됨(`frontend/shared/lib/storage/`)
+  - [x] 스냅샷 저장/로드 및 staleness 판정 로직 — 구현됨(`frontend/features/app-bootstrap/snapshot-cutoff.ts`)
+  - [x] Recents 기록(즐겨찾기와 독립) — 구현됨(`frontend/features/recents/`)
+- [ ] 네트워크/동기화
+  - [ ] RFC 9457 오류 파서 + 표준화된 error handling — 미구현 — 차기 범위(실제는 `{ code, message }`)
+  - [ ] Favorites 동기화: ETag/If-Match, 412 리베이스 흐름 — 미구현 — 차기 범위(`docs/legacy/favorites-server-sync-design.md` 참고)
+  - [x] RefreshQueue 단위 패스 실행 + “같은 패스 재시도 금지” — 구현됨(개념 일치, concurrency=2 배치 refetch로 구현; `frontend/features/favorites/use-refresh-queue.ts`)
+- [ ] 오프라인
+  - [ ] 서비스워커 설치/업데이트/캐시 버전 관리 — 미구현 — 차기 범위(`docs/legacy/service-worker-caching-design.md` 참고)
+  - [x] API 실패 시 스냅샷 fallback, 오프라인 배지 표시 — 구현됨
+- [x] 접근성
+  - [x] 키보드 조작/포커스 링/스크린리더 라벨 점검(2.1.1/2.4.7/2.5.7) — 구현됨
 
 ### 테스트 계획과 대표 케이스
 
-| 레벨        | 케이스                       | 기대                                      |
-| ----------- | ---------------------------- | ----------------------------------------- |
-| Unit        | staleness 판정(경계값)       | 10분/60분 등 경계 정확                    |
-| Unit        | Favorites 닉네임 20자 하드캡 | 21자 입력 불가                            |
-| Unit        | ‘완료’ auto-blur 커밋        | 커밋 후 모드 종료                         |
-| Integration | 스냅샷 없음 + 초기 실패      | 인라인 오류 + 다시 시도, 비네비           |
-| Integration | 스냅샷 있음 + 갱신 실패      | 스냅샷 유지 + stale 표시                  |
-| Integration | RefreshQueue 정책            | 같은 패스에서 실패 항목 재큐잉 없음       |
-| Integration | Favorites 412 충돌           | 재조회 → 리베이스 → 재시도 성공           |
-| E2E         | Search → Select → Detail     | ActiveLocation 전환 + Recents 기록        |
-| E2E         | Favorites 편집/정렬          | 위/아래/드래그 동작 + 저장                |
-| E2E         | 오프라인 모드                | 스냅샷 렌더 + 오프라인 배지               |
-| A11y        | 키보드 전 기능 조작          | Tab/Enter만으로 가능 citeturn2search2  |
-| A11y        | 드래그 대안 제공             | 위/아래로 재정렬 가능 citeturn0search0 |
+| 레벨        | 케이스                       | 기대                                      | 구현 상태                                                                                                                                                                                                       |
+| ----------- | ---------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit        | staleness 판정(경계값)       | 10분/60분 등 경계 정확                    | 구현됨(즐겨찾기 카드 배지 경계 — `frontend/pages/favorites/ui/favorite-card.tsx`의 `CORE_WEATHER_STALE_TIME`/`VERY_STALE_MS`; 시스템 전역 staleTime 경계는 10분/30분, 위 “스테일 및 last-updated 규칙” 절 참고) |
+| Unit        | Favorites 닉네임 20자 하드캡 | 21자 입력 불가                            | 구현됨                                                                                                                                                                                                          |
+| Unit        | ‘완료’ auto-blur 커밋        | 커밋 후 모드 종료                         | 구현됨                                                                                                                                                                                                          |
+| Integration | 스냅샷 없음 + 초기 실패      | 인라인 오류 + 다시 시도, 비네비           | 구현됨                                                                                                                                                                                                          |
+| Integration | 스냅샷 있음 + 갱신 실패      | 스냅샷 유지 + stale 표시                  | 구현됨                                                                                                                                                                                                          |
+| Integration | RefreshQueue 정책            | 같은 패스에서 실패 항목 재큐잉 없음       | 구현됨(concurrency=2 배치 refetch로 구현)                                                                                                                                                                       |
+| Integration | Favorites 412 충돌           | 재조회 → 리베이스 → 재시도 성공           | 미구현 — 차기 범위(서버 동기화 없음; `docs/legacy/favorites-server-sync-design.md` 참고)                                                                                                                        |
+| E2E         | Search → Select → Detail     | ActiveLocation 전환 + Recents 기록        | 구현됨                                                                                                                                                                                                          |
+| E2E         | Favorites 편집/정렬          | 위/아래/드래그 동작 + 저장                | 구현됨                                                                                                                                                                                                          |
+| E2E         | 오프라인 모드                | 스냅샷 렌더 + 오프라인 배지               | 구현됨(서비스 워커 없이 스냅샷 fallback + online/offline 이벤트 수준)                                                                                                                                           |
+| A11y        | 키보드 전 기능 조작          | Tab/Enter만으로 가능 citeturn2search2  | 구현됨                                                                                                                                                                                                          |
+| A11y        | 드래그 대안 제공             | 위/아래로 재정렬 가능 citeturn0search0 | 구현됨                                                                                                                                                                                                          |
 
 이 명세는 “확정 항목(Favorites)”과 “가정/권장 항목(그 외)”을 분리했으며, 실제 구현 착수 시 **가정 항목**은 첫 스프린트에서 빠르게 확정(또는 축소)하는 것을 권장한다.
