@@ -38,23 +38,35 @@ subagents; you pass those paths on without opening them. See
 
 ## Inputs to inspect first
 
-You read only what governs *your own* actions — routing, branch naming, PR
-mechanics. Everything that governs the *code* is read by the subagents that write
+You read only what governs _your own_ actions — routing, branch naming, PR
+mechanics. Everything that governs the _code_ is read by the subagents that write
 it.
 
-- [docs/skills/README.md](../../../docs/skills/README.md) — maps the issue's `area:*` label to its area skill. You need the mapping, not the skill
 - [docs/skills/branching-and-issues.md](../../../docs/skills/branching-and-issues.md) — branch naming, commit language, PR requirements
 - `.github/PULL_REQUEST_TEMPLATE.md` — read at stage 5, not before; every section must be filled for real
 
 AGENTS.md is already in your context — every session loads it through `CLAUDE.md`.
 Do not read it again; that is a duplicate copy of the largest governing document,
-re-sent on every turn for the rest of the run.
+re-sent on every turn for the rest of the run. Its "Minimum required skills by
+area" list is the area-skill mapping you need, already resident, and it keys on the
+kind of work rather than on the `area:*` label — so translate: `area:favorites` →
+favorites work, `area:storage` → the persistence rules under weather/query work,
+`area:app-shell` and `area:routing` → no dedicated skill, use `fsd-boundaries.md`.
+An issue carrying several `area:*` labels needs every matching skill named.
+`docs/skills/README.md` indexes the skill files but does not carry this mapping;
+you do not need to open it.
 
-Do **not** read the area skill, `docs/skills/task-to-pr-automation.md`, or any
-spec or source file. The area skill binds the implementation, so the researcher,
-implementers, and reviewers read it — you only name it in their dispatches.
-`task-to-pr-automation.md` is the Codex fallback path; it tells you nothing you
-need when `superpowers:*` is available.
+Do **not** read the area skill itself, `docs/skills/task-to-pr-automation.md`, or
+any spec or source file. The area skill binds the implementation, so the
+researcher, implementers, and reviewers read it — you only name its path in their
+dispatches. `task-to-pr-automation.md` is the Codex fallback path; it tells you
+nothing you need when `superpowers:*` is available.
+
+AGENTS.md requires the area skill to be read before planning or execution. That
+requirement is met by the agents doing those things, not by you — with one
+exception: if you brainstorm a design decision (stage 3), the constraints binding
+that decision must reach you first. Stage 2.5 tells the researcher to put them in
+its summary.
 
 ## Hard rules
 
@@ -67,9 +79,11 @@ need when `superpowers:*` is available.
   review and pollute the context that coordinates the run
 - Never read a spec, source, or plan file yourself. If you need what it says,
   dispatch an agent that reads it and writes its findings to a path you hand on
-  unopened. Composing the content in your own context first and *then* writing it
+  unopened. Composing the content in your own context first and _then_ writing it
   to a file saves nothing — the tokens are already resident. The saving comes from
-  the reading happening somewhere else
+  the reading happening somewhere else. This rule and the context budget below
+  assume subagents exist; on a single-threaded host they do not apply (see the
+  portability note)
 - Dispatch prompts carry paths, not prose. A dispatch over ~2,000 characters means
   you pasted something that should have been a file
 - Every subagent prompt states the branch the agent must be on and tells it to
@@ -131,15 +145,22 @@ produce lives inside the worktree. Do the rest of the run in there. Install
 dependencies only if the task needs package commands and `node_modules` is
 missing.
 
-Make the handoff directory the later stages write into:
+Make the handoff directory the later stages write into. Use the absolute worktree
+path everywhere — you will be working inside the worktree, where a relative
+`.worktrees/<slug>/` resolves to a nested path that does not exist:
 
 ```bash
-mkdir -p .worktrees/<slug>/.sdd
+WT="$(git rev-parse --show-toplevel)/.worktrees/<slug>"   # from the main checkout
+mkdir -p "$WT/.sdd"
 ```
 
-`.sdd/` holds ground truth, briefs, and reports — the files subagents write for
-each other and that you pass along without opening. It is scratch, not history:
-`.worktrees/` is already git-ignored, so nothing in it reaches the PR diff.
+`.sdd/` holds ground truth, briefs, reports, and diffs — the files subagents write
+for each other and that you pass along without opening. It is scratch, not history.
+The repo ignores it via a `/.sdd/` entry, which is separate from the `.worktrees/`
+entry on purpose: inside a linked worktree, paths are evaluated from that
+worktree's root, so `.worktrees/` does not cover them. Confirm once with
+`git -C "$WT" status --short` — if `.sdd/` shows as untracked, the ignore rule did
+not apply and the stage-5 clean-status check will fail.
 
 Establish the baseline before any edit: run the checks the task's surface depends
 on. A check that already fails is either in scope or a blocker — decide which, and
@@ -164,18 +185,24 @@ Dispatch one researcher subagent. Give it:
 
 - the issue number, and `gh issue view <N>` as its own job to run
 - the worktree path and the branch name
-- the area skill's path, from `docs/skills/README.md`'s mapping — the path, since
-  you have not read the skill
+- the area skill's path, from AGENTS.md's "Minimum required skills by area" — the
+  path, since you have not read the skill. Name every skill a multi-area issue maps to
 - the output path: `<worktree>/.sdd/ground-truth.md`
 - what the plan will need from it: which files the change touches, what the code
   actually does today where the issue claims otherwise, the binding rules from
   AGENTS.md and the area skill quoted verbatim with their exact values, and any
   contradiction between the issue and those rules
+- if you intend to brainstorm a design decision at stage 3: say so, and require the
+  summary to carry the constraints that bind that specific decision. This is the one
+  case where a rule has to reach you rather than only the file
 
-Require it to return **only** the output path and a summary of five lines or
-fewer. State that explicitly — a subagent's return payload lands in your context
-permanently, so an agent that reports its findings in full has defeated the stage
-it was dispatched for.
+Require it to return **only** the output path and a summary of at most five lines
+and 600 characters. Give both limits — five lines of unbounded prose is not a
+bound, and this summary is the one part of its work that becomes permanently
+resident in your context. State the limits explicitly; an agent that reports its
+findings in full has defeated the stage it was dispatched for. If a summary comes
+back over the limit, do not re-read or re-summarize it — it is already resident,
+and the only thing left to do is note it and carry on.
 
 Read the five-line summary. Do not read `ground-truth.md`.
 
@@ -220,7 +247,7 @@ shape, and it loads into the planner's context instead of yours. Its deliverable
    from `ground-truth.md`. Task reviewers in stage 4 use that section as their
    attention lens, so a rule missing there is a rule nobody checks
 3. **one brief file per task** at `<worktree>/.sdd/task-<N>-brief.md`, each carrying
-   that task's full requirements *and* a copy of the Global Constraints — so a brief
+   that task's full requirements _and_ a copy of the Global Constraints — so a brief
    is the single self-contained thing an implementer reads
 
 It returns only the plan path, the task count, and one line per task. Not the plan.
@@ -257,18 +284,25 @@ this skill:` line the `Skill` tool prints, and check that directory:
 ls <sdd-base-dir>/scripts/ 2>/dev/null
 ```
 
-- **`task-brief`, `review-package`, `sdd-workspace` present** — use them as that
-  skill describes. `review-package` matters most: it writes the diff to a file so
-  the reviewer reads it instead of you carrying it.
-- **No `scripts/` directory** — that version predates them, and every artifact it
-  describes as a file handoff will otherwise be inlined. Do the same handoffs
-  yourself: stage 3 already wrote the briefs, so pass those paths; and redirect the
-  diff to a file rather than letting it into your context —
+Probe each helper separately and decide separately — a version may ship some and
+not others, and "the directory exists" is not evidence that the one you are about
+to call is in it. For each helper, use it if present, else do its job yourself:
+
+- **`review-package`** — writes the diff to a file so the reviewer reads it instead
+  of you carrying it. This is the one that matters most. Without it:
 
   ```bash
   { git log --oneline BASE..HEAD; git diff --stat BASE..HEAD; git diff -U10 BASE..HEAD; } \
     > <worktree>/.sdd/review-<N>.diff
   ```
+
+- **`task-brief`** — extracts one task's text to a file. Without it, nothing is
+  needed: stage 3 already wrote `<worktree>/.sdd/task-<N>-brief.md`. Pass that path.
+- **`sdd-workspace`** — resolves a per-plan artifact directory. Without it, use
+  `<worktree>/.sdd/` and keep the ledger at `<worktree>/.sdd/progress.md`.
+
+Never call a helper you have not seen in the listing, and never skip a handoff
+because its helper is missing — the fallback is the point.
 
 Also check how many reviewers that version wants. Versions with a single combined
 `task-reviewer-prompt.md` gate spec and quality in one dispatch; older ones split it
@@ -281,7 +315,7 @@ Never state a version's capabilities from memory, including this file's descript
 of them. Check the directory.
 
 **When a review finding collides with the plan, ask who wrote the constraint.**
-SDD treats plan conflicts as the human's call, but most of the plan is text *you*
+SDD treats plan conflicts as the human's call, but most of the plan is text _you_
 wrote minutes earlier — escalating your own draft to Ori is noise. Split it:
 
 - The constraint came from **your plan** → amend the plan, record why in the ledger,
@@ -294,14 +328,14 @@ wrote minutes earlier — escalating your own draft to Ori is noise. Split it:
 test that never failed, a lint rule never seen to fire, a CI guard nobody watched
 trip — none are known to work; they are only known to be green, which is the exact
 condition that let the bug ship in the first place. So when you dispatch a fix for
-this class of work, name the *falsifying condition* rather than describing the
+this class of work, name the _falsifying condition_ rather than describing the
 problem: "this test must fail when `getServerSnapshot` is reverted to X." Without a
 stated discriminator, implementers satisfy one property by trading away another —
 and the trade is invisible in a green suite.
 
 **When a subagent dies mid-task** (session limit, crash), do not re-dispatch blind.
 Its uncommitted work is usually intact and worth keeping. First verify integrity:
-`git status`, and specifically confirm that any file it reverted *temporarily* for
+`git status`, and specifically confirm that any file it reverted _temporarily_ for
 testing was restored — an implementer killed between "revert to prove the guard
 fires" and "restore" leaves the bug reinstated in the worktree. Then resume the same
 agent with what remains; its context survives.
@@ -310,9 +344,10 @@ agent with what remains; its context survives.
 brief path, the ground-truth path, the report path it must write, the branch name,
 and one line saying where the task sits in the plan. That is the whole prompt — the
 brief already carries the requirements and the Global Constraints, which is why
-stage 3 built it. A reviewer dispatch is the same brief path, the report path, and
-the diff path. Reviewers get their constraints by reading the brief; do not retype
-the rules into the prompt.
+stage 3 built it. A reviewer dispatch is the same brief path, the report path, the
+diff path, and — like every other dispatch, per the hard rules — the branch name
+with the `git status --short --branch` check before it acts. Reviewers get their
+constraints by reading the brief; do not retype the rules into the prompt.
 
 The number to watch is the dispatch's own length. The run this stage was designed
 from sent a 16,159-character implementer prompt whose bulk was a "ground truth
@@ -370,8 +405,13 @@ it, but not from here: by stage 5 your context is at its heaviest, and
 `gh run watch` streams. Redirect it and read only the exit code:
 
 ```bash
-gh run watch <run-id> --exit-status > .worktrees/<slug>/.sdd/ci.log 2>&1; echo "exit=$?"
+gh run watch <run-id> --exit-status > "$WT/.sdd/ci.log" 2>&1; echo "exit=$?"
 ```
+
+`gh run watch` blocks until the run ends and has no timeout of its own, so a hung
+runner hangs you. Bound it with the tool's own timeout rather than waiting
+indefinitely, and re-issue the watch if it returns without a verdict — a timed-out
+watch says nothing about the run.
 
 On failure, dispatch an agent with the log path and the branch to diagnose and fix.
 Do not read the log yourself, and do not fix CI by hand — the same rule that governs
@@ -383,11 +423,11 @@ different hardware, headless, with different timing, and any behaviour that depe
 on those — hydration mismatches, races, animation, anything timing-sensitive —
 can appear or vanish there. This is not hypothetical: a run of this skill opened a
 PR after 34/34 passed locally, and CI failed three tests immediately, because a
-check had been built to *require* a nondeterministic condition that simply did not
+check had been built to _require_ a nondeterministic condition that simply did not
 occur on the runner.
 
 Two rules follow. First, never report a PR as done on local output alone. Second, a
-mechanism that asserts a fault *must* occur will fail wherever that fault is
+mechanism that asserts a fault _must_ occur will fail wherever that fault is
 environment-dependent — so suppression mechanisms warn, and only the detection path
 fails. Retries do not save you: they rescue a test that passes on retry, not one
 that fails identically three times.
@@ -421,10 +461,10 @@ budget entered stage 4 at 202k and spent 17.7M of its 34.4M input budget re-send
 that floor across 88 turns — for a documentation-only PR with three tasks.
 
 You cannot read your own usage mid-run, so check the proxy: by the end of stage 3
-you should have opened the issue body, `docs/skills/README.md`,
-`branching-and-issues.md`, and nothing else. No spec file, no source file, no plan,
-no brief, no ground-truth. If you have opened one of those, the budget is already
-gone and the rest of the run pays for it.
+you should have opened the issue body, `branching-and-issues.md`, and nothing else.
+No spec file, no source file, no area skill, no plan, no brief, no ground-truth. If
+you have opened one of those, the budget is already gone and the rest of the run
+pays for it.
 
 Afterwards, the real numbers are in the session transcript at
 `~/.claude/projects/<project-slug>/<session-id>.jsonl`. Each assistant line carries
@@ -444,7 +484,8 @@ Before claiming the run is done, confirm each of these from real output:
   metadata matches the issue
 - `gh issue view <N> --json labels` — carries `status:review`
 - `ls <worktree>/.sdd/` — ground-truth, briefs, and reports exist as files, which is
-  the evidence the handoffs happened rather than being inlined
+  the evidence the handoffs happened rather than being inlined. Claude Code only;
+  under the single-threaded Codex path there are no handoffs to evidence
 
 Expected evidence: one issue number, one branch, one PR URL, fresh passing check
 output, and PR metadata equal to the issue's. Report any check you could not run as
@@ -482,6 +523,9 @@ you reached, what exists on disk and on the remote, and what you need.
   [docs/skills/task-to-pr-automation.md](../../../docs/skills/task-to-pr-automation.md)
   for stages 2 onward and implement stage 4 single-threaded, keeping the per-task
   review gate as a self-review pass against the plan's Global Constraints. Running
-  single-threaded means the reading has nowhere else to happen, so the context
-  budget above does not apply; stages 2.5 and 3 collapse into reading the files and
-  writing the plan directly.
+  single-threaded means the reading has nowhere else to happen: the no-reading hard
+  rule, the context budget, and the `.sdd/` verification line are all Claude Code
+  provisions and are suspended here. Stages 2.5 and 3 collapse into reading the
+  files and writing the plan directly. Still write `ground-truth.md` and the plan
+  to disk — not to save context, which is unreachable here, but because they are
+  what a resumed or handed-over session reads instead of re-deriving.
