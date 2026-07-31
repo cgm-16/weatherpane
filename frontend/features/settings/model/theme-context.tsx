@@ -11,14 +11,12 @@ interface ThemeContextValue {
   preference: ThemePreference;
   theme: ThemeMode;
   setPreference: (preference: ThemePreference) => void;
-  toggle: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   preference: 'system',
   theme: 'light',
   setPreference: () => {},
-  toggle: () => {},
 });
 
 function applyThemeToDom(theme: ThemeMode) {
@@ -97,14 +95,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     createSessionThemeRepository().set(nextPreference);
   }
 
-  function toggle() {
-    setPreference(theme === 'light' ? 'dark' : 'light');
-  }
-
   return (
-    <ThemeContext
-      value={{ preference: themePreference, theme, setPreference, toggle }}
-    >
+    <ThemeContext value={{ preference: themePreference, theme, setPreference }}>
       {children}
     </ThemeContext>
   );
