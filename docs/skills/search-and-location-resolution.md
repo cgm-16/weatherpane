@@ -17,6 +17,8 @@
 ## Hard rules
 
 - Search source is the local preprocessed Korea catalog.
+- The generated Search artifact is `catalog.search.generated.json`; its compact tuples are directly searchable without catalog-wide runtime preparation.
+- Keep `catalog.generated.json` as the version-1 canonical artifact, and use the aligned fixed-width-ID lookup artifact for single-entry reconstruction when needed.
 - Search normalization stays narrow and explicit:
   - NFC-normalize query text
   - fold whitespace and punctuation for matching
