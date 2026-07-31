@@ -8,11 +8,21 @@
 /* Tailwind v4: dark: 유틸리티를 미디어쿼리 대신 클래스 기반으로 동작 */
 @variant dark (&:is(.dark, .dark *));
 
-/* 비필수 애니메이션/전환 억제 */
+/* 명시적 모션 축소 선택은 시스템 설정보다 우선한다. */
+:root[data-motion='reduced'] *,
+:root[data-motion='reduced'] *::before,
+:root[data-motion='reduced'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* 시스템 모션 축소는 명시적으로 full을 선택하지 않은 경우에만 적용한다. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  :root:not([data-motion='full']) *,
+  :root:not([data-motion='full']) *::before,
+  :root:not([data-motion='full']) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
