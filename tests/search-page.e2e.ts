@@ -10,9 +10,12 @@ test('검색 결과 선택 시 Detail로 이동하고 날씨가 표시된다', a
     name: '서울특별시-종로구-청운동',
   });
 
+  await expect(page).toHaveURL('/search?q=%EC%B2%AD%EC%9A%B4%EB%8F%99');
   await expect(searchbox).toHaveValue('청운동');
   await expect(page.getByRole('listbox', { name: '검색 결과' })).toBeVisible();
+  await expect(page.getByRole('progressbar')).toHaveCount(0);
   await expect(highlightedResult).toHaveAttribute('aria-selected', 'true');
+  await expect(page).toHaveURL('/search?q=%EC%B2%AD%EC%9A%B4%EB%8F%99');
 
   await searchbox.press('Enter');
 

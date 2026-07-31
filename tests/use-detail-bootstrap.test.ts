@@ -212,6 +212,16 @@ describe('useDetailBootstrap', () => {
     expect(result.current.kind).toBe('not-found');
   });
 
+  test('일치하는 활성 위치가 있으면 카탈로그를 다시 조회하지 않는다', () => {
+    vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
+    vi.mocked(useCoreWeather).mockReturnValue(pendingQuery());
+    vi.mocked(useAqi).mockReturnValue(pendingQuery());
+
+    renderHook(() => useDetailBootstrap('loc_test'));
+
+    expect(getCatalogEntryById).not.toHaveBeenCalled();
+  });
+
   test('쿼리 로딩 중 → loading 반환', () => {
     vi.mocked(useActiveLocation).mockReturnValue(resolvedCtx);
     vi.mocked(useCoreWeather).mockReturnValue(pendingQuery());
