@@ -52,6 +52,7 @@ test.describe('테마 시스템 — 스모크', () => {
       await page.getByRole('radio', { name: '어둡게' }).click();
       await expect(page.locator('html')).toHaveClass(/dark/);
 
+      await page.waitForLoadState('networkidle');
       await page.goto('/favorites');
       await expect(page.locator('html')).toHaveClass(/dark/);
     });
@@ -64,6 +65,7 @@ test.describe('테마 시스템 — 스모크', () => {
       await page.getByRole('radio', { name: '어둡게' }).click();
       await expect(page.locator('html')).toHaveClass(/dark/);
 
+      await page.waitForLoadState('networkidle');
       await page.reload();
       await expect(page.locator('html')).toHaveClass(/dark/);
     });

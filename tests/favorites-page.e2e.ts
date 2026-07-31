@@ -92,6 +92,7 @@ test.describe('Favorites page', () => {
       );
       await page.goto('/favorites');
       await expect(page.getByText('서울')).toBeVisible();
+      await page.waitForLoadState('networkidle');
       await page.reload();
       await expect(page.getByText('서울')).toBeVisible();
     });
@@ -142,6 +143,7 @@ test.describe('Favorites page — 편집/정렬 모드', () => {
   test('nickname persists after editing and reload', async ({ page }) => {
     // page.evaluate로 씨딩하면 재로드 시 재실행되지 않아 앱이 저장한 상태가 유지된다
     await page.goto('/favorites');
+    await page.waitForLoadState('networkidle');
     await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
       key: FAVORITES_KEY,
       value: favoritesPayload([seoulFav]),
@@ -158,6 +160,7 @@ test.describe('Favorites page — 편집/정렬 모드', () => {
   test('reorder via 위로 button persists after reload', async ({ page }) => {
     // page.evaluate로 씨딩하면 재로드 시 재실행되지 않아 앱이 저장한 상태가 유지된다
     await page.goto('/favorites');
+    await page.waitForLoadState('networkidle');
     await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
       key: FAVORITES_KEY,
       value: favoritesPayload([seoulFav, busanFav]),

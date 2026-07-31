@@ -111,6 +111,7 @@ test.describe('온도 단위 — 홈과 상세', () => {
   }) => {
     await page.goto('/settings');
     await page.getByRole('radio', { name: '화씨' }).check();
+    await page.waitForLoadState('networkidle');
     await page.reload();
     await expect(page.getByRole('radio', { name: '화씨' })).toBeChecked();
 
@@ -118,6 +119,7 @@ test.describe('온도 단위 — 홈과 상세', () => {
       key: storageKeys.activeLocation,
       value: activeLocation,
     });
+    await page.waitForLoadState('networkidle');
     await page.goto('/');
     await expect(page.getByText('63°').first()).toBeVisible();
     await page.getByRole('link', { name: /상세 보기/ }).click();
@@ -130,8 +132,10 @@ test.describe('온도 단위 — 홈과 상세', () => {
 
     await page.goto('/settings');
     await page.getByRole('radio', { name: '섭씨' }).check();
+    await page.waitForLoadState('networkidle');
     await page.reload();
     await expect(page.getByRole('radio', { name: '섭씨' })).toBeChecked();
+    await page.waitForLoadState('networkidle');
     await page.goto('/');
     await expect(page.getByText('17°').first()).toBeVisible();
   });
@@ -144,12 +148,14 @@ test.describe('온도 단위 — 즐겨찾기', () => {
   test('화씨 선택은 새로고침 뒤 즐겨찾기 카드에 적용된다', async ({ page }) => {
     await page.goto('/settings');
     await page.getByRole('radio', { name: '화씨' }).check();
+    await page.waitForLoadState('networkidle');
     await page.reload();
 
     await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
       key: storageKeys.favorites,
       value: JSON.stringify({ version: 1, data: [favorite] }),
     });
+    await page.waitForLoadState('networkidle');
     await page.goto('/favorites');
     await expect(page.getByText('63°')).toBeVisible();
     await page.screenshot({
