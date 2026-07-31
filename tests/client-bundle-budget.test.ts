@@ -4,6 +4,7 @@ import {
   assertCatalogBundleBudget,
   assertGeneratedCatalogBundleBudgets,
   deriveCatalogBundleBudgets,
+  formatCatalogBundleEvidence,
   type ClientBundleReport,
 } from '../scripts/client-bundle-budget';
 
@@ -138,6 +139,19 @@ describe('catalog bundle budgets', () => {
     expect(evidence.lookup.reductionPercentage.rawBytes).toBeCloseTo(
       ((8_733_640 - measured.lookup.rawBytes) / 8_733_640) * 100
     );
+  });
+
+  it('prints every actual-versus-limit value to prevent output omission', () => {
+    const budgets = deriveCatalogBundleBudgets(measured);
+    const output = formatCatalogBundleEvidence(
+      assertCatalogBundleBudget(createReport(), budgets),
+      budgets
+    );
+
+    expect(output).toContain('검색 카탈로그 raw: 1000 / 1050 bytes');
+    expect(output).toContain('검색 카탈로그 gzip: 100 / 105 bytes');
+    expect(output).toContain('상세 조회 raw: 500 / 525 bytes');
+    expect(output).toContain('상세 조회 gzip: 50 / 53 bytes');
   });
 
   it('rejects Search gzip one byte above its derived limit', () => {
