@@ -25,15 +25,15 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 - **Offline behavior**: 스냅샷 기반 렌더, stale/오프라인 표시, 실패 복구 UX.
 - **Assets / Sketch pipeline**: 상태(맑음/비/눈 등)와 주야에 따른 스케치 키-에셋 매핑 및 캐시.
 
-> **구현 상태:** Home/Search/Weather Detail/Favorites/Recents는 구현됨. Settings는 미구현 — 차기 범위(이슈 #77). Offline behavior는 스냅샷 fallback + last-updated 배지 수준까지 구현됨 — 서비스워커 기반 PWA 캐싱은 미구현(`docs/legacy/service-worker-caching-design.md` 참고).
+> **구현 상태:** Home/Search/Favorites/Recents는 구현됨. Weather Detail은 현재/시간별 예보와 보조 지표까지 부분 구현되었고 다일 일별 예보는 미구현이다. Settings는 미구현 — 차기 범위(이슈 #77). Offline behavior는 API 실패 후 스냅샷 fallback + last-updated 배지 수준까지 구현됨 — 초기 pending 중 스냅샷 즉시 렌더와 서비스워커 기반 PWA 캐싱은 미구현(`docs/legacy/service-worker-caching-design.md` 참고).
 
 ### MVP 우선순위(권장)
 
 | 우선순위 | 기능                   | MVP 목표                                               | 구현 상태                                                                                              | 비고                                                |
 | -------- | ---------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------- |
-| P0       | Home/Active Location   | 즉시 렌더 + 스냅샷 fallback + stale 표시               | 구현됨                                                                                                 | 오프라인 핵심                                       |
+| P0       | Home/Active Location   | 즉시 렌더 + 스냅샷 fallback + stale 표시               | 부분 구현(API 실패 후 스냅샷 fallback + stale 표시는 구현, 초기 pending 중 스냅샷 즉시 렌더는 미구현)  | 오프라인 핵심                                       |
 | P0       | Search                 | 위치 선택 → Active Location 전환 + Recents 기록        | 구현됨                                                                                                 | 검색 데이터 소스는 가정 필요                        |
-| P0       | Weather Detail         | 최소한 “현재/시간별/일별” 표시 + 오류/스켈레톤         | 구현됨                                                                                                 | 데이터 계약 필요                                    |
+| P0       | Weather Detail         | 최소한 “현재/시간별/일별” 표시 + 오류/스켈레톤         | 부분 구현(현재/시간별 + 오류/스켈레톤은 구현, 다일 일별 예보 모델/UI는 미구현)                         | 데이터 계약 필요                                    |
 | P0       | Favorites              | **확정 UX** 준수(편집/정렬, 위·아래, 스켈레톤/오류 등) | 구현됨                                                                                                 | 본 문서에서 고정                                    |
 | P1       | Settings               | 테마/단위 + 캐시/로컬 데이터 초기화                    | 미구현 — 차기 범위(이슈 #77)                                                                           | 개인정보/보안과 연계                                |
 | P1       | Service Worker         | 앱 셸 precache + 런타임 캐시                           | 미구현 — 차기 범위(`docs/legacy/service-worker-caching-design.md`)                                     | PWA 캐싱 권장 citeturn0search3                   |
@@ -86,13 +86,13 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 
 #### Home / Active Location
 
-| 상태             | 조건                   | 표시                                      | 사용자 액션          |
-| ---------------- | ---------------------- | ----------------------------------------- | -------------------- |
-| 로딩 스켈레톤    | 최초 진입, 스냅샷 없음 | 큰 요약 스켈레톤 + 섹션 스켈레톤          | 대기                 |
-| 스냅샷 표시      | 스냅샷 있음            | 마지막 업데이트 + stale/오프라인 배지     | 새로고침(선택)       |
-| 온라인 갱신 실패 | 스냅샷 있음 + API 실패 | 스냅샷 유지 + stale 강화                  | 재시도/포커스 재진입 |
-| 초기 실패        | 스냅샷 없음 + API 실패 | 홈 상단 인라인 오류 + 재시도              | 재시도               |
-| 위치 권한 거부   | Geolocation 거부       | “위치 권한 필요” 안내 + 검색으로 이동 CTA | 검색 사용            |
+| 상태             | 조건                                 | 표시                                      | 사용자 액션          |
+| ---------------- | ------------------------------------ | ----------------------------------------- | -------------------- |
+| 로딩 스켈레톤    | API 쿼리 pending/loading             | 큰 요약 스켈레톤 + 섹션 스켈레톤          | 대기                 |
+| 스냅샷 fallback  | API 실패 + 유효한 영속 스냅샷 있음   | 마지막 업데이트 + stale/오프라인 배지     | 새로고침(선택)       |
+| 온라인 갱신 실패 | 인메모리 쿼리 데이터 있음 + API 실패 | 기존 데이터 유지 + stale 강화             | 재시도/포커스 재진입 |
+| 초기 실패        | API 실패 + 유효한 영속 스냅샷 없음   | 홈 상단 인라인 오류 + 재시도              | 재시도               |
+| 위치 권한 거부   | Geolocation 거부                     | “위치 권한 필요” 안내 + 검색으로 이동 CTA | 검색 사용            |
 
 Geolocation은 사용자 동의가 필요하며, 브라우저는 제공 전에 권한을 요청한다. citeturn6search0  
 권한 상태 조회는 Permissions API의 `navigator.permissions.query()`로 일관된 UX를 구성할 수 있다. citeturn6search1turn6search12
@@ -109,12 +109,14 @@ Geolocation은 사용자 동의가 필요하며, 브라우저는 제공 전에 �
 
 #### Weather Detail
 
-| 상태      | 조건                   | 표시                           |
-| --------- | ---------------------- | ------------------------------ |
-| 스켈레톤  | 스냅샷 없음 + 로딩     | 현재/시간/일별 스켈레톤        |
-| 스냅샷    | 상세 스냅샷 존재       | 상세 UI + last-updated         |
-| 갱신 실패 | 스냅샷 존재 + API 실패 | stale 표시 + 하단 토스트(선택) |
-| 초기 실패 | 스냅샷 없음 + API 실패 | 풀페이지 오류 + 재시도         |
+| 상태             | 조건                                 | 표시                              |
+| ---------------- | ------------------------------------ | --------------------------------- |
+| 스켈레톤         | API 쿼리 pending/loading             | 현재/시간별 UI 스켈레톤           |
+| 스냅샷 fallback  | API 실패 + 유효한 영속 스냅샷 있음   | 현재 날씨 요약 + last-updated     |
+| 온라인 갱신 실패 | 인메모리 쿼리 데이터 있음 + API 실패 | 기존 상세 UI + 새로고침 실패 안내 |
+| 초기 실패        | API 실패 + 유효한 영속 스냅샷 없음   | 풀페이지 오류 + 재시도            |
+
+> **구현 상태: 부분 구현.** 현재/시간별 예보와 오류/스켈레톤 상태는 구현되어 있지만, 다일 일별 예보 모델/UI와 일별 스켈레톤은 미구현이다. 영속 fallback도 별도 상세 스냅샷이 아니라 현재 날씨 요약 스냅샷을 사용한다.
 
 #### Favorites (모듈/섹션)
 
@@ -202,7 +204,7 @@ flowchart LR
 
 ### 런타임 상호작용 시퀀스(mermaid)
 
-> **구현 상태:** 아래 시퀀스의 `W`(Service Worker) 참여자는 미구현 — 차기 범위다. 나머지 흐름(스냅샷 로드 → 렌더 → RefreshQueue → 갱신/폴백)은 실제 구현과 개념적으로 일치한다(구현됨).
+> **구현 상태: 부분 구현.** 아래 시퀀스의 `W`(Service Worker) 참여자는 미구현 — 차기 범위다. 스냅샷을 먼저 로드해 즉시 렌더한 뒤 백그라운드에서 갱신하는 순서도 미구현이다. 실제 app-bootstrap 훅은 API 쿼리가 pending인 동안 `loading`을 반환하고, 성공 데이터를 스냅샷으로 저장하며, API 실패 후에만 영속 스냅샷을 읽어 fallback한다. 따라서 아래 다이어그램은 목표 흐름이며, 현재는 실패 후 fallback 경로만 구현되어 있다.
 
 ```mermaid
 sequenceDiagram
@@ -592,9 +594,9 @@ PATCH는 리소스의 부분 수정을 위한 HTTP 메서드로 RFC 5789에 정�
 
 ### 스테일(stale) 및 last-updated 규칙(권장 기본값)
 
-Weatherpane는 “스냅샷 즉시 제공 + 백그라운드 갱신”을 기본 UX로 한다. HTTP 캐시 확장인 stale-while-revalidate는 백그라운드 재검증 동안 오래된 응답을 제공하는 개념을 정의한다. citeturn1search0turn0search7
+Weatherpane는 “스냅샷 즉시 제공 + 백그라운드 갱신”을 목표 UX로 한다. HTTP 캐시 확장인 stale-while-revalidate는 백그라운드 재검증 동안 오래된 응답을 제공하는 개념을 정의한다. citeturn1search0turn0search7
 
-> **구현 상태: 정정.** 아래는 원래 “Summary/Detail” 축으로 서술되어 있었으나 실제 구현에는 그런 축이 없다. 실제 축은 Weather(핵심 날씨)/AQI이며, `AGENTS.md`의 Query and persistence rules와 `frontend/features/app-bootstrap/snapshot-cutoff.ts`가 단일 출처다.
+> **구현 상태: 부분 구현 및 정책 축 정정.** 아래는 원래 “Summary/Detail” 축으로 서술되어 있었으나 실제 구현에는 그런 축이 없다. 실제 축은 Weather(핵심 날씨)/AQI이며, `AGENTS.md`의 Query and persistence rules와 `frontend/features/app-bootstrap/snapshot-cutoff.ts`가 단일 출처다. staleTime과 실패 후 스냅샷 fallback은 구현되어 있지만, 초기 pending 중 영속 스냅샷을 즉시 렌더하고 백그라운드에서 갱신하는 순서는 미구현이다.
 
 실제 정책(구현됨):
 
@@ -620,26 +622,23 @@ last-updated 표시 규칙 예:
 
 ### 초기 로드 및 재시도 플로우(mermaid)
 
-> **구현 상태: 구현됨.** 이 플로우는 서비스 워커가 아니라 app-bootstrap 훅(`frontend/features/app-bootstrap/use-home-bootstrap.ts`, `use-detail-bootstrap.ts`)이 구현한다 — 스냅샷 즉시 렌더 → 백그라운드 갱신 → 실패 시 스냅샷 유지/인라인 오류라는 개념은 실제 구현과 일치한다.
+> **구현 상태: 부분 구현.** app-bootstrap 훅(`frontend/features/app-bootstrap/use-home-bootstrap.ts`, `use-detail-bootstrap.ts`)은 API 쿼리를 먼저 시작하고 pending 중에는 `loading`을 반환한다. 성공하면 최신 데이터를 렌더하고 영속 스냅샷을 저장하며, API 실패 후에만 유효한 영속 스냅샷을 읽어 fallback한다. 따라서 실패 후 스냅샷 유지/인라인 오류는 구현되어 있지만, 스냅샷 즉시 렌더 → 백그라운드 갱신 순서는 미구현이다.
 
 ```mermaid
 flowchart TD
   A[앱 진입] --> B[ActiveLocation 결정<br/>마지막 선택 or 현재 위치 권한]
-  B --> C{로컬 스냅샷 존재?}
-  C -->|예| D[스냅샷 즉시 렌더<br/>last-updated 표시]
-  C -->|아니오| E[스켈레톤 렌더]
-
-  D --> F[백그라운드 갱신 요청]
-  E --> F
-
-  F --> G{API 성공?}
-  G -->|예| H[스냅샷 저장/갱신<br/>UI 업데이트]
-  G -->|아니오| I{스냅샷 있었나?}
-  I -->|예| J[기존 스냅샷 유지<br/>stale/오프라인 표시]
-  I -->|아니오| K[인라인 오류 + 다시 시도]
-
-  K --> L[다시 시도]
-  L --> F
+  B --> C[Weather/AQI 쿼리 시작]
+  C --> D{Weather pending/loading?}
+  D -->|예| E[스켈레톤 렌더]
+  D -->|아니오| F{Weather/AQI 데이터 모두 있음?}
+  F -->|예| G[최신 데이터 렌더<br/>영속 스냅샷 저장/갱신]
+  F -->|아니오| H{Weather/AQI 중 하나라도 실패?}
+  H -->|아니오| E
+  H -->|예| I[영속 스냅샷 조회]
+  I --> J{유효한 Weather 스냅샷 있음?}
+  J -->|예| K[stale fallback 렌더<br/>last-updated 표시]
+  J -->|아니오| L[인라인 오류 + 다시 시도]
+  L --> C
 ```
 
 ---
