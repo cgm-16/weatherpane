@@ -111,6 +111,12 @@ test.describe('온도 단위 — 홈과 상세', () => {
   }) => {
     await page.goto('/settings');
     await page.getByRole('radio', { name: '화씨' }).check();
+    // RR7.14 지연 라우트 탐색이 마운트 시 보낸 /__manifest 요청이 끝나기 전에
+    // reload/goto가 일어나면 그 요청이 중단되어 콘솔에 "Failed to fetch manifest
+    // patches" 에러가 남는다 — 실제 버그가 아니라 테스트 특유의 경쟁 상태다.
+    // tests/fixtures.ts의 manifestIssues 가드가 이를 하드 실패로 잡아내므로,
+    // networkidle을 기다린 뒤에 reload/goto해 경쟁 자체를 없앤다. 이 파일의 다른
+    // reload/goto 앞에 붙은 waitForLoadState('networkidle')도 동일한 이유다.
     await page.waitForLoadState('networkidle');
     await page.reload();
     await expect(page.getByRole('radio', { name: '화씨' })).toBeChecked();
@@ -130,6 +136,9 @@ test.describe('온도 단위 — 홈과 상세', () => {
       fullPage: true,
     });
 
+    // 위 상세 보기 링크 클릭도 RR 라우트 전환이라 동일한 /__manifest 경쟁이 발생할 수
+    // 있다 — 아래 goto 전에 networkidle을 기다려 경쟁을 없앤다.
+    await page.waitForLoadState('networkidle');
     await page.goto('/settings');
     await page.getByRole('radio', { name: '섭씨' }).check();
     await page.waitForLoadState('networkidle');
