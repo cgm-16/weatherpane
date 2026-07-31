@@ -34,10 +34,6 @@ type HydrationIssue = {
   fullText: string;
 };
 
-type ManifestIssue = {
-  label: string;
-};
-
 // 모든 *.e2e.ts는 '@playwright/test' 대신 이 파일에서 test/expect를 가져와야 한다.
 // page fixture를 재정의해 콘솔 에러/경고와 페이지 에러 중 하이드레이션 관련 문구를
 // 수집하고, 테스트 종료 시 비어 있는지 단언한다. React 19는 SSR/클라이언트 초기 렌더가
@@ -65,14 +61,21 @@ export const test = base.extend<{ knownHydrationBug: KnownHydrationBug }>({
   // eslint-react의 rules-of-hooks가 오탐한다.
   page: async ({ page, knownHydrationBug }, runWithFixture) => {
     const hydrationIssues: HydrationIssue[] = [];
-    const manifestIssues: ManifestIssue[] = [];
+    // React Router 7.14의 지연 라우트 탐색(lazy route discovery)은 마운트 시 /__manifest를
+    // fetch한다. 같은 테스트 안에서 page.reload()나 page.goto()가 그 요청이 끝나기 전에
+    // 실행되면 브라우저가 진행 중이던 fetch를 중단시키고, RR은 이를 콘솔에
+    // "Failed to fetch manifest patches" 에러로 남긴다 — 앱의 실제 동작과는 무관한, 테스트
+    // 하네스 특유의 경쟁 상태다. 조용히 지나치면 진짜 회귀도 같이 묻힐 수 있으므로 console
+    // 에러와 requestfailed 이벤트 양쪽에서 감지해 하드 실패로 바꾼다. *.e2e.ts 스펙 파일들의
+    // waitForLoadState('networkidle') 호출은 바로 이 경쟁을 막기 위한 가드다.
+    const manifestIssues: string[] = [];
 
     const onConsole = (message: ConsoleMessage) => {
       if (message.type() !== 'error' && message.type() !== 'warning') return;
       if (message.text().startsWith('Failed to fetch manifest patches')) {
-        manifestIssues.push({
-          label: `[console.${message.type()}] ${firstLine(message.text())}`,
-        });
+        manifestIssues.push(
+          `[console.${message.type()}] ${firstLine(message.text())}`
+        );
       }
       if (HYDRATION_WARNING_PATTERN.test(message.text())) {
         hydrationIssues.push({
@@ -83,9 +86,9 @@ export const test = base.extend<{ knownHydrationBug: KnownHydrationBug }>({
     };
     const onRequestFailed = (request: Request) => {
       if (new URL(request.url()).pathname !== '/__manifest') return;
-      manifestIssues.push({
-        label: `[requestfailed] ${request.method()} ${request.url()} (${request.failure()?.errorText ?? 'unknown'})`,
-      });
+      manifestIssues.push(
+        `[requestfailed] ${request.method()} ${request.url()} (${request.failure()?.errorText ?? 'unknown'})`
+      );
     };
     const onPageError = (error: Error) => {
       if (HYDRATION_WARNING_PATTERN.test(error.message)) {
@@ -103,8 +106,8 @@ export const test = base.extend<{ knownHydrationBug: KnownHydrationBug }>({
     await runWithFixture(page);
 
     expect(
-      manifestIssues.map((issueFound) => issueFound.label),
-      `React Router 매니페스트 요청 오류 ${manifestIssues.length}건 감지:\n${manifestIssues.map((issueFound) => issueFound.label).join('\n')}`
+      manifestIssues,
+      `React Router 매니페스트 요청 오류 ${manifestIssues.length}건 감지:\n${manifestIssues.join('\n')}`
     ).toEqual([]);
 
     if (knownHydrationBug) {
