@@ -6,7 +6,7 @@ import { useWeatherProvider } from '~/shared/api/weather-provider';
 import {
   buildCatalogLocationFromEntry,
   createCatalogLocationResolver,
-} from '~/entities/location';
+} from '~/entities/location/search-selection';
 import {
   getCatalogEntryFromSearchResult,
   type SearchCatalogResult,
