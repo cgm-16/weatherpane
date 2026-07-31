@@ -48,12 +48,7 @@ test('최근 방문 지역은 재로드 후에도 유지되며 인기 지역 위
   await page.waitForURL(/\/location\//);
 
   // 검색 기본 상태로 돌아감
-  // RR7.14 지연 라우트 탐색이 마운트 시 보낸 /__manifest 요청이 끝나기 전에
-  // reload/goto가 일어나면 그 요청이 중단되어 콘솔에 "Failed to fetch manifest
-  // patches" 에러가 남는다 — 실제 버그가 아니라 테스트 특유의 경쟁 상태다.
-  // tests/fixtures.ts의 manifestIssues 가드가 이를 하드 실패로 잡아내므로,
-  // networkidle을 기다린 뒤에 reload/goto해 경쟁 자체를 없앤다. 이 파일의 다른
-  // reload/goto 앞에 붙은 waitForLoadState('networkidle')도 동일한 이유다.
+  // /__manifest 경합 가드 — 근거는 tests/fixtures.ts의 manifestIssues 주석 참고
   await page.waitForLoadState('networkidle');
   await page.goto('/search');
 
