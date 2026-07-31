@@ -317,11 +317,46 @@ export function getCatalogLocationResultsByCanonicalPath(
     });
   }
 
-  return canonicalPaths.flatMap((canonicalPath) => {
-    const entry = findGeneratedEntry({ canonicalPath });
+  const requestedPathsByComparable = new Map<
+    string,
+    Array<{ canonicalPath: string; resultIndex: number }>
+  >();
+  const results = new Array<SearchCatalogResult | null>(
+    canonicalPaths.length
+  ).fill(null);
 
-    return entry ? [mapGeneratedEntryToSearchResult(entry)] : [];
+  canonicalPaths.forEach((canonicalPath, resultIndex) => {
+    const pathComparable = normalizeComparable(canonicalPath);
+    const requestedPaths = requestedPathsByComparable.get(pathComparable) ?? [];
+    requestedPaths.push({ canonicalPath, resultIndex });
+    requestedPathsByComparable.set(pathComparable, requestedPaths);
   });
+
+  for (const entry of generatedSearchCatalog.entries) {
+    const requestedPaths = requestedPathsByComparable.get(entry[1]);
+
+    if (!requestedPaths) {
+      continue;
+    }
+
+    const generatedCanonicalPath = getGeneratedCanonicalPath(entry);
+    const matchingRequests = requestedPaths.filter(
+      ({ canonicalPath }) => canonicalPath === generatedCanonicalPath
+    );
+
+    if (matchingRequests.length === 0) {
+      continue;
+    }
+
+    const result = mapGeneratedEntryToSearchResult(entry);
+    for (const { resultIndex } of matchingRequests) {
+      results[resultIndex] = result;
+    }
+  }
+
+  return results.filter(
+    (result): result is SearchCatalogResult => result !== null
+  );
 }
 
 export function getCatalogEntryFromSearchResult(
