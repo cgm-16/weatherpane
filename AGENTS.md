@@ -93,6 +93,14 @@ Every PR must:
 - include screenshots for UI changes
 - call out risks and rollback notes
 
+## Agent delegation
+
+- The main conversation coordinates the task and retains decisions that require full repository or user context.
+- Follow the applicable skill's delegation model. When `superpowers:subagent-driven-development` or another task-specific workflow applies, dispatch implementation and review to the agents it requires.
+- Keep tightly coupled iterative implementation in the main conversation when no applicable workflow calls for delegation.
+- Use agents for bounded research, batch operations, verbose output, implementation tasks, and review when their scope and acceptance checks can be handed off precisely.
+- Route required context through the main conversation; agents do not share conversation context automatically.
+
 ## Agent output rules
 
 When changing behavior:

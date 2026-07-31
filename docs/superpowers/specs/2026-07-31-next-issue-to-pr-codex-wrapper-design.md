@@ -8,6 +8,7 @@ Make `$next-issue-to-pr` directly invokable by Codex inside the Weatherpane repo
 
 In scope:
 
+- `AGENTS.md` agent-delegation guidance
 - `.agents/skills/next-issue-to-pr/SKILL.md`
 - `.agents/skills/next-issue-to-pr/agents/openai.yaml`
 - structural validation and fresh-context delegation evaluation
@@ -16,8 +17,14 @@ Out of scope:
 
 - changing the canonical Claude skill or its supporting files
 - copying scripts, tests, evaluations, workflow stages, handoff rules, or context-budget guidance
-- changing issue selection, implementation, review, or PR policy
+- changing issue selection or the canonical workflow's implementation, review, or PR policy
 - changing application code or user-facing UI
+
+## Agent Delegation Alignment
+
+The main conversation coordinates work and retains decisions requiring full context. Implementation and review follow the applicable skill's delegation model, including `superpowers:subagent-driven-development` and task-specific workflows. Tightly coupled iterative implementation stays in the main conversation only when no applicable workflow requires delegation.
+
+This project-level rule reconciles the generic main-conversation default with Weatherpane's skill-driven execution methods without changing the canonical `next-issue-to-pr` workflow.
 
 ## Canonical Workflow Boundary
 
@@ -26,6 +33,7 @@ The canonical skill owns its controller model, workflow stages, scratch artifact
 ## Structure
 
 ```text
+AGENTS.md
 .agents/skills/next-issue-to-pr/
 ├── SKILL.md
 └── agents/
@@ -64,6 +72,6 @@ GREEN verifies:
 
 ## Completion Criteria
 
-- The issue #101 branch adds only this design record and the wrapper files.
+- The issue #101 branch adds this design record and wrapper files and updates `AGENTS.md`.
 - Fresh command and evaluation output supports every validation claim.
 - The PR states non-scope, test evidence, risks, and rollback steps.
