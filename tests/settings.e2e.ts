@@ -158,3 +158,99 @@ test.describe('온도 단위 — 즐겨찾기', () => {
     });
   });
 });
+
+test('확인된 로컬 데이터 초기화는 Weatherpane 값만 삭제하고 기본값으로 다시 시작한다', async ({
+  page,
+}) => {
+  const localTargets = {
+    [storageKeys.activeLocation]: activeLocation,
+    [storageKeys.aqiSnapshots]: 'saved-aqi-snapshots',
+    [storageKeys.favorites]: JSON.stringify({ version: 1, data: [favorite] }),
+    [storageKeys.recents]: 'saved-recents',
+    [storageKeys.settings]: JSON.stringify({
+      data: { motionPreference: 'reduced', temperatureUnit: 'F' },
+      version: 1,
+    }),
+    [storageKeys.theme]: JSON.stringify({ data: 'dark', version: 1 }),
+    [storageKeys.weatherSnapshots]: 'saved-weather-snapshots',
+  };
+  const sessionTargets = {
+    [storageKeys.theme]: JSON.stringify({ data: 'dark', version: 1 }),
+    [storageKeys.unsupportedRouteContext]: 'saved-unsupported-context',
+  };
+
+  await page.addInitScript(
+    ({ localTargets, sessionTargets }) => {
+      if (sessionStorage.getItem('task5.reset-seed')) {
+        return;
+      }
+
+      for (const [key, value] of Object.entries(localTargets)) {
+        localStorage.setItem(key, value);
+      }
+      for (const [key, value] of Object.entries(sessionTargets)) {
+        sessionStorage.setItem(key, value);
+      }
+      localStorage.setItem('other.local.key', 'keep-local');
+      sessionStorage.setItem('other.session.key', 'keep-session');
+      sessionStorage.setItem('task5.reset-seed', 'seeded');
+    },
+    { localTargets, sessionTargets }
+  );
+  await page.goto('/settings');
+  const readStorage = () =>
+    page.evaluate(
+      ({ localKeys, sessionKeys }) => ({
+        local: Object.fromEntries(
+          localKeys.map((key) => [key, localStorage.getItem(key)])
+        ),
+        localUnrelated: localStorage.getItem('other.local.key'),
+        session: Object.fromEntries(
+          sessionKeys.map((key) => [key, sessionStorage.getItem(key)])
+        ),
+        sessionUnrelated: sessionStorage.getItem('other.session.key'),
+      }),
+      {
+        localKeys: Object.keys(localTargets),
+        sessionKeys: Object.keys(sessionTargets),
+      }
+    );
+  const beforeCancel = await readStorage();
+
+  await page.getByRole('button', { name: '로컬 데이터 초기화' }).click();
+  await expect(
+    page.getByRole('alertdialog', { name: '로컬 데이터 초기화' })
+  ).toBeVisible();
+  await page.getByRole('button', { name: '취소' }).click();
+
+  expect(await readStorage()).toEqual(beforeCancel);
+
+  await page.getByRole('button', { name: '로컬 데이터 초기화' }).click();
+  await page.screenshot({
+    path: 'test-results/settings-local-data-reset-confirmation.png',
+    fullPage: true,
+  });
+  await Promise.all([
+    page.waitForEvent('load'),
+    page.getByRole('button', { name: '초기화', exact: true }).click(),
+  ]);
+
+  const afterReset = await readStorage();
+  expect(Object.values(afterReset.local)).toEqual(
+    Object.values(localTargets).map(() => null)
+  );
+  expect(Object.values(afterReset.session)).toEqual(
+    Object.values(sessionTargets).map(() => null)
+  );
+  expect(afterReset.localUnrelated).toBe('keep-local');
+  expect(afterReset.sessionUnrelated).toBe('keep-session');
+  await expect(
+    page.getByRole('radio', { name: '시스템', exact: true })
+  ).toBeChecked();
+  await expect(page.getByRole('radio', { name: '섭씨' })).toBeChecked();
+  await expect(page.getByRole('radio', { name: '시스템 설정' })).toBeChecked();
+  await page.screenshot({
+    path: 'test-results/settings-local-data-reset.png',
+    fullPage: true,
+  });
+});
