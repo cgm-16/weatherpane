@@ -4,8 +4,6 @@ import { OfflineBanner } from './offline-banner';
 
 interface AppShellProps {
   children: React.ReactNode;
-  onThemeToggle: () => void;
-  theme: 'light' | 'dark';
 }
 
 /**
@@ -13,13 +11,13 @@ interface AppShellProps {
  * - 모바일 (< md): BottomNav 표시, 하단 패딩으로 콘텐츠 가림 방지
  * - 데스크톱 (≥ md): SidebarNav 표시, 왼쪽 마진으로 콘텐츠 이동
  */
-export function AppShell({ children, onThemeToggle, theme }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
   return (
     <>
       <OfflineBanner />
       {/* 데스크톱 사이드바: md 미만에서 숨김 */}
       <div className="hidden md:block">
-        <SidebarNav onThemeToggle={onThemeToggle} theme={theme} />
+        <SidebarNav />
       </div>
 
       {/* 콘텐츠 영역: 모바일은 pb-24(하단 내비 높이), 데스크톱은 pl-64(사이드바 폭) */}
@@ -27,7 +25,7 @@ export function AppShell({ children, onThemeToggle, theme }: AppShellProps) {
 
       {/* 모바일 하단 내비: md 이상에서 숨김 */}
       <div className="md:hidden">
-        <BottomNav onThemeToggle={onThemeToggle} theme={theme} />
+        <BottomNav />
       </div>
     </>
   );

@@ -1,11 +1,6 @@
 import { NavLink } from 'react-router';
 import { cn } from '~/shared/lib/utils';
 
-interface SidebarNavProps {
-  onThemeToggle: () => void;
-  theme: 'light' | 'dark';
-}
-
 function navItemClass({ isActive }: { isActive: boolean }) {
   return cn(
     'flex items-center gap-3 rounded-full px-4 py-3 text-sm transition-colors',
@@ -19,7 +14,7 @@ function navItemClass({ isActive }: { isActive: boolean }) {
  * 데스크톱 사이드바 내비게이션.
  * md 미만 화면 크기에서는 AppShell이 숨김 처리한다.
  */
-export function SidebarNav({ onThemeToggle, theme }: SidebarNavProps) {
+export function SidebarNav() {
   return (
     <aside
       aria-label="사이드바 내비게이션"
@@ -62,23 +57,16 @@ export function SidebarNav({ onThemeToggle, theme }: SidebarNavProps) {
         </NavLink>
       </nav>
 
-      <div className="border-t border-border/15 px-4 pt-6">
-        <button
-          aria-label={
-            theme === 'light' ? '어두운 모드로 전환' : '밝은 모드로 전환'
-          }
-          data-theme-toggle={theme === 'light' ? 'dark' : 'light'}
-          className="flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm text-foreground/60 transition-colors hover:bg-accent hover:text-foreground"
-          onClick={onThemeToggle}
-        >
+      <div className="px-4 pt-6">
+        <NavLink to="/settings" className={navItemClass}>
           <span
             aria-hidden
             className="material-symbols-outlined shrink-0 text-[20px]"
           >
-            {theme === 'light' ? 'dark_mode' : 'light_mode'}
+            settings
           </span>
-          {theme === 'light' ? '어두운 모드' : '밝은 모드'}
-        </button>
+          설정
+        </NavLink>
       </div>
     </aside>
   );

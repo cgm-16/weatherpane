@@ -1,11 +1,6 @@
 import { NavLink } from 'react-router';
 import { cn } from '~/shared/lib/utils';
 
-interface BottomNavProps {
-  onThemeToggle: () => void;
-  theme: 'light' | 'dark';
-}
-
 function navItemClass({ isActive }: { isActive: boolean }) {
   return cn(
     'flex flex-col items-center gap-0.5 px-4 py-2 rounded-full transition-colors',
@@ -17,7 +12,7 @@ function navItemClass({ isActive }: { isActive: boolean }) {
  * 모바일 하단 내비게이션 바.
  * md 이상 화면 크기에서는 AppShell이 숨김 처리한다.
  */
-export function BottomNav({ onThemeToggle, theme }: BottomNavProps) {
+export function BottomNav() {
   return (
     <nav
       aria-label="기본 내비게이션"
@@ -41,19 +36,12 @@ export function BottomNav({ onThemeToggle, theme }: BottomNavProps) {
         </span>
         <span className="text-[10px] font-medium">즐겨찾기</span>
       </NavLink>
-      <button
-        aria-label={
-          theme === 'light' ? '어두운 모드로 전환' : '밝은 모드로 전환'
-        }
-        data-theme-toggle={theme === 'light' ? 'dark' : 'light'}
-        className="flex flex-col items-center gap-0.5 rounded-full px-4 py-2 text-foreground/50 transition-colors hover:text-foreground"
-        onClick={onThemeToggle}
-      >
+      <NavLink to="/settings" className={navItemClass}>
         <span aria-hidden className="material-symbols-outlined text-[20px]">
-          {theme === 'light' ? 'dark_mode' : 'light_mode'}
+          settings
         </span>
-        <span className="text-[10px] font-medium">테마</span>
-      </button>
+        <span className="text-[10px] font-medium">설정</span>
+      </NavLink>
     </nav>
   );
 }

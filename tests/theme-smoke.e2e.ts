@@ -42,30 +42,26 @@ test.describe('테마 시스템 — 스모크', () => {
       await expect(page.locator('html')).toHaveClass(/dark/);
     });
 
-    test('테마 토글 후 페이지 이동해도 dark 유지', async ({ page }) => {
+    test('설정에서 테마 선택 후 페이지 이동해도 dark 유지', async ({
+      page,
+    }) => {
       await page.addInitScript(() => localStorage.clear());
       await page.emulateMedia({ colorScheme: 'light' });
-      await page.goto('/');
+      await page.goto('/settings');
 
-      await page
-        .getByRole('button', { name: '어두운 모드로 전환' })
-        .first()
-        .click();
+      await page.getByRole('radio', { name: '어둡게' }).click();
       await expect(page.locator('html')).toHaveClass(/dark/);
 
       await page.goto('/favorites');
       await expect(page.locator('html')).toHaveClass(/dark/);
     });
 
-    test('테마 토글 후 새로고침해도 dark 유지', async ({ page }) => {
+    test('설정에서 테마 선택 후 새로고침해도 dark 유지', async ({ page }) => {
       await page.addInitScript(() => localStorage.clear());
       await page.emulateMedia({ colorScheme: 'light' });
-      await page.goto('/');
+      await page.goto('/settings');
 
-      await page
-        .getByRole('button', { name: '어두운 모드로 전환' })
-        .first()
-        .click();
+      await page.getByRole('radio', { name: '어둡게' }).click();
       await expect(page.locator('html')).toHaveClass(/dark/);
 
       await page.reload();
