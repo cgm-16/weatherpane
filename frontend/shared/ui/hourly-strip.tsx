@@ -1,4 +1,8 @@
 import type { CoreWeatherHourlyEntry } from '~/entities/weather/model/core-weather';
+import {
+  formatTemperature,
+  type TemperatureUnit,
+} from '~/shared/lib/temperature';
 
 // visualBucket + isDay를 Material Symbols 아이콘 이름으로 변환한다.
 function conditionIcon(entry: CoreWeatherHourlyEntry): string {
@@ -31,9 +35,15 @@ interface HourlyStripProps {
   hourly: CoreWeatherHourlyEntry[];
   timeZone: string;
   count?: number;
+  temperatureUnit: TemperatureUnit;
 }
 
-export function HourlyStrip({ hourly, timeZone, count = 6 }: HourlyStripProps) {
+export function HourlyStrip({
+  hourly,
+  timeZone,
+  count = 6,
+  temperatureUnit,
+}: HourlyStripProps) {
   const entries = hourly.slice(0, count);
 
   return (
@@ -55,7 +65,7 @@ export function HourlyStrip({ hourly, timeZone, count = 6 }: HourlyStripProps) {
             {conditionIcon(entry)}
           </span>
           <span className="font-body text-sm font-semibold text-foreground">
-            {Math.round(entry.temperatureC)}°
+            {formatTemperature(entry.temperatureC, temperatureUnit)}
           </span>
         </li>
       ))}

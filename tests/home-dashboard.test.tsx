@@ -90,6 +90,7 @@ function renderDashboard(
           isRefreshing={false}
           hasRefreshError={false}
           onRefresh={vi.fn()}
+          temperatureUnit="C"
           {...overrides}
         />
       </MemoryRouter>
@@ -98,6 +99,25 @@ function renderDashboard(
 }
 
 describe('HomeDashboard 콘텐츠 렌더링', () => {
+  test('화씨 선택 시 현재·최고·최저와 상세 링크 설명을 같은 단위로 표시한다', () => {
+    renderDashboard({
+      temperatureUnit: 'F',
+      weather: {
+        ...weather,
+        current: { ...weather.current, temperatureC: 17.2 },
+      },
+    });
+
+    expect(screen.getByText('63°')).toBeInTheDocument();
+    expect(screen.getByText('H 72°')).toBeInTheDocument();
+    expect(screen.getByText('L 50°')).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', {
+        name: '서울: 63° 맑음, 날씨 상세 보기',
+      })
+    ).toBeInTheDocument();
+  });
+
   test('현재 기온을 표시한다', () => {
     renderDashboard();
     expect(screen.getByText(/18°/)).toBeInTheDocument();

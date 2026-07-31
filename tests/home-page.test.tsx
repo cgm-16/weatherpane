@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
 
 vi.mock('../frontend/features/app-bootstrap/use-home-bootstrap', () => ({
@@ -28,7 +28,12 @@ vi.mock('../frontend/features/favorites/use-favorites', () => ({
   })),
 }));
 
+vi.mock('../frontend/features/settings', () => ({
+  useSettings: vi.fn(() => ({ temperatureUnit: 'F' })),
+}));
+
 import { useHomeBootstrap } from '../frontend/features/app-bootstrap/use-home-bootstrap';
+import { useSettings } from '../frontend/features/settings';
 import { HomePage } from '../frontend/pages/home/ui/home-page';
 import {
   SketchManifestProvider,
@@ -46,6 +51,18 @@ const loc = {
   timezone: 'Asia/Seoul',
 };
 
+function settingsValue(
+  temperatureUnit: 'C' | 'F'
+): ReturnType<typeof useSettings> {
+  return {
+    temperatureUnit,
+    motionPreference: 'system',
+    reduceMotion: false,
+    setTemperatureUnit: vi.fn(),
+    setMotionPreference: vi.fn(),
+  };
+}
+
 function renderPage() {
   return render(
     <SketchManifestProvider manifest={BASELINE_MANIFEST}>
@@ -57,6 +74,10 @@ function renderPage() {
 }
 
 describe('HomePage 상태별 렌더링', () => {
+  beforeEach(() => {
+    vi.mocked(useSettings).mockReturnValue(settingsValue('C'));
+  });
+
   test('no-location → 지역 검색 링크를 표시한다', () => {
     vi.mocked(useHomeBootstrap).mockReturnValue({ kind: 'no-location' });
     renderPage();
@@ -95,7 +116,8 @@ describe('HomePage 상태별 렌더링', () => {
     ).toBeInTheDocument();
   });
 
-  test('stale-fallback → 기온, 최고·최저 기온을 표시한다', () => {
+  test('stale-fallback → 선택한 화씨 단위로 기온, 최고·최저 기온을 표시한다', () => {
+    vi.mocked(useSettings).mockReturnValue(settingsValue('F'));
     const now = new Date().toISOString();
     vi.mocked(useHomeBootstrap).mockReturnValue({
       kind: 'stale-fallback',
@@ -104,7 +126,7 @@ describe('HomePage 상태별 렌더링', () => {
         locationId: 'loc_test',
         fetchedAt: now,
         observedAt: now,
-        temperatureC: 17,
+        temperatureC: 17.2,
         conditionCode: 'CLEAR',
         conditionText: '맑음',
         todayMinC: 10,
@@ -114,9 +136,9 @@ describe('HomePage 상태별 렌더링', () => {
       aqi: null,
     });
     renderPage();
-    expect(screen.getByText(/17/)).toBeInTheDocument();
-    expect(screen.getByText(/22°/)).toBeInTheDocument();
-    expect(screen.getByText(/10°/)).toBeInTheDocument();
+    expect(screen.getByText('63°')).toBeInTheDocument();
+    expect(screen.getByText('H 72°')).toBeInTheDocument();
+    expect(screen.getByText('L 50°')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /마지막 업데이트 시각/ })
     ).toBeInTheDocument();

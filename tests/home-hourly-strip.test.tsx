@@ -28,35 +28,54 @@ function makeEntry(utcHour: number, tempC: number): CoreWeatherHourlyEntry {
 }
 
 describe('HourlyStrip', () => {
+  test('화씨 선택 시 시간별 기온을 변환해 표시한다', () => {
+    const hourly = [makeEntry(0, 17.2)];
+    render(
+      <HourlyStrip hourly={hourly} timeZone="Asia/Seoul" temperatureUnit="F" />
+    );
+
+    expect(screen.getByText('63°')).toBeInTheDocument();
+  });
+
   test('최대 6개 카드를 렌더링한다', () => {
     const hourly = Array.from({ length: 8 }, (_, i) => makeEntry(i, 17 + i));
-    render(<HourlyStrip hourly={hourly} timeZone="Asia/Seoul" />);
+    render(
+      <HourlyStrip hourly={hourly} timeZone="Asia/Seoul" temperatureUnit="C" />
+    );
     expect(screen.getAllByRole('listitem')).toHaveLength(6);
   });
 
   test('각 카드에 기온이 표시된다', () => {
     // UTC 00:00 = Seoul 09:00
     const hourly = [makeEntry(0, 17)];
-    render(<HourlyStrip hourly={hourly} timeZone="Asia/Seoul" />);
+    render(
+      <HourlyStrip hourly={hourly} timeZone="Asia/Seoul" temperatureUnit="C" />
+    );
     expect(screen.getByText(/17°/)).toBeInTheDocument();
   });
 
   test('빈 hourly 배열은 빈 목록을 렌더링한다', () => {
-    render(<HourlyStrip hourly={[]} timeZone="Asia/Seoul" />);
+    render(
+      <HourlyStrip hourly={[]} timeZone="Asia/Seoul" temperatureUnit="C" />
+    );
     expect(screen.queryAllByRole('listitem')).toHaveLength(0);
   });
 
   test('서울 자정(UTC 15:00)은 "오전 12시"로 표시한다', () => {
     // UTC 15:00 = Seoul 00:00 (자정)
     const entry = makeEntry(15, 15);
-    render(<HourlyStrip hourly={[entry]} timeZone="Asia/Seoul" />);
+    render(
+      <HourlyStrip hourly={[entry]} timeZone="Asia/Seoul" temperatureUnit="C" />
+    );
     expect(screen.getByText('오전 12시')).toBeInTheDocument();
   });
 
   test('서울 정오(UTC 03:00)는 "오후 12시"로 표시한다', () => {
     // UTC 03:00 = Seoul 12:00 (정오)
     const entry = makeEntry(3, 20);
-    render(<HourlyStrip hourly={[entry]} timeZone="Asia/Seoul" />);
+    render(
+      <HourlyStrip hourly={[entry]} timeZone="Asia/Seoul" temperatureUnit="C" />
+    );
     expect(screen.getByText('오후 12시')).toBeInTheDocument();
   });
 
@@ -65,7 +84,12 @@ describe('HourlyStrip', () => {
       makeEntry(i, 18 + i)
     );
     render(
-      <HourlyStrip hourly={manyHourly} timeZone="Asia/Seoul" count={12} />
+      <HourlyStrip
+        hourly={manyHourly}
+        timeZone="Asia/Seoul"
+        count={12}
+        temperatureUnit="C"
+      />
     );
     expect(screen.getAllByRole('listitem')).toHaveLength(12);
   });

@@ -168,6 +168,7 @@ function renderDashboard(
           isRefreshing={false}
           hasRefreshError={false}
           onRefresh={vi.fn()}
+          temperatureUnit="C"
           {...overrides}
         />
       </MemoryRouter>
@@ -176,6 +177,29 @@ function renderDashboard(
 }
 
 describe('DetailDashboard 콘텐츠 렌더링', () => {
+  test('화씨 선택 시 현재·최고·최저·시간별·이슬점을 변환해 표시한다', () => {
+    renderDashboard({
+      temperatureUnit: 'F',
+      weather: {
+        ...dashboardWeather,
+        current: { ...dashboardWeather.current, temperatureC: 17.2 },
+        hourly: [
+          {
+            at: '2025-01-01T00:00:00.000Z',
+            temperatureC: 17.2,
+            popPct: 0,
+            condition: dashboardCondition,
+          },
+        ],
+      },
+    });
+
+    expect(screen.getAllByText('63°')).toHaveLength(2);
+    expect(screen.getByText('H 72°')).toBeInTheDocument();
+    expect(screen.getByText('L 50°')).toBeInTheDocument();
+    expect(screen.getByText('48°')).toBeInTheDocument();
+  });
+
   test('현재 기온을 표시한다', () => {
     renderDashboard();
     expect(screen.getByText(/18°/)).toBeInTheDocument();
