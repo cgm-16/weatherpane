@@ -6,6 +6,8 @@ import type {
   LocationCatalog,
 } from '../frontend/entities/location/model/catalog';
 import { getCatalogEntryById } from '../frontend/entities/location/model/catalog-lookup';
+import generatedSearchCatalog from '../frontend/entities/location/catalog.search.generated.json';
+import { POPULAR_LOCATIONS } from '../frontend/entities/location/data/popular-locations';
 import {
   getCatalogEntryFromSearchResult,
   getCatalogLocationResultsByCanonicalPath,
@@ -201,6 +203,49 @@ describe('getCatalogLocationResultsByCanonicalPath', () => {
         secondaryPath: '서울특별시-종로구',
       },
     ]);
+  });
+
+  it('returns every popular default path in requested order with one artifact scan', () => {
+    const originalEntries = generatedSearchCatalog.entries;
+    const originalSegments = generatedSearchCatalog.segments;
+    let entryIterations = 0;
+    let segmentReads = 0;
+
+    generatedSearchCatalog.entries = new Proxy(originalEntries, {
+      get(target, property, receiver) {
+        if (property === Symbol.iterator) {
+          return function* iterateEntries() {
+            entryIterations += 1;
+            yield* target;
+          };
+        }
+
+        return Reflect.get(target, property, receiver);
+      },
+    });
+    generatedSearchCatalog.segments = new Proxy(originalSegments, {
+      get(target, property, receiver) {
+        if (typeof property === 'string' && /^\d+$/.test(property)) {
+          segmentReads += 1;
+        }
+
+        return Reflect.get(target, property, receiver);
+      },
+    });
+
+    try {
+      const results =
+        getCatalogLocationResultsByCanonicalPath(POPULAR_LOCATIONS);
+
+      expect(results.map(({ canonicalPath }) => canonicalPath)).toEqual(
+        POPULAR_LOCATIONS
+      );
+      expect(entryIterations).toBe(1);
+      expect(segmentReads).toBeLessThanOrEqual(80);
+    } finally {
+      generatedSearchCatalog.entries = originalEntries;
+      generatedSearchCatalog.segments = originalSegments;
+    }
   });
 });
 
