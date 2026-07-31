@@ -5,8 +5,10 @@ import type {
   CatalogEntry,
   LocationCatalog,
 } from '../frontend/entities/location/model/catalog';
+import { getCatalogEntryById } from '../frontend/entities/location/model/catalog-lookup';
 import {
-  getCatalogEntryById,
+  getCatalogEntryFromSearchResult,
+  getCatalogLocationResultsByCanonicalPath,
   searchCatalogLocations,
 } from '../frontend/entities/location/model/search';
 
@@ -56,6 +58,15 @@ const catalog: LocationCatalog = {
 };
 
 describe('searchCatalogLocations', () => {
+  it('returns the real default 청운동 result synchronously', () => {
+    expect(searchCatalogLocations('청운동')).toContainEqual({
+      canonicalPath: '서울특별시-종로구-청운동',
+      catalogLocationId: '5f5def784f91',
+      primaryLabel: '청운동',
+      secondaryPath: '서울특별시-종로구',
+    });
+  });
+
   it('does not broaden already-suffixed queries to unrelated stripped-name entries', () => {
     expect(
       searchCatalogLocations('성동구', catalog).map(
@@ -152,12 +163,72 @@ describe('searchCatalogLocations', () => {
   });
 });
 
+describe('getCatalogEntryFromSearchResult', () => {
+  it('reconstructs the matched default search artifact tuple', () => {
+    const result = searchCatalogLocations('청운동').find(
+      ({ catalogLocationId }) => catalogLocationId === '5f5def784f91'
+    );
+
+    expect(result).toBeDefined();
+    expect(getCatalogEntryFromSearchResult(result!)).toEqual({
+      archetypeKey: null,
+      canonicalPath: '서울특별시-종로구-청운동',
+      catalogLocationId: '5f5def784f91',
+      depth: 3,
+      display: {
+        primaryLabel: '청운동',
+        secondaryLabel: '서울특별시-종로구',
+      },
+      eupMyeonDong: '청운동',
+      leafLabel: '청운동',
+      overrideKey: null,
+      siDo: '서울특별시',
+      siGunGu: '종로구',
+      tokens: ['서울특별시-종로구-청운동', '서울특별시', '종로구', '청운동'],
+    });
+  });
+});
+
+describe('getCatalogLocationResultsByCanonicalPath', () => {
+  it('returns a default artifact result for an exact canonical path', () => {
+    expect(
+      getCatalogLocationResultsByCanonicalPath(['서울특별시-종로구-청운동'])
+    ).toEqual([
+      {
+        canonicalPath: '서울특별시-종로구-청운동',
+        catalogLocationId: '5f5def784f91',
+        primaryLabel: '청운동',
+        secondaryPath: '서울특별시-종로구',
+      },
+    ]);
+  });
+});
+
 describe('getCatalogEntryById', () => {
-  it('returns the entry for a known id and null for unknown', () => {
+  it('returns the custom catalog entry for a known id and null for unknown', () => {
     const firstEntry = entries[0];
     expect(getCatalogEntryById(firstEntry.catalogLocationId, catalog)).toEqual(
       firstEntry
     );
     expect(getCatalogEntryById('nonexistent-id', catalog)).toBeNull();
+  });
+
+  it('reconstructs known, first, and last default artifact entries', () => {
+    expect(getCatalogEntryById('5f5def784f91')).toMatchObject({
+      canonicalPath: '서울특별시-종로구-청운동',
+      catalogLocationId: '5f5def784f91',
+    });
+    expect(getCatalogEntryById('af6564d37582')).toMatchObject({
+      canonicalPath: '서울특별시',
+      catalogLocationId: 'af6564d37582',
+    });
+    expect(getCatalogEntryById('8c770f6aad99')).toMatchObject({
+      canonicalPath: '전북특별자치도-부안군-위도면-하왕등리',
+      catalogLocationId: '8c770f6aad99',
+    });
+  });
+
+  it('returns null for an unknown default artifact ID', () => {
+    expect(getCatalogEntryById('000000000000')).toBeNull();
   });
 });

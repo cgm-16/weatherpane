@@ -7,7 +7,7 @@ export {
   recoverUnsupportedRouteContext,
 } from './model/location-resolution';
 export { buildLocationComparablePath } from './model/location-match';
-export { getCatalogEntryById } from './model/search';
+export { getCatalogEntryById } from './model/catalog-lookup';
 export { buildCatalogLocationFromEntry } from './model/catalog';
 export type { CatalogEntry, CatalogDepth } from './model/catalog';
 export type {
