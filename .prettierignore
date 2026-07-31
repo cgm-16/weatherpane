@@ -5,3 +5,6 @@ dist
 build
 coverage
 pnpm-lock.yaml
+frontend/entities/location/catalog.generated.json
+frontend/entities/location/catalog.search.generated.json
+frontend/entities/location/catalog.lookup.generated.json

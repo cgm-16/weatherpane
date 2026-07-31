@@ -76,6 +76,30 @@ export function parseCatalogEntry(rawPath: string): CatalogEntry {
   };
 }
 
+export function validateRawCatalogPaths(rawPaths: unknown): string[] {
+  if (!Array.isArray(rawPaths)) {
+    throw new Error('generate-catalog: input JSON is not an array');
+  }
+
+  const seenCanonical = new Set<string>();
+  for (const [index, rawPath] of rawPaths.entries()) {
+    if (typeof rawPath !== 'string') {
+      throw new Error(
+        `generate-catalog: entry at index ${index} is not a string`
+      );
+    }
+    const canonicalPath = rawPath.normalize('NFC');
+    if (seenCanonical.has(canonicalPath)) {
+      throw new Error(
+        `generate-catalog: duplicate entry in source data (after NFC normalization): "${canonicalPath}"`
+      );
+    }
+    seenCanonical.add(canonicalPath);
+  }
+
+  return rawPaths;
+}
+
 export interface PopularValidationResult {
   valid: string[];
   invalid: string[];

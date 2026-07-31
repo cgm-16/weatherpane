@@ -4,39 +4,32 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { LocationCatalog } from '../frontend/entities/location/model/catalog';
+import {
+  buildGeneratedCatalogLookup,
+  buildGeneratedSearchCatalog,
+} from '../frontend/entities/location/model/catalog-artifacts';
 import { POPULAR_LOCATIONS } from '../frontend/entities/location/data/popular-locations';
-import { parseCatalogEntry, validatePopularLocations } from './catalog-parser';
+import {
+  parseCatalogEntry,
+  validatePopularLocations,
+  validateRawCatalogPaths,
+} from './catalog-parser';
 
 const root = new URL('..', import.meta.url);
 const inputPath = fileURLToPath(new URL('docs/korea_districts.json', root));
-const outputPath = fileURLToPath(
+const catalogOutputPath = fileURLToPath(
   new URL('frontend/entities/location/catalog.generated.json', root)
+);
+const searchOutputPath = fileURLToPath(
+  new URL('frontend/entities/location/catalog.search.generated.json', root)
+);
+const lookupOutputPath = fileURLToPath(
+  new URL('frontend/entities/location/catalog.lookup.generated.json', root)
 );
 
 // ── 원시 데이터 읽기 ────────────────────────────────────────────────────────
 const rawJson = readFileSync(inputPath, 'utf-8');
-const rawPaths: unknown = JSON.parse(rawJson);
-
-if (!Array.isArray(rawPaths)) {
-  throw new Error('generate-catalog: input JSON is not an array');
-}
-
-// ── 파싱 전 중복 항목 검사 ──────────────────────────────────────────────────
-const seenCanonical = new Set<string>();
-for (const [index, rawPath] of rawPaths.entries()) {
-  if (typeof rawPath !== 'string') {
-    throw new Error(
-      `generate-catalog: entry at index ${index} is not a string`
-    );
-  }
-  const canonicalPath = rawPath.normalize('NFC');
-  if (seenCanonical.has(canonicalPath)) {
-    throw new Error(
-      `generate-catalog: duplicate entry in source data (after NFC normalization): "${canonicalPath}"`
-    );
-  }
-  seenCanonical.add(canonicalPath);
-}
+const rawPaths = validateRawCatalogPaths(JSON.parse(rawJson));
 
 // ── 항목 파싱 ────────────────────────────────────────────────────────────────
 const entries = (rawPaths as string[]).map((path) => parseCatalogEntry(path));
@@ -57,10 +50,18 @@ const catalog: LocationCatalog = {
   entries,
 };
 
-mkdirSync(dirname(outputPath), { recursive: true });
-writeFileSync(outputPath, JSON.stringify(catalog, null, 2) + '\n', 'utf-8');
+const outputs = [
+  [catalogOutputPath, catalog],
+  [searchOutputPath, buildGeneratedSearchCatalog(entries)],
+  [lookupOutputPath, buildGeneratedCatalogLookup(entries)],
+] as const;
 
-console.log(`Wrote ${entries.length} entries → ${outputPath}`);
+for (const [outputPath, output] of outputs) {
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, `${JSON.stringify(output, null, 2)}\n`, 'utf-8');
+}
+
+console.log(`Wrote ${entries.length} entries → ${catalogOutputPath}`);
 console.log(
   `Popular locations validated: ${validation.valid.length}/${POPULAR_LOCATIONS.length}`
 );

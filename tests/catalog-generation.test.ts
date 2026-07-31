@@ -4,8 +4,15 @@ import {
   parseCatalogEntry,
   computeCatalogLocationId,
   computeTokens,
+  validateRawCatalogPaths,
   validatePopularLocations,
 } from '../scripts/catalog-parser';
+import {
+  buildGeneratedCatalogLookup,
+  buildGeneratedSearchCatalog,
+} from '../frontend/entities/location/model/catalog-artifacts';
+import generatedSearchCatalog from '../frontend/entities/location/catalog.search.generated.json';
+import generatedCatalogLookup from '../frontend/entities/location/catalog.lookup.generated.json';
 import { POPULAR_LOCATIONS } from '../frontend/entities/location/data/popular-locations';
 
 // ─── computeCatalogLocationId 테스트 ──────────────────────────────────────
@@ -269,5 +276,87 @@ describe('validatePopularLocations', () => {
     const result = validatePopularLocations([], []);
     expect(result.invalid).toHaveLength(0);
     expect(result.valid).toHaveLength(0);
+  });
+});
+
+// ─── 검색·조회 전용 산출물 테스트 ─────────────────────────────────────────
+
+describe('validateRawCatalogPaths', () => {
+  it('rejects NFC-normalized duplicate source paths', () => {
+    expect(() =>
+      validateRawCatalogPaths(['서울특별시', '서울특별시'.normalize('NFD')])
+    ).toThrow(
+      'generate-catalog: duplicate entry in source data (after NFC normalization): "서울특별시"'
+    );
+  });
+});
+
+describe('generated catalog artifacts', () => {
+  const entries = [
+    parseCatalogEntry('서울특별시-종로구-청운동'),
+    parseCatalogEntry('서울특별시'),
+    parseCatalogEntry('서울특별시-종로구'),
+    parseCatalogEntry('부산광역시-기장군-장안읍'),
+  ];
+
+  it('sorts search entries by canonical path without reordering source entries', () => {
+    const searchCatalog = buildGeneratedSearchCatalog(entries);
+
+    expect(searchCatalog.entries.map(([id]) => id)).toEqual([
+      entries[3].catalogLocationId,
+      entries[1].catalogLocationId,
+      entries[2].catalogLocationId,
+      entries[0].catalogLocationId,
+    ]);
+    expect(entries.map((entry) => entry.canonicalPath)).toEqual([
+      '서울특별시-종로구-청운동',
+      '서울특별시',
+      '서울특별시-종로구',
+      '부산광역시-기장군-장안읍',
+    ]);
+  });
+
+  it('stores the only allowed omitted-suffix comparable in segment metadata', () => {
+    const searchCatalog = buildGeneratedSearchCatalog(entries);
+    const byLabel = new Map(
+      searchCatalog.segments.map((segment) => [segment[0], segment])
+    );
+
+    expect(byLabel.get('종로구')).toEqual(['종로구', '종로구', '종로']);
+    expect(byLabel.get('청운동')).toEqual(['청운동', '청운동', '청운']);
+    expect(byLabel.get('서울특별시')).toEqual([
+      '서울특별시',
+      '서울특별시',
+      '서울특별',
+    ]);
+  });
+
+  it('keeps lookup metadata aligned with fixed-width IDs in source order', () => {
+    const lookup = buildGeneratedCatalogLookup(entries);
+
+    expect(lookup.ids).toBe(
+      entries.map((entry) => entry.catalogLocationId).join('')
+    );
+    expect(lookup.entries).toEqual(
+      entries.map((entry) => [
+        entry.canonicalPath,
+        entry.archetypeKey,
+        entry.overrideKey,
+      ])
+    );
+  });
+
+  it('ships complete version-1 generated artifacts', () => {
+    expect(generatedSearchCatalog).toMatchObject({
+      version: '1',
+      total: 20_556,
+    });
+    expect(generatedSearchCatalog.entries).toHaveLength(20_556);
+    expect(generatedCatalogLookup).toMatchObject({
+      version: '1',
+      total: 20_556,
+    });
+    expect(generatedCatalogLookup.ids).toHaveLength(20_556 * 12);
+    expect(generatedCatalogLookup.entries).toHaveLength(20_556);
   });
 });
