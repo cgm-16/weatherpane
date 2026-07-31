@@ -23,30 +23,49 @@ const THEME_INIT_SCRIPT = `(function(){
     try { sessionStorage.setItem(k, v); } catch(e) {}
     try { localStorage.setItem(k, v); } catch(e) {}
   }
-  function applyTheme(dark) {
-    document.documentElement.classList.toggle('dark', dark);
-    save(dark ? 'dark' : 'light');
+  function resolveTheme(preference) {
+    return preference === 'dark' || (preference === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  function applyTheme(preference) {
+    document.documentElement.classList.toggle('dark', resolveTheme(preference));
+  }
+  function parsePreference(raw) {
+    if (!raw) return null;
+    try {
+      var stored = JSON.parse(raw);
+      var preference = stored && stored.version === 1 ? stored.data : null;
+      return preference === 'system' || preference === 'light' || preference === 'dark'
+        ? preference
+        : null;
+    } catch(e) {
+      return null;
+    }
+  }
+  function readPreference() {
+    try {
+      var sessionPreference = parsePreference(sessionStorage.getItem(k));
+      if (sessionPreference) return sessionPreference;
+    } catch(e) {}
+    try {
+      var localPreference = parsePreference(localStorage.getItem(k));
+      if (localPreference) return localPreference;
+    } catch(e) {}
+    return 'system';
   }
   try {
-    var raw = sessionStorage.getItem(k) || localStorage.getItem(k);
-    if (raw) {
-      var d = JSON.parse(raw).data;
-      if (d === 'dark') { document.documentElement.classList.add('dark'); }
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.classList.add('dark');
-    }
+    applyTheme(readPreference());
   } catch(e) {
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.classList.add('dark');
-    }
+    applyTheme('system');
   }
   // React 하이드레이션 전 클릭을 처리해 상태 불일치와 경쟁 조건을 방지한다 (data-theme-toggle 속성 기반)
   document.addEventListener('click', function(e) {
     var btn = e.target && e.target.closest && e.target.closest('button[data-theme-toggle]');
     if (!btn) return;
     var val = btn.getAttribute('data-theme-toggle');
-    if (val === 'dark') { applyTheme(true); }
-    else if (val === 'light') { applyTheme(false); }
+    if (val === 'dark' || val === 'light') {
+      applyTheme(val);
+      save(val);
+    }
   }, true);
 })();`;
 

@@ -3,7 +3,7 @@ import { storageKeys, storageSchemaVersion } from '../storage-keys';
 import type { StorageLike } from '../storage-types';
 import { createVersionedValueRepository } from './repository-utils';
 
-type ThemePreference = 'system' | 'light' | 'dark';
+export type ThemePreference = 'system' | 'light' | 'dark';
 
 interface ThemeRepositoryOptions {
   storage?: StorageLike;
