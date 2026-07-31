@@ -1,25 +1,34 @@
 ---
 name: next-issue-to-pr
-description: Pick the next GitHub issue off the board — highest priority tier, oldest within that tier — and carry it all the way to an open PR using superpowers subagent-driven development. Use this skill whenever Ori asks what to work on next, says "take the next issue", "work the backlog", "grab the top-priority issue", "pick something off the board", "ship the next thing", or asks for an issue to be implemented end-to-end without naming which one. Also use it when Ori names a specific issue number and wants it implemented through to a PR, since stages 2-5 apply unchanged once selection is skipped.
+description: Pick the next GitHub issue off the board — highest priority tier, oldest within that tier — and carry it all the way to an open PR using superpowers subagent-driven development. Use this skill whenever Ori asks what to work on next, says "take the next issue", "work the backlog", "grab the top-priority issue", "pick something off the board", "ship the next thing", or asks for an issue to be implemented end-to-end without naming which one. Also use it when Ori names a specific issue number and wants it implemented through to a PR, since stages 2 onward apply unchanged once selection is skipped.
 ---
 
 # Next Issue To PR
 
-Carry one issue from the board to an open PR, autonomously, in five stages:
+Carry one issue from the board to an open PR, autonomously:
 
 ```
 1 SELECT    pick the issue, claim it with status:in-progress
 2 ISOLATE   worktree + branch off origin/main
-3 PLAN      read the issue, write the plan file inside the worktree
+2.5 GROUND  a researcher subagent writes ground-truth.md; you get the path
+3 PLAN      a planner subagent writes the plan + per-task briefs; you get the paths
 4 BUILD     superpowers:subagent-driven-development over the plan
 5 SHIP      push -> PR, template filled, issue metadata synced
 ```
 
-Ori reviews at the PR, not before it. Run all five stages without checking in.
+Ori reviews at the PR, not before it. Run every stage without checking in.
 Progress summaries and "should I continue?" prompts cost Ori time they chose not
 to spend — the PR is the checkpoint. The narrow list of genuine hard stops is at
 the end of this file; everything not on it, decide yourself and record the
 decision in the PR body.
+
+**You are a router, not a reader.** Stage 4 costs one full re-send of your entire
+context per turn, and it runs for 80-200 turns. Every file you read in stages 1-3
+is therefore paid 80-200 times over. Measured: a docs-only three-task PR entered
+stage 4 carrying 202k tokens and spent 17.7M of its 34.4M input budget doing
+nothing but re-sending that floor. Facts reach you as file paths written by
+subagents; you pass those paths on without opening them. See
+[Context budget](#context-budget) for the target and how to check it.
 
 ## When to use this skill
 
@@ -29,15 +38,23 @@ decision in the PR body.
 
 ## Inputs to inspect first
 
-- [AGENTS.md](../../../AGENTS.md) — product rules that must not drift
-- [docs/skills/branching-and-issues.md](../../../docs/skills/branching-and-issues.md) — branch naming, commit language, PR requirements
-- [docs/skills/task-to-pr-automation.md](../../../docs/skills/task-to-pr-automation.md) — the end-to-end workflow this skill automates
-- [docs/skills/README.md](../../../docs/skills/README.md) — to find the area skill for the issue's `area:*` label
-- `.github/PULL_REQUEST_TEMPLATE.md` — every section must be filled for real
+You read only what governs *your own* actions — routing, branch naming, PR
+mechanics. Everything that governs the *code* is read by the subagents that write
+it.
 
-Read the area skill matching the issue's `area:*` label before planning. AGENTS.md
-lists the minimum required skill per area; an implementation that ignores its area
-skill will fail review on rules this skill does not restate.
+- [docs/skills/README.md](../../../docs/skills/README.md) — maps the issue's `area:*` label to its area skill. You need the mapping, not the skill
+- [docs/skills/branching-and-issues.md](../../../docs/skills/branching-and-issues.md) — branch naming, commit language, PR requirements
+- `.github/PULL_REQUEST_TEMPLATE.md` — read at stage 5, not before; every section must be filled for real
+
+AGENTS.md is already in your context — every session loads it through `CLAUDE.md`.
+Do not read it again; that is a duplicate copy of the largest governing document,
+re-sent on every turn for the rest of the run.
+
+Do **not** read the area skill, `docs/skills/task-to-pr-automation.md`, or any
+spec or source file. The area skill binds the implementation, so the researcher,
+implementers, and reviewers read it — you only name it in their dispatches.
+`task-to-pr-automation.md` is the Codex fallback path; it tells you nothing you
+need when `superpowers:*` is available.
 
 ## Hard rules
 
@@ -48,6 +65,13 @@ skill will fail review on rules this skill does not restate.
 - Never edit implementation files yourself once stage 4 starts — every code change
   goes through an implementer subagent and its reviewers. Controller edits skip
   review and pollute the context that coordinates the run
+- Never read a spec, source, or plan file yourself. If you need what it says,
+  dispatch an agent that reads it and writes its findings to a path you hand on
+  unopened. Composing the content in your own context first and *then* writing it
+  to a file saves nothing — the tokens are already resident. The saving comes from
+  the reading happening somewhere else
+- Dispatch prompts carry paths, not prose. A dispatch over ~2,000 characters means
+  you pasted something that should have been a file
 - Every subagent prompt states the branch the agent must be on and tells it to
   verify with `git status --short --branch` before its first commit. Subagents
   have committed to the wrong branch when this was left implicit
@@ -102,58 +126,159 @@ the current working tree — which may be dirty, on another branch — is untouc
 Build the branch name from the script's `branch_prefix`, replacing `<slug>` with a
 few words describing the change. `.worktrees/` is already git-ignored.
 
-Isolation comes before planning because the plan file lives inside the worktree
-(stage 3 writes it to `docs/superpowers/plans/`). Do the rest of the run in there.
-Install dependencies only if the task needs package commands and `node_modules` is
+Isolation comes before research and planning because every artifact those stages
+produce lives inside the worktree. Do the rest of the run in there. Install
+dependencies only if the task needs package commands and `node_modules` is
 missing.
+
+Make the handoff directory the later stages write into:
+
+```bash
+mkdir -p .worktrees/<slug>/.sdd
+```
+
+`.sdd/` holds ground truth, briefs, and reports — the files subagents write for
+each other and that you pass along without opening. It is scratch, not history:
+`.worktrees/` is already git-ignored, so nothing in it reaches the PR diff.
 
 Establish the baseline before any edit: run the checks the task's surface depends
 on. A check that already fails is either in scope or a blocker — decide which, and
 say which in the PR body. Discovering a pre-existing failure after implementation
 makes it impossible to tell what your change broke.
 
-Done-check: worktree on the right branch, clean status, baseline known.
+Done-check: worktree on the right branch, clean status, `.sdd/` present, baseline
+known.
+
+### 2.5 Establish ground truth without reading anything
+
+Intent: get the facts the plan needs into a file, without those facts passing
+through your context on the way.
+
+This stage exists because the alternative — you reading the spec and source files
+to write an accurate plan — is what put 202k tokens under an 88-turn stage 4 in the
+run this stage was designed from. In that run the controller read `specs.md`
+(32k chars) and `specs-favorites.md` (22k chars), then pasted its conclusions into
+a 16,159-character dispatch. Both copies stayed resident to the end.
+
+Dispatch one researcher subagent. Give it:
+
+- the issue number, and `gh issue view <N>` as its own job to run
+- the worktree path and the branch name
+- the area skill's path, from `docs/skills/README.md`'s mapping — the path, since
+  you have not read the skill
+- the output path: `<worktree>/.sdd/ground-truth.md`
+- what the plan will need from it: which files the change touches, what the code
+  actually does today where the issue claims otherwise, the binding rules from
+  AGENTS.md and the area skill quoted verbatim with their exact values, and any
+  contradiction between the issue and those rules
+
+Require it to return **only** the output path and a summary of five lines or
+fewer. State that explicitly — a subagent's return payload lands in your context
+permanently, so an agent that reports its findings in full has defeated the stage
+it was dispatched for.
+
+Read the five-line summary. Do not read `ground-truth.md`.
+
+If the summary reports a contradiction between the issue and an AGENTS.md product
+rule, that is a stop (see the stop list). Everything else, carry on.
+
+Done-check: `<worktree>/.sdd/ground-truth.md` exists, you have its path and a
+five-line summary, and you have not opened it.
 
 ### 3. Turn the issue into a plan file
 
-Intent: SDD is parameterized on a plan file, so one must exist before stage 4.
+Intent: SDD is parameterized on a plan file, so one must exist before stage 4 — and
+it must exist without its text passing through you.
 
-Read the issue body and the area skill, then judge how specified the issue is:
+Judge how specified the issue is, from its body and the researcher's summary:
 
-- **Concrete and bounded** — the issue names the defect or the change, and you can
-  see the files it touches. Write the plan directly with `superpowers:writing-plans`.
+- **Concrete and bounded** — the issue names the defect or the change, and the
+  summary names the files. Dispatch the planner directly.
 - **A feature with real design questions** — several defensible shapes, and picking
-  wrong wastes the whole run. Use `superpowers:brainstorming` first, then write the
-  plan. Brainstorming is a thinking step, not an interrupt; do not stop for Ori
-  unless the ambiguity is one only Ori can resolve (see the stop list).
+  wrong wastes the whole run. Run `superpowers:brainstorming` yourself first: the
+  design decision is yours to make, not a subagent's. It loads several thousand
+  tokens of skill text into your floor, so spend it only when the shape is genuinely
+  open — but it reads no project files, which is what makes it affordable at all.
+  Pass its conclusion to the planner as a few lines of constraint. Brainstorming is
+  a thinking step, not an interrupt; do not stop for Ori unless the ambiguity is one
+  only Ori can resolve (see the stop list).
 - **Too vague to plan at all** — the issue states a symptom with no reproduction and
-  no acceptance criteria. Investigate first with `superpowers:systematic-debugging`
-  and write the plan around what you find. An issue you cannot plan after
-  investigating is a stop.
+  no acceptance criteria. Send the researcher back out with
+  `superpowers:systematic-debugging` as its method and a reproduction as its
+  deliverable, appended to `ground-truth.md`. An issue still unplannable after that
+  is a stop.
 
-The plan's Global Constraints section must carry the product rules from AGENTS.md
-and the area skill that bind this work — exact values, exact formats. Task
-reviewers in stage 4 use that section as their attention lens, so a rule missing
-there is a rule nobody checks.
+Dispatch one planner subagent. Give it the ground-truth path, the issue number, the
+worktree path, the branch name, any decision you reached by brainstorming, and
+`superpowers:writing-plans` as the skill it must follow — that skill owns the plan's
+shape, and it loads into the planner's context instead of yours. Its deliverables:
 
-Write the plan to `docs/superpowers/plans/<date>-<slug>.local.md`. The `.local.md`
-suffix matters: `*.local.*` is git-ignored, which keeps the plan out of the PR diff
-and out of the `docs/` Korean-language rule, so the plan can be written in English
-for the subagents that consume it. A plan committed into the branch turns a
-one-file fix into a review with tens of thousands of characters of scaffolding in
-the diff — the reviewer's attention is the scarce resource the PR is competing for.
+1. the plan at `docs/superpowers/plans/<date>-<slug>.local.md`, numbered tasks, each
+   independently implementable
+2. **a Global Constraints section** carrying the product rules from AGENTS.md and
+   the area skill that bind this work — exact values, exact formats, quoted verbatim
+   from `ground-truth.md`. Task reviewers in stage 4 use that section as their
+   attention lens, so a rule missing there is a rule nobody checks
+3. **one brief file per task** at `<worktree>/.sdd/task-<N>-brief.md`, each carrying
+   that task's full requirements *and* a copy of the Global Constraints — so a brief
+   is the single self-contained thing an implementer reads
 
-Done-check: a plan file exists at that path with numbered tasks, each independently
-implementable, and Global Constraints quoting the binding rules verbatim.
+It returns only the plan path, the task count, and one line per task. Not the plan.
+
+Writing the briefs here, rather than at dispatch time, is what keeps stage 4's
+prompts down to paths: the expensive artifact is built once by an agent whose
+context is discarded, instead of assembled in yours once per task.
+
+The `.local.md` suffix matters: `*.local.*` is git-ignored, which keeps the plan out
+of the PR diff and out of the `docs/` Korean-language rule, so the plan can be
+written in English for the subagents that consume it. A plan committed into the
+branch turns a one-file fix into a review with tens of thousands of characters of
+scaffolding in the diff — the reviewer's attention is the scarce resource the PR is
+competing for.
+
+Done-check: the plan file and one brief per task exist, you hold their paths and a
+one-line-per-task list, and you have read none of them.
 
 ### 4. Build it with subagent-driven development
 
 Intent: implement through subagents, with a review gate per task.
 
 Invoke `superpowers:subagent-driven-development` with the plan file and follow it.
-Let the harness resolve the skill's scripts — several plugin versions are cached, so
-hardcoded script paths rot. That skill owns the loop: ledger, per-task implementer,
-per-task review, the fix loop and its cap, and the final whole-branch review.
+That skill owns the loop: ledger, per-task implementer, per-task review, the fix
+loop and its cap, and the final whole-branch review.
+
+**Check what that version can actually do before you rely on it.** The plugin is
+updated continuously and several versions sit in the cache; the harness picks one,
+and it is not always the newest or the one `installed_plugins.json` records. Do not
+pin a version — pins rot as fast as paths do. Instead, read the `Base directory for
+this skill:` line the `Skill` tool prints, and check that directory:
+
+```bash
+ls <sdd-base-dir>/scripts/ 2>/dev/null
+```
+
+- **`task-brief`, `review-package`, `sdd-workspace` present** — use them as that
+  skill describes. `review-package` matters most: it writes the diff to a file so
+  the reviewer reads it instead of you carrying it.
+- **No `scripts/` directory** — that version predates them, and every artifact it
+  describes as a file handoff will otherwise be inlined. Do the same handoffs
+  yourself: stage 3 already wrote the briefs, so pass those paths; and redirect the
+  diff to a file rather than letting it into your context —
+
+  ```bash
+  { git log --oneline BASE..HEAD; git diff --stat BASE..HEAD; git diff -U10 BASE..HEAD; } \
+    > <worktree>/.sdd/review-<N>.diff
+  ```
+
+Also check how many reviewers that version wants. Versions with a single combined
+`task-reviewer-prompt.md` gate spec and quality in one dispatch; older ones split it
+into `spec-reviewer-prompt.md` and `code-quality-reviewer-prompt.md` and cost you
+roughly twice the dispatches for the same gate. Follow whichever the loaded version
+ships — but count on the split one being slower, and say so in the PR body if the
+run was expensive.
+
+Never state a version's capabilities from memory, including this file's description
+of them. Check the directory.
 
 **When a review finding collides with the plan, ask who wrote the constraint.**
 SDD treats plan conflicts as the human's call, but most of the plan is text *you*
@@ -181,7 +306,21 @@ testing was restored — an implementer killed between "revert to prove the guar
 fires" and "restore" leaves the bug reinstated in the worktree. Then resume the same
 agent with what remains; its context survives.
 
-What this repo adds on top of it:
+**Every dispatch is paths plus a handful of lines.** An implementer dispatch is the
+brief path, the ground-truth path, the report path it must write, the branch name,
+and one line saying where the task sits in the plan. That is the whole prompt — the
+brief already carries the requirements and the Global Constraints, which is why
+stage 3 built it. A reviewer dispatch is the same brief path, the report path, and
+the diff path. Reviewers get their constraints by reading the brief; do not retype
+the rules into the prompt.
+
+The number to watch is the dispatch's own length. The run this stage was designed
+from sent a 16,159-character implementer prompt whose bulk was a "ground truth
+verified by the coordinator" block — research the controller had done itself and
+then paid for twice, once resident and once as payload. Under this shape the same
+dispatch is a few hundred characters.
+
+What this repo adds on top of SDD:
 
 - Every dispatch names the branch and requires `git status --short --branch` before
   the first commit
@@ -189,9 +328,10 @@ What this repo adds on top of it:
 - Implementers run `pnpm lint`, `pnpm typecheck`, and the tests covering their
   change; UI changes also need Playwright smoke and a screenshot, with the artifact
   path in the report
-- The task reviewer's global-constraints block quotes the area skill's rules and the
-  AGENTS.md product rules the task touches
 - Behavior changes update the matching doc/skill/spec file in the same PR
+- Subagents report status, commits, a one-line test summary, and concerns — the
+  detail goes in their report file. Say this in the dispatch; a full report in the
+  return payload is resident for the rest of the run
 
 Done-check: ledger shows every task complete, final whole-branch review clean or its
 residual findings parked with written rulings.
@@ -225,11 +365,18 @@ what turn one review into three.
 Carry the issue's assignees, labels, and milestone onto the PR. Leave the issue
 open — the PR closes it on merge.
 
-**The run is not finished when the PR opens — it finishes when CI passes.** Watch it:
+**The run is not finished when the PR opens — it finishes when CI passes.** Watch
+it, but not from here: by stage 5 your context is at its heaviest, and
+`gh run watch` streams. Redirect it and read only the exit code:
 
 ```bash
-gh run watch <run-id> --exit-status
+gh run watch <run-id> --exit-status > .worktrees/<slug>/.sdd/ci.log 2>&1; echo "exit=$?"
 ```
+
+On failure, dispatch an agent with the log path and the branch to diagnose and fix.
+Do not read the log yourself, and do not fix CI by hand — the same rule that governs
+stage 4 governs here, and this is the most expensive point in the session to break
+it.
 
 A suite that is green on your machine is evidence about your machine. CI runs on
 different hardware, headless, with different timing, and any behaviour that depends
@@ -263,6 +410,29 @@ If CI fails, fix it before reporting. The PR is yours until it is green.
 Done-check: a PR URL, no placeholders in the body, metadata matching the issue,
 `status:review` on the issue, and CI observed passing.
 
+## Context budget
+
+Stage 4's cost is `turns × your resident context`, and it runs 80-200 turns. The
+floor you carry into it is therefore the single number that decides whether the run
+finishes or dies at a usage limit.
+
+**Target: under 100k tokens when you invoke SDD.** The run that motivated this
+budget entered stage 4 at 202k and spent 17.7M of its 34.4M input budget re-sending
+that floor across 88 turns — for a documentation-only PR with three tasks.
+
+You cannot read your own usage mid-run, so check the proxy: by the end of stage 3
+you should have opened the issue body, `docs/skills/README.md`,
+`branching-and-issues.md`, and nothing else. No spec file, no source file, no plan,
+no brief, no ground-truth. If you have opened one of those, the budget is already
+gone and the rest of the run pays for it.
+
+Afterwards, the real numbers are in the session transcript at
+`~/.claude/projects/<project-slug>/<session-id>.jsonl`. Each assistant line carries
+`message.usage`; resident context per turn is
+`cache_read_input_tokens + cache_creation_input_tokens + input_tokens`. Plot it
+across turns and the jumps name the stage that added the weight. Cache reads bill at
+a discount, so treat the absolute totals as directional and the trajectory as exact.
+
 ## Verification
 
 Before claiming the run is done, confirm each of these from real output:
@@ -273,6 +443,8 @@ Before claiming the run is done, confirm each of these from real output:
 - `gh pr view <PR> --json url,body,labels,assignees,milestone` — body complete,
   metadata matches the issue
 - `gh issue view <N> --json labels` — carries `status:review`
+- `ls <worktree>/.sdd/` — ground-truth, briefs, and reports exist as files, which is
+  the evidence the handoffs happened rather than being inlined
 
 Expected evidence: one issue number, one branch, one PR URL, fresh passing check
 output, and PR metadata equal to the issue's. Report any check you could not run as
@@ -308,5 +480,8 @@ you reached, what exists on disk and on the remote, and what you need.
   `Skill` to invoke `superpowers:*`; `Agent` for subagent dispatch.
 - Codex: same shell commands directly. Codex has no `superpowers:*` skills — follow
   [docs/skills/task-to-pr-automation.md](../../../docs/skills/task-to-pr-automation.md)
-  for stages 2-5 and implement stage 4 single-threaded, keeping the per-task review
-  gate as a self-review pass against the plan's Global Constraints.
+  for stages 2 onward and implement stage 4 single-threaded, keeping the per-task
+  review gate as a self-review pass against the plan's Global Constraints. Running
+  single-threaded means the reading has nowhere else to happen, so the context
+  budget above does not apply; stages 2.5 and 3 collapse into reading the files and
+  writing the plan directly.
