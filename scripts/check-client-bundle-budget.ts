@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import {
   assertCatalogBundleBudget,
   assertGeneratedCatalogBundleBudgets,
+  formatCatalogBundleEvidence,
   type CatalogBundleBudgets,
   type ClientBundleReport,
   type GeneratedCatalogBundleBudgets,
@@ -20,13 +21,7 @@ const generatedBudgets = JSON.parse(
 const budgets = assertGeneratedCatalogBundleBudgets(generatedBudgets);
 const evidence = assertCatalogBundleBudget(report, budgets);
 
-console.log(
-  `검색 카탈로그: ${evidence.search.actual.rawBytes} raw bytes, ${evidence.search.actual.gzipBytes} gzip bytes, raw ${evidence.search.reductionPercentage.rawBytes.toFixed(2)}% 감소, gzip ${evidence.search.reductionPercentage.gzipBytes.toFixed(2)}% 감소`
-);
-console.log(
-  `상세 조회: ${evidence.lookup.actual.rawBytes} raw bytes, ${evidence.lookup.actual.gzipBytes} gzip bytes, raw ${evidence.lookup.reductionPercentage.rawBytes.toFixed(2)}% 감소, gzip ${evidence.lookup.reductionPercentage.gzipBytes.toFixed(2)}% 감소`
-);
-console.log('전체 카탈로그 제외 및 Search/Detail 경로 격리를 확인했습니다.');
+console.log(formatCatalogBundleEvidence(evidence, budgets));
 
 if (process.argv.includes('--prove-red')) {
   const checks = [
