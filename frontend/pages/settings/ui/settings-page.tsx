@@ -1,4 +1,4 @@
-import { SettingsControls } from '~/features/settings';
+import { LocalDataReset, SettingsControls } from '~/features/settings';
 
 export function SettingsPage() {
   return (
@@ -13,6 +13,7 @@ export function SettingsPage() {
           </p>
         </header>
         <SettingsControls />
+        <LocalDataReset />
       </div>
     </main>
   );
