@@ -18,7 +18,7 @@ import {
   storageKeys,
   storageSchemaVersion,
 } from '../frontend/shared/lib/storage/storage-keys';
-import * as searchCatalog from '../frontend/entities/location/model/search';
+import * as searchSelection from '../frontend/entities/location/search-selection';
 import type { RecentLocation } from '../frontend/entities/location/model/types';
 import { createMemoryStorage } from './storage/test-storage';
 import { ActiveLocationProvider } from '../frontend/features/app-bootstrap/active-location-context';
@@ -333,7 +333,7 @@ describe('search route', () => {
 describe('search result selection', () => {
   test('선택한 기본 검색 결과의 카탈로그 항목은 검색 산출물에서 복원한다', async () => {
     const reconstructEntry = vi.spyOn(
-      searchCatalog,
+      searchSelection,
       'getCatalogEntryFromSearchResult'
     );
     vi.mocked(useWeatherProvider).mockReturnValue({
