@@ -5,6 +5,7 @@ import type { Plugin } from 'vite';
 import { defineConfig } from 'vite';
 
 import { REMOTE_MANIFEST_URL } from './frontend/entities/asset/api/fetch-remote-manifest';
+import { clientBundleReportPlugin } from './scripts/client-bundle-report';
 
 // 개발 서버에서 /v1/assets/manifest 엔드포인트가 없으면 React Router가 "No route matches URL"
 // 오류를 발생시켜 HMR 이벤트가 트리거되고 E2E 테스트에 타이밍 문제가 발생한다.
@@ -22,7 +23,12 @@ function manifestStubPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [tailwindcss(), reactRouter(), manifestStubPlugin()],
+  plugins: [
+    tailwindcss(),
+    reactRouter(),
+    manifestStubPlugin(),
+    clientBundleReportPlugin(),
+  ],
   resolve: {
     tsconfigPaths: true,
   },

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "headroomRatio": 0.05,
+  "baseline": {
+    "gzipBytes": 847465,
+    "rawBytes": 8733640
+  },
+  "search": {
+    "measuredRawBytes": 2208645,
+    "measuredGzipBytes": 482194,
+    "rawBytes": 2319078,
+    "gzipBytes": 506304
+  },
+  "lookup": {
+    "measuredRawBytes": 1428018,
+    "measuredGzipBytes": 270389,
+    "rawBytes": 1499419,
+    "gzipBytes": 283909
+  }
+}
