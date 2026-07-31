@@ -1,6 +1,10 @@
 import { NavLink } from 'react-router';
 import { cn } from '~/shared/lib/utils';
-import { useTheme } from '~/shared/hooks/use-theme';
+
+interface BottomNavProps {
+  onThemeToggle: () => void;
+  theme: 'light' | 'dark';
+}
 
 function navItemClass({ isActive }: { isActive: boolean }) {
   return cn(
@@ -13,9 +17,7 @@ function navItemClass({ isActive }: { isActive: boolean }) {
  * 모바일 하단 내비게이션 바.
  * md 이상 화면 크기에서는 AppShell이 숨김 처리한다.
  */
-export function BottomNav() {
-  const { theme, toggle } = useTheme();
-
+export function BottomNav({ onThemeToggle, theme }: BottomNavProps) {
   return (
     <nav
       aria-label="기본 내비게이션"
@@ -45,7 +47,7 @@ export function BottomNav() {
         }
         data-theme-toggle={theme === 'light' ? 'dark' : 'light'}
         className="flex flex-col items-center gap-0.5 rounded-full px-4 py-2 text-foreground/50 transition-colors hover:text-foreground"
-        onClick={toggle}
+        onClick={onThemeToggle}
       >
         <span aria-hidden className="material-symbols-outlined text-[20px]">
           {theme === 'light' ? 'dark_mode' : 'light_mode'}

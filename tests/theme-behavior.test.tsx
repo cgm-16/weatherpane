@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { act, renderHook } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { ThemeProvider, useTheme } from '../frontend/shared/hooks/use-theme';
+import { ThemeProvider, useTheme } from '../frontend/features/settings';
 
 type ColorSchemeListener = (event: MediaQueryListEvent) => void;
 

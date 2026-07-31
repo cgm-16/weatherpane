@@ -1,6 +1,10 @@
 import { NavLink } from 'react-router';
 import { cn } from '~/shared/lib/utils';
-import { useTheme } from '~/shared/hooks/use-theme';
+
+interface SidebarNavProps {
+  onThemeToggle: () => void;
+  theme: 'light' | 'dark';
+}
 
 function navItemClass({ isActive }: { isActive: boolean }) {
   return cn(
@@ -15,9 +19,7 @@ function navItemClass({ isActive }: { isActive: boolean }) {
  * 데스크톱 사이드바 내비게이션.
  * md 미만 화면 크기에서는 AppShell이 숨김 처리한다.
  */
-export function SidebarNav() {
-  const { theme, toggle } = useTheme();
-
+export function SidebarNav({ onThemeToggle, theme }: SidebarNavProps) {
   return (
     <aside
       aria-label="사이드바 내비게이션"
@@ -67,7 +69,7 @@ export function SidebarNav() {
           }
           data-theme-toggle={theme === 'light' ? 'dark' : 'light'}
           className="flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm text-foreground/60 transition-colors hover:bg-accent hover:text-foreground"
-          onClick={toggle}
+          onClick={onThemeToggle}
         >
           <span
             aria-hidden

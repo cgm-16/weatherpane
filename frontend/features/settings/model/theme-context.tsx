@@ -25,7 +25,6 @@ function applyThemeToDom(theme: ThemeMode) {
   document.documentElement.classList.toggle('dark', theme === 'dark');
 }
 
-// sessionStorage 기반 저장소: localStorage가 지워져도 같은 탭 세션 내에서 테마를 유지한다.
 function createSessionThemeRepository() {
   return createThemeRepository({ storage: getSessionStorage() ?? undefined });
 }

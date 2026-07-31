@@ -51,6 +51,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     if (!hydrated || preferences.motionPreference !== 'system') return;
 
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    // eslint-disable-next-line @eslint-react/set-state-in-effect -- system 선택에 다시 진입할 때 현재 시스템 모션 상태를 즉시 반영한다.
+    setSystemReduceMotion(mediaQuery.matches);
     const handleChange = (event: MediaQueryListEvent) => {
       setSystemReduceMotion(event.matches);
     };
