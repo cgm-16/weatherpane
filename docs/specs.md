@@ -6,7 +6,7 @@ Weatherpane는 **대한민국 지역을 중심으로** 사용자에게 “현재
 
 본 문서는 사용자와의 이전 대화에서 확정된 **Favorites UX 결정**(카드 스켈레톤/인라인 오류/재시도/비네비게이션/편집 모드/위·아래 버튼/닉네임 20자 하드캡 등)을 **“변경 금지(확정)”**로 고정하고, 그 외 화면/기능은 “MVP 가정(Assumptions)”과 “권장 설계(Recommendations)”를 명확히 구분해 개발자가 즉시 구현 가능한 수준의 **아키텍처·데이터 모델·API 계약·오프라인 전략·테스트 계획**을 통합한다. API 오류 포맷은 표준화된 Problem Details(RFC 9457)를 기본으로 하여 클라이언트/테스트/관측을 단순화한다. citeturn0search2
 
-> **구현 상태: 정정.** 위 두 문단이 언급하는 **설정(Settings)** 화면, **서비스워커** 기반 오프라인 프록시, **RFC 9457** 오류 포맷은 모두 미구현 — 차기 범위다(Settings는 이슈 #77; 서비스워커 원 설계는 `docs/legacy/service-worker-caching-design.md` 참고). 실제 오류 포맷은 `/v1/*` 프록시가 반환하는 단순한 `{ code, message }` 구조다(`app/routes/v1.weather.core.ts`). 아래 각 절에서 항목별 구현 여부를 다시 표기한다.
+> **구현 상태: 정정.** 위 두 문단이 언급하는 **설정(Settings)** 화면은 구현됨(이슈 #77; `frontend/features/settings/`). **서비스워커** 기반 오프라인 프록시와 **RFC 9457** 오류 포맷은 미구현 — 차기 범위다(서비스워커 원 설계는 `docs/legacy/service-worker-caching-design.md` 참고). 실제 오류 포맷은 `/v1/*` 프록시가 반환하는 단순한 `{ code, message }` 구조다(`app/routes/v1.weather.core.ts`). 아래 각 절에서 항목별 구현 여부를 다시 표기한다.
 
 ---
 
@@ -21,11 +21,11 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 - **Weather Detail**: 선택 위치의 상세 예보(시간별/일별)와 보조 지표(습도/풍속 등).
 - **Favorites**: 자주 보는 위치를 저장/정렬/별칭(닉네임) 관리, 홈에서 빠르게 접근.
 - **Recents**: 최근 조회한 위치 목록(즐겨찾기와 독립).
-- **Settings**: 단위/테마/데이터 관리(캐시 삭제 등).
+- **Settings**: 테마·온도 단위·동작 줄이기와 선택적 로컬 데이터 초기화.
 - **Offline behavior**: 스냅샷 기반 렌더, stale/오프라인 표시, 실패 복구 UX.
 - **Assets / Sketch pipeline**: 상태(맑음/비/눈 등)와 주야에 따른 스케치 키-에셋 매핑 및 캐시.
 
-> **구현 상태:** Home/Search/Favorites/Recents는 구현됨. Weather Detail은 현재/시간별 예보와 보조 지표까지 부분 구현되었고 다일 일별 예보는 미구현이다. Settings는 미구현 — 차기 범위(이슈 #77). Offline behavior는 API 실패 후 스냅샷 fallback + last-updated 배지 수준까지 구현됨 — 초기 pending 중 스냅샷 즉시 렌더와 서비스워커 기반 PWA 캐싱은 미구현(`docs/legacy/service-worker-caching-design.md` 참고).
+> **구현 상태:** Home/Search/Favorites/Recents/Settings는 구현됨(Settings는 이슈 #77). Weather Detail은 현재/시간별 예보와 보조 지표까지 부분 구현되었고 다일 일별 예보는 미구현이다. Offline behavior는 API 실패 후 스냅샷 fallback + last-updated 배지 수준까지 구현됨 — 초기 pending 중 스냅샷 즉시 렌더와 서비스워커 기반 PWA 캐싱은 미구현(`docs/legacy/service-worker-caching-design.md` 참고).
 
 ### MVP 우선순위(권장)
 
@@ -35,10 +35,10 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 | P0       | Search                 | 위치 선택 → Active Location 전환 + Recents 기록        | 구현됨                                                                                                 | 검색 데이터 소스는 가정 필요                        |
 | P0       | Weather Detail         | 최소한 “현재/시간별/일별” 표시 + 오류/스켈레톤         | 부분 구현(현재/시간별 + 오류/스켈레톤은 구현, 다일 일별 예보 모델/UI는 미구현)                         | 데이터 계약 필요                                    |
 | P0       | Favorites              | **확정 UX** 준수(편집/정렬, 위·아래, 스켈레톤/오류 등) | 구현됨                                                                                                 | 본 문서에서 고정                                    |
-| P1       | Settings               | 테마/단위 + 캐시/로컬 데이터 초기화                    | 미구현 — 차기 범위(이슈 #77)                                                                           | 개인정보/보안과 연계                                |
-| P1       | Service Worker         | 앱 셸 precache + 런타임 캐시                           | 미구현 — 차기 범위(`docs/legacy/service-worker-caching-design.md`)                                     | PWA 캐싱 권장 citeturn0search3                   |
+| P1       | Settings               | 테마/단위/동작 줄이기 + 선택적 로컬 데이터 초기화      | 구현됨(이슈 #77; `frontend/features/settings/`)                                                        | 확인 뒤 Weatherpane 소유 데이터만 초기화            |
+| P1       | Service Worker         | 앱 셸 precache + 런타임 캐시                           | 미구현 — 차기 범위(`docs/legacy/service-worker-caching-design.md`)                                     | PWA 캐싱 권장 citeturn0search3                   |
 | P2       | 원격 스케치 매니페스트 | 다음 세션에 적용되는 원격 오버라이드                   | 부분 구현(`/v1/assets/manifest`는 오버라이드 로직은 구현되어 있으나 현재 `{}` 반환 — 활성 데이터 없음) | 운영 편의                                           |
-| P2       | 고급 오프라인 동기화   | Periodic Background Sync 등                            | 미구현 — 차기 범위                                                                                     | 브라우저 지원 고려 citeturn5search2turn5search6 |
+| P2       | 고급 오프라인 동기화   | Periodic Background Sync 등                            | 미구현 — 차기 범위                                                                                     | 브라우저 지원 고려 citeturn5search2turn5search6 |
 
 ### 명시적 전제(Assumptions)
 
@@ -77,8 +77,7 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 
 ### 전역 내비게이션 규칙(권장)
 
-- 기본 라우트: `/`(Home), `/search`, `/favorites`, `/location/:resolvedLocationId`(`app/routes.ts`)
-  - `/settings`는 미구현 — 차기 범위(이슈 #77이 구현을 추적한다).
+- 기본 라우트: `/`(Home), `/search`, `/favorites`, `/settings`, `/location/:resolvedLocationId`(`app/routes.ts`)
 - Active Location 변경은 **사용자의 명시적 선택(검색/최근/즐겨찾기 클릭)**으로만 발생(권장).
   - 예외: 최초 실행에서 “현재 위치” 허용 시 Active Location을 현재 위치로 초기화.
 
@@ -240,7 +239,7 @@ sequenceDiagram
 
 ### 저장소 선택과 근거
 
-MVP 단계의 영속 상태는 **기능별 버전드 Web Storage** 를 표준으로 한다. `favorites`, `recents`, `active location`, `theme`, `weather snapshots`, `AQI snapshots` 는 `localStorage` 에 저장하고, unsupported temp-route context 는 세션 범위여야 하므로 `sessionStorage` 에 저장한다. 각 저장소는 키 버전과 payload `version` 을 함께 사용하고, 파싱 실패 또는 버전 불일치 시 해당 기능 키를 안전하게 리셋한다.
+MVP 단계의 영속 상태는 **기능별 버전드 Web Storage** 를 표준으로 한다. `favorites`, `recents`, `active location`, `theme`, `settings`, `weather snapshots`, `AQI snapshots` 는 `localStorage` 에 저장하고, unsupported temp-route context 및 테마의 세션 미러는 세션 범위이므로 `sessionStorage` 에 저장한다. 각 저장소는 키 버전과 payload `version` 을 함께 사용하고, 파싱 실패 또는 버전 불일치 시 해당 기능 키를 안전하게 리셋한다. TanStack Query 캐시는 런타임 전용이며 세션 간 영속하거나 로컬 데이터 초기화 대상으로 취급하지 않는다.
 
 > **구현 상태: 구현됨.** 위 문단은 실제 구현과 일치한다 — 버전드 `localStorage`/`sessionStorage`이며 IndexedDB가 아니다(`frontend/shared/lib/storage/browser-storage.ts`, `frontend/shared/lib/storage/repositories/`).
 
@@ -255,7 +254,7 @@ MVP 단계의 영속 상태는 **기능별 버전드 Web Storage** 를 표준으
 - `WeatherDetailSnapshot`: 상세 화면 전용 시간별/일별 영속 스냅샷 — 미구현. Detail 화면의 오프라인 폴백도 `WeatherSummarySnapshot`과 동일한 스냅샷을 재사용하며, 별도의 시간별/일별 영속 스냅샷은 없다(`frontend/features/app-bootstrap/use-detail-bootstrap.ts`)
 - `Favorite`: 즐겨찾기 메타(닉네임, order) — 구현됨. 단, 실제 필드는 `locationId` 하나가 아니라 `location: ResolvedLocation` 전체를 포함한다(`frontend/entities/location/model/types.ts`의 `FavoriteLocation`; 아래 TypeScript 인터페이스 절 참고)
 - `Recent`: 최근 조회 기록 — 구현됨. 단, 실제 필드는 `locationId`/`openCount`가 아니라 `location`/`lastOpenedAt`이며 `openCount`는 없다(`frontend/entities/location/model/types.ts`의 `RecentLocation`; `MAX_RECENTS = 10`)
-- `Settings`: 단위/테마/접근성 설정 — 미구현 — 차기 범위(이슈 #77)
+- `Settings`: 온도 단위/동작 줄이기 설정 — 구현됨(이슈 #77). 단, 실제 타입명은 `Settings`가 아니라 `SettingsPreferences`이며 `temperatureUnit`/`motionPreference`만 포함한다(`frontend/features/settings/model/settings-repository.ts`). 테마(`system | light | dark`)는 별도로 `weatherpane.theme.v1`에 저장되며 이 인터페이스에 포함되지 않는다(`frontend/shared/lib/storage/repositories/theme-repository.ts`)
 - `SyncOperation`: 즐겨찾기 변경사항 동기화 큐 — 미구현 — 차기 범위. 원래 설계는 `docs/legacy/favorites-server-sync-design.md` 참고
 
 ### TypeScript 인터페이스(예시)
@@ -404,9 +403,9 @@ export interface Aqi {
 
 현재 위치 서비스는 `getCurrentPosition()` 기반의 1회 조회만 수행한다. 성공 시 역매핑으로 지원되는 한국 canonical 위치를 `dong > gu/gun > si/do` 순서로 시도하고, canonicalization에 실패하면 raw GPS fallback을 만든다. `fallbackReason: 'outside-korea'` 인 raw GPS 위치는 조회는 가능하지만 즐겨찾기 저장 대상이 아니다. persisted active location이 이미 복원된 경우에는 현재 위치를 백그라운드에서 조용히 다시 조회하지 않는다.
 
-### Favorites / Recents / Settings 모델(예시)
+### Favorites / Recents / Settings 모델
 
-> **구현 상태:** `Favorite`는 구현됨이나 실제 필드는 `locationId` 단일 문자열이 아니라 `location: ResolvedLocation` 전체다(`FavoriteLocation`, `frontend/entities/location/model/types.ts`). `Recent`는 구현됨이나 실제 필드는 `locationId`/`openCount`가 아니라 `location`/`lastOpenedAt`이며 `openCount`는 존재하지 않는다(`RecentLocation`, 동일 파일; `MAX_RECENTS = 10`). `Settings`는 미구현 — 차기 범위(이슈 #77).
+> **구현 상태:** `Favorite`는 구현됨이나 실제 필드는 `locationId` 단일 문자열이 아니라 `location: ResolvedLocation` 전체다(`FavoriteLocation`, `frontend/entities/location/model/types.ts`). `Recent`는 구현됨이나 실제 필드는 `locationId`/`openCount`가 아니라 `location`/`lastOpenedAt`이며 `openCount`는 존재하지 않는다(`RecentLocation`, 동일 파일; `MAX_RECENTS = 10`). `Settings`는 구현됨(이슈 #77)이나 실제 타입명은 `SettingsPreferences`다(`frontend/features/settings/model/settings-repository.ts`). 테마는 이 타입에 포함되지 않고 별도로 `weatherpane.theme.v1`에 저장된다(`frontend/shared/lib/storage/repositories/theme-repository.ts`).
 
 ```ts
 export interface Favorite {
@@ -425,11 +424,33 @@ export interface Recent {
 }
 
 export interface Settings {
-  theme: 'system' | 'light' | 'dark';
-  unitTemp: 'C' | 'F';
-  reduceMotion: boolean;
+  temperatureUnit: 'C' | 'F'; // 기본값 C
+  motionPreference: 'system' | 'reduced' | 'full';
 }
 ```
+
+### Settings 계약
+
+- 테마는 `weatherpane.theme.v1`에 `system | light | dark`로 저장한다. `system`은
+  현재 시스템 색상 설정과 실행 중 변경을 따르며, `light`와 `dark`의 명시적
+  선택은 시스템 변경을 따르지 않는다.
+- 비테마 설정은 `weatherpane.settings.v1`에 `temperatureUnit`과
+  `motionPreference`를 버전 관리된 payload로 저장한다. 온도 단위는 `C | F`이며
+  기본값은 `C`다. 날씨와 스냅샷의 정규화 값은 섭씨로 유지하고, 표시 경계에서만
+  `F = C × 9 / 5 + 32`로 변환한 뒤 한 번 반올림한다.
+- 동작 줄이기는 `system | reduced | full`이다. `system`은 실행 중 시스템의
+  `prefers-reduced-motion` 변경을 따르고, `reduced`는 항상 줄이며, `full`은
+  시스템 설정과 관계없이 전체 동작을 허용한다.
+- 로컬 데이터 초기화는 확인을 거쳐야 하며 취소하면 어떤 값도 변경하지 않는다.
+  확인 뒤 `weatherpane.active-location.v1`, `weatherpane.aqi-snapshots.v1`,
+  `weatherpane.favorites.v1`, `weatherpane.recents.v1`,
+  `weatherpane.settings.v1`, `weatherpane.theme.v1`,
+  `weatherpane.weather-snapshots.v1`의 localStorage 값과
+  `weatherpane.theme.v1`, `weatherpane.unsupported-route-context.v1`의
+  sessionStorage 값만 개별 삭제한다. 비관련 키는 보존한다.
+- 모든 삭제가 성공하면 페이지를 다시 불러와 기본 설정과 마운트된 상태를
+  일치시킨다. 하나라도 실패하면 초기화 대화상자를 유지하고 명시적 오류를
+  표시하며 다시 불러오지 않는다.
 
 ### 로컬 저장 키 스키마(권장)
 
@@ -441,6 +462,7 @@ export interface Settings {
 | `favorites`                      | `weatherpane.favorites.v1`                 | `localStorage`   | `FavoriteLocation[]`                           |
 | `recents`                        | `weatherpane.recents.v1`                   | `localStorage`   | `Recent[]`                                     |
 | `theme`                          | `weatherpane.theme.v1`                     | `localStorage`   | `"system" \| "light" \| "dark"`                |
+| `settings`                       | `weatherpane.settings.v1`                  | `localStorage`   | `temperatureUnit, motionPreference`            |
 | `unsupported temp-route context` | `weatherpane.unsupported-route-context.v1` | `sessionStorage` | `Record<token, UnsupportedRouteContext>`       |
 
 ### 예시 JSON
@@ -696,7 +718,7 @@ PR/이슈 템플릿, CODEOWNERS, 보호 브랜치는 entity["company","Git
 ### 구현 체크리스트(요약)
 
 - [x] UI
-  - [x] Home/Search/Detail/Favorites/Recents의 스켈레톤/오류/stale 상태 구현 — 구현됨. Settings는 미구현 — 차기 범위(이슈 #77)
+  - [x] Home/Search/Detail/Favorites/Recents/Settings의 스켈레톤/오류/stale 상태 구현 — 구현됨(Settings는 이슈 #77)
   - [x] Favorites “편집/정렬” 모드 토글, 위/아래 버튼, 닉네임 20자 하드캡, 완료 auto-blur 커밋 — 구현됨
 - [x] 데이터
   - [x] 버전드 Web Storage 키/payload `version` 관리 — 구현됨(`frontend/shared/lib/storage/`)
