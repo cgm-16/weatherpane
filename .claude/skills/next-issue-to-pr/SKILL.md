@@ -145,21 +145,25 @@ produce lives inside the worktree. Do the rest of the run in there. Install
 dependencies only if the task needs package commands and `node_modules` is
 missing.
 
-Make the handoff directory the later stages write into. Use the absolute worktree
-path everywhere — you will be working inside the worktree, where a relative
-`.worktrees/<slug>/` resolves to a nested path that does not exist:
+Make the handoff directory the later stages write into. Spell the worktree path out
+in full every time it appears, in this stage and every later one:
 
 ```bash
-WT="$(git rev-parse --show-toplevel)/.worktrees/<slug>"   # from the main checkout
-mkdir -p "$WT/.sdd"
+mkdir -p /abs/path/to/repo/.worktrees/<slug>/.sdd
 ```
+
+Two traps here, and they are the same trap. A relative `.worktrees/<slug>/` breaks
+once you are working inside the worktree, where it resolves to a nested path that
+does not exist. And a shell variable holding the path does not survive either —
+shell state is not carried between commands, so a `WT=...` set in this stage is
+empty by stage 5, which silently writes to `/.sdd/`. Write the literal path.
 
 `.sdd/` holds ground truth, briefs, reports, and diffs — the files subagents write
 for each other and that you pass along without opening. It is scratch, not history.
 The repo ignores it via a `/.sdd/` entry, which is separate from the `.worktrees/`
 entry on purpose: inside a linked worktree, paths are evaluated from that
 worktree's root, so `.worktrees/` does not cover them. Confirm once with
-`git -C "$WT" status --short` — if `.sdd/` shows as untracked, the ignore rule did
+`git -C <worktree> status --short` — if `.sdd/` shows as untracked, the ignore rule did
 not apply and the stage-5 clean-status check will fail.
 
 Establish the baseline before any edit: run the checks the task's surface depends
@@ -405,7 +409,7 @@ it, but not from here: by stage 5 your context is at its heaviest, and
 `gh run watch` streams. Redirect it and read only the exit code:
 
 ```bash
-gh run watch <run-id> --exit-status > "$WT/.sdd/ci.log" 2>&1; echo "exit=$?"
+gh run watch <run-id> --exit-status > <worktree>/.sdd/ci.log 2>&1; echo "exit=$?"
 ```
 
 `gh run watch` blocks until the run ends and has no timeout of its own, so a hung
@@ -460,6 +464,22 @@ finishes or dies at a usage limit.
 budget entered stage 4 at 202k and spent 17.7M of its 34.4M input budget re-sending
 that floor across 88 turns — for a documentation-only PR with three tasks.
 
+The target is not arbitrary; it is what this file's own instructions add up to:
+
+| tokens      | source                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------ |
+| ~58,000     | system prompt, tool definitions, `CLAUDE.md`/`AGENTS.md` — measured floor at turn 1, before this skill loads |
+| ~7,400      | this file                                                                                                    |
+| ~1,100      | `branching-and-issues.md` + the PR template                                                                  |
+| ~2,500      | the issue body and `gh` output                                                                               |
+| ~1,500      | stage 2.5 and 3 dispatches and their bounded returns                                                         |
+| **~70,500** | **at stage 4 entry**                                                                                         |
+| ~76,800     | if stage 3 needed `superpowers:brainstorming`                                                                |
+
+Roughly 25k of headroom. That is the whole margin — one spec file read, or one
+plan read back, spends most of it. The budget holds only if the reading stays
+delegated.
+
 You cannot read your own usage mid-run, so check the proxy: by the end of stage 3
 you should have opened the issue body, `branching-and-issues.md`, and nothing else.
 No spec file, no source file, no area skill, no plan, no brief, no ground-truth. If
@@ -483,8 +503,11 @@ Before claiming the run is done, confirm each of these from real output:
 - `gh pr view <PR> --json url,body,labels,assignees,milestone` — body complete,
   metadata matches the issue
 - `gh issue view <N> --json labels` — carries `status:review`
-- `ls <worktree>/.sdd/` — ground-truth, briefs, and reports exist as files, which is
-  the evidence the handoffs happened rather than being inlined. Claude Code only;
+- `ls <worktree>/.sdd/` — `ground-truth.md` and one `task-<N>-brief.md` per task,
+  which is the evidence the handoffs happened rather than being inlined. Check only
+  those two: stages 2.5 and 3 always write them, whereas reports, diffs, and the
+  ledger land wherever the loaded SDD version puts them — `.sdd/` under the fallback
+  path, its own workspace directory when `sdd-workspace` exists. Claude Code only;
   under the single-threaded Codex path there are no handoffs to evidence
 
 Expected evidence: one issue number, one branch, one PR URL, fresh passing check
