@@ -323,3 +323,16 @@ export function assertCatalogBundleBudget(
 
   return { lookup, search };
 }
+
+export function formatCatalogBundleEvidence(
+  evidence: CatalogBundleEvidence,
+  budgets: CatalogBundleBudgets
+): string {
+  return [
+    `검색 카탈로그 raw: ${evidence.search.actual.rawBytes} / ${budgets.search.rawBytes} bytes, ${evidence.search.reductionPercentage.rawBytes.toFixed(2)}% 감소`,
+    `검색 카탈로그 gzip: ${evidence.search.actual.gzipBytes} / ${budgets.search.gzipBytes} bytes, ${evidence.search.reductionPercentage.gzipBytes.toFixed(2)}% 감소`,
+    `상세 조회 raw: ${evidence.lookup.actual.rawBytes} / ${budgets.lookup.rawBytes} bytes, ${evidence.lookup.reductionPercentage.rawBytes.toFixed(2)}% 감소`,
+    `상세 조회 gzip: ${evidence.lookup.actual.gzipBytes} / ${budgets.lookup.gzipBytes} bytes, ${evidence.lookup.reductionPercentage.gzipBytes.toFixed(2)}% 감소`,
+    '전체 카탈로그 제외 및 Search/Detail 경로 격리를 확인했습니다.',
+  ].join('\n');
+}
