@@ -8,6 +8,7 @@ import {
   validatePopularLocations,
 } from '../scripts/catalog-parser';
 import {
+  buildCatalogEntryFromParts,
   buildGeneratedCatalogLookup,
   buildGeneratedSearchCatalog,
 } from '../frontend/entities/location/model/catalog-artifacts';
@@ -343,6 +344,36 @@ describe('generated catalog artifacts', () => {
         entry.archetypeKey,
         entry.overrideKey,
       ])
+    );
+  });
+
+  it('reconstructs the canonical catalog entry from an aligned lookup tuple', () => {
+    const entry = parseCatalogEntry('서울특별시-종로구-청운동');
+
+    expect(
+      buildCatalogEntryFromParts(
+        entry.catalogLocationId,
+        entry.canonicalPath,
+        entry.archetypeKey,
+        entry.overrideKey
+      )
+    ).toEqual(entry);
+  });
+
+  it('rejects malformed IDs before reconstructing or generating artifacts', () => {
+    const invalidEntry = {
+      ...parseCatalogEntry('서울특별시'),
+      catalogLocationId: 'invalid',
+    };
+
+    expect(() =>
+      buildCatalogEntryFromParts('invalid', '서울특별시', null, null)
+    ).toThrow('catalog-artifacts: invalid catalogLocationId "invalid"');
+    expect(() => buildGeneratedSearchCatalog([invalidEntry])).toThrow(
+      'catalog-artifacts: invalid catalogLocationId "invalid"'
+    );
+    expect(() => buildGeneratedCatalogLookup([invalidEntry])).toThrow(
+      'catalog-artifacts: invalid catalogLocationId "invalid"'
     );
   });
 
