@@ -5,6 +5,7 @@ export const storageKeys = {
   aqiSnapshots: `weatherpane.aqi-snapshots.v${storageSchemaVersion}`,
   favorites: `weatherpane.favorites.v${storageSchemaVersion}`,
   recents: `weatherpane.recents.v${storageSchemaVersion}`,
+  settings: `weatherpane.settings.v${storageSchemaVersion}`,
   theme: `weatherpane.theme.v${storageSchemaVersion}`,
   unsupportedRouteContext: `weatherpane.unsupported-route-context.v${storageSchemaVersion}`,
   weatherSnapshots: `weatherpane.weather-snapshots.v${storageSchemaVersion}`,
