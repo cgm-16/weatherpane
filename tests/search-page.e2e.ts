@@ -48,6 +48,7 @@ test('최근 방문 지역은 재로드 후에도 유지되며 인기 지역 위
   await page.waitForURL(/\/location\//);
 
   // 검색 기본 상태로 돌아감
+  await page.waitForLoadState('networkidle');
   await page.goto('/search');
 
   // 최근 지역 섹션이 표시됨

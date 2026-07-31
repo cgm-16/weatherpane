@@ -1,4 +1,9 @@
-import { test as base, expect, type ConsoleMessage } from '@playwright/test';
+import {
+  test as base,
+  expect,
+  type ConsoleMessage,
+  type Request,
+} from '@playwright/test';
 
 // React 하이드레이션 불일치를 알리는 문구는 버전에 따라 형태가 다르지만
 // ("Hydration failed because...", "A tree hydrated but some attributes...",
@@ -29,6 +34,10 @@ type HydrationIssue = {
   fullText: string;
 };
 
+type ManifestIssue = {
+  label: string;
+};
+
 // 모든 *.e2e.ts는 '@playwright/test' 대신 이 파일에서 test/expect를 가져와야 한다.
 // page fixture를 재정의해 콘솔 에러/경고와 페이지 에러 중 하이드레이션 관련 문구를
 // 수집하고, 테스트 종료 시 비어 있는지 단언한다. React 19는 SSR/클라이언트 초기 렌더가
@@ -56,15 +65,27 @@ export const test = base.extend<{ knownHydrationBug: KnownHydrationBug }>({
   // eslint-react의 rules-of-hooks가 오탐한다.
   page: async ({ page, knownHydrationBug }, runWithFixture) => {
     const hydrationIssues: HydrationIssue[] = [];
+    const manifestIssues: ManifestIssue[] = [];
 
     const onConsole = (message: ConsoleMessage) => {
       if (message.type() !== 'error' && message.type() !== 'warning') return;
+      if (message.text().startsWith('Failed to fetch manifest patches')) {
+        manifestIssues.push({
+          label: `[console.${message.type()}] ${firstLine(message.text())}`,
+        });
+      }
       if (HYDRATION_WARNING_PATTERN.test(message.text())) {
         hydrationIssues.push({
           label: `[console.${message.type()}] ${firstLine(message.text())}`,
           fullText: message.text(),
         });
       }
+    };
+    const onRequestFailed = (request: Request) => {
+      if (new URL(request.url()).pathname !== '/__manifest') return;
+      manifestIssues.push({
+        label: `[requestfailed] ${request.method()} ${request.url()} (${request.failure()?.errorText ?? 'unknown'})`,
+      });
     };
     const onPageError = (error: Error) => {
       if (HYDRATION_WARNING_PATTERN.test(error.message)) {
@@ -77,8 +98,14 @@ export const test = base.extend<{ knownHydrationBug: KnownHydrationBug }>({
 
     page.on('console', onConsole);
     page.on('pageerror', onPageError);
+    page.on('requestfailed', onRequestFailed);
 
     await runWithFixture(page);
+
+    expect(
+      manifestIssues.map((issueFound) => issueFound.label),
+      `React Router 매니페스트 요청 오류 ${manifestIssues.length}건 감지:\n${manifestIssues.map((issueFound) => issueFound.label).join('\n')}`
+    ).toEqual([]);
 
     if (knownHydrationBug) {
       const { issue, pattern } = knownHydrationBug;
