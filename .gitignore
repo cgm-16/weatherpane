@@ -10,6 +10,9 @@
 # Local Files
 *.local.*
 .worktrees/
+# 에이전트 핸드오프 스크래치. `.worktrees/` 항목은 링크된 워크트리 안에서는
+# 적용되지 않으므로(그 안에서는 경로가 `/.sdd/...`로 평가된다) 별도로 무시한다.
+/.sdd/
 
 # Playwright
 node_modules/
