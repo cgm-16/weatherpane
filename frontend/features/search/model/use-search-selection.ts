@@ -6,14 +6,12 @@ import { useWeatherProvider } from '~/shared/api/weather-provider';
 import {
   buildCatalogLocationFromEntry,
   createCatalogLocationResolver,
-} from '~/entities/location/search-selection';
-import {
   getCatalogEntryFromSearchResult,
+  type ActiveLocation,
   type SearchCatalogResult,
-} from '~/entities/location/model/search';
+} from '~/entities/location/search-selection';
 import { createUnsupportedRouteContextRepository } from '~/shared/lib/storage/repositories/unsupported-route-context-repository';
 import { persistRecent } from '~/features/recents';
-import type { ActiveLocation } from '~/entities/location/model/types';
 
 export function useSearchSelection() {
   const navigate = useNavigate();
