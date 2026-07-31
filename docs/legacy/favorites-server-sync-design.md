@@ -6,13 +6,13 @@ replaced_by: 미구현 — 차기 범위. 멀티 디바이스 동기화가 필�
 
 # Favorites 서버 동기화 설계 (아카이브)
 
-이 문서는 `docs/specs-favorites.md`의 초기 버전에 있던 서버 API·ETag 기반 동시성 제어·IndexedDB 다중 오브젝트 스토어·로컬 SyncQueue 설계를 원문 그대로 보존한 것이다. 실제 구현에서는 이 중 어느 것도 만들어지지 않았으며, 즐겨찾기는 단일 기기 로컬 `localStorage` 저장소만으로 동작한다(`frontend/shared/lib/storage/repositories/location-repositories.ts`). 아래 내용은 변경 없이 원문 그대로 옮긴 것이며, 현재 시점에서 사실이 아니다 — 미래에 멀티 디바이스 동기화를 설계할 때 참고용으로만 남긴다. 아래 IndexedDB 표의 `favoriteSnapshots` 행이 가리키는 “위 스냅샷 전체”는 이 아카이브로 옮겨지지 않았다 [`docs/specs-favorites.md`의 ‘FavoriteWeatherSnapshot’ 절 참고].
+이 문서는 `docs/specs-favorites.md`의 초기 버전에 있던 서버 API·ETag 기반 동시성 제어·IndexedDB 다중 오브젝트 스토어·로컬 SyncQueue 설계를 보존한 것이다. 실제 구현에서는 이 중 어느 것도 만들어지지 않았으며, 즐겨찾기는 단일 기기 로컬 `localStorage` 저장소만으로 동작한다(`frontend/shared/lib/storage/repositories/location-repositories.ts`). 아래 내용은 깨진 인용 자리표시자만 제거하고 나머지는 원문 그대로 옮긴 것이며, 현재 시점에서 사실이 아니다 — 미래에 멀티 디바이스 동기화를 설계할 때 참고용으로만 남긴다. 아래 IndexedDB 표의 `favoriteSnapshots` 행이 가리키는 “위 스냅샷 전체”는 이 아카이브로 옮겨지지 않았다 [`docs/specs-favorites.md`의 ‘FavoriteWeatherSnapshot’ 절 참고].
 
 ---
 
 ## 로컬 저장소 선택 및 구조 (원래 설계: IndexedDB)
 
-웹 클라이언트는 **IndexedDB**를 기본 저장소로 사용한다(대용량 구조화 데이터에 적합, 트랜잭션 제공). citeturn1search2turn1search14
+웹 클라이언트는 **IndexedDB**를 기본 저장소로 사용한다(대용량 구조화 데이터에 적합, 트랜잭션 제공).
 
 **IndexedDB DB명(예시):** `app_weather_v1`
 
@@ -62,12 +62,12 @@ replaced_by: 미구현 — 차기 범위. 멀티 디바이스 동기화가 필�
 ### HTTP/캐싱/조건부 요청 기본
 
 - 조건부 요청의 핵심 헤더:
-  - `ETag` / `If-None-Match`로 304 Not Modified 기반 캐시 재검증 가능 citeturn2search10turn2search3turn2search6
-  - **업데이트 계열(정렬 저장 등)**은 `If-Match`로 “lost update”를 방지(낙관적 락) citeturn2search33turn6search10turn2search5
+  - `ETag` / `If-None-Match`로 304 Not Modified 기반 캐시 재검증 가능
+  - **업데이트 계열(정렬 저장 등)**은 `If-Match`로 “lost update”를 방지(낙관적 락)
 - 레이트리밋 대응:
-  - 429 Too Many Requests는 레이트 리미팅을 의미하며 `Retry-After`를 포함할 수 있다. citeturn3search2turn3search6turn3search0
+  - 429 Too Many Requests는 레이트 리미팅을 의미하며 `Retry-After`를 포함할 수 있다.
 - 오류 포맷:
-  - 문제 상세는 RFC 9457(Problem Details) 형태를 기본으로 한다. citeturn2search0turn2search1
+  - 문제 상세는 RFC 9457(Problem Details) 형태를 기본으로 한다.
 
 ### 엔드포인트 요약(권장 계약)
 
@@ -80,7 +80,7 @@ replaced_by: 미구현 — 차기 범위. 멀티 디바이스 동기화가 필�
 | 정렬 저장(일괄)        | `PUT /v1/favorites/reorder`                 | 헤더: `If-Match`(컬렉션 ETag) + `{ orderedFavoriteIds }` | `200` + `{ favorites }` + `ETag`       | `412`, `422`                    |
 | 카드용 날씨 요약(배치) | `GET /v1/weather/summaries?locationIds=...` | 쿼리: 최대 N개                                           | `200` + `{ generatedAt, summaries[] }` | `400`, `429`, `503`             |
 
-> `PATCH` 메서드는 부분 수정을 위한 표준 메서드로 사용 가능하며, 멱등성은 구현 방식에 따라 달라질 수 있음을 유의한다. citeturn6search2turn6search13
+> `PATCH` 메서드는 부분 수정을 위한 표준 메서드로 사용 가능하며, 멱등성은 구현 방식에 따라 달라질 수 있음을 유의한다.
 
 ### 요청/응답 스키마(예시)
 
@@ -171,7 +171,7 @@ replaced_by: 미구현 — 차기 범위. 멀티 디바이스 동기화가 필�
 
 ### 오류 응답 포맷: RFC 9457 Problem Details
 
-RFC 9457은 HTTP API 오류를 기계가 읽을 수 있는 표준 구조로 전달하기 위한 포맷을 정의한다. citeturn2search0turn2search1
+RFC 9457은 HTTP API 오류를 기계가 읽을 수 있는 표준 구조로 전달하기 위한 포맷을 정의한다.
 
 기본 구조(필수/권장 필드) + 확장 필드(`code`, `retryable`, `fields`)를 사용한다:
 
@@ -190,14 +190,14 @@ RFC 9457은 HTTP API 오류를 기계가 읽을 수 있는 표준 구조로 전�
 
 ### 오류 코드/상태 코드 매핑(권장)
 
-| 상황                   | HTTP | code(예시)           | retryable | 클라이언트 동작                                                       |
-| ---------------------- | ---: | -------------------- | --------- | --------------------------------------------------------------------- |
-| 인증 만료/미인증       |  401 | AUTH_UNAUTHORIZED    | false     | 로그인/토큰 갱신 플로우                                               |
-| 즐겨찾기 중복 추가     |  409 | FAV_ALREADY_EXISTS   | false     | UI에서 “이미 추가됨” 안내                                             |
-| 닉네임 검증 실패       |  422 | FAV_NICKNAME_INVALID | false     | 입력 유지 + 오류 메시지                                               |
-| 정렬 충돌(ETag 불일치) |  412 | FAV_ETAG_MISMATCH    | true      | 최신 목록 재조회 후 머지/재시도                                       |
-| 레이트 리밋            |  429 | RATE_LIMITED         | true      | `Retry-After` 준수 후 재시도 citeturn3search2turn3search6turn3search0 |
-| 일시적 장애            |  503 | SERVICE_UNAVAILABLE  | true      | `Retry-After` 있으면 준수 citeturn3search0turn3search7                |
+| 상황                   | HTTP | code(예시)           | retryable | 클라이언트 동작                 |
+| ---------------------- | ---: | -------------------- | --------- | ------------------------------- |
+| 인증 만료/미인증       |  401 | AUTH_UNAUTHORIZED    | false     | 로그인/토큰 갱신 플로우         |
+| 즐겨찾기 중복 추가     |  409 | FAV_ALREADY_EXISTS   | false     | UI에서 “이미 추가됨” 안내       |
+| 닉네임 검증 실패       |  422 | FAV_NICKNAME_INVALID | false     | 입력 유지 + 오류 메시지         |
+| 정렬 충돌(ETag 불일치) |  412 | FAV_ETAG_MISMATCH    | true      | 최신 목록 재조회 후 머지/재시도 |
+| 레이트 리밋            |  429 | RATE_LIMITED         | true      | `Retry-After` 준수 후 재시도    |
+| 일시적 장애            |  503 | SERVICE_UNAVAILABLE  | true      | `Retry-After` 있으면 준수       |
 
 ---
 
@@ -206,8 +206,8 @@ RFC 9457은 HTTP API 오류를 기계가 읽을 수 있는 표준 구조로 전�
 정렬/삭제/닉 변경은 컬렉션 상태를 바꾸며 서로 충돌할 수 있다. 이를 위해:
 
 - 서버는 `GET /v1/favorites` 응답에 컬렉션 `ETag`를 제공한다.
-- 클라이언트는 업데이트 요청에 `If-Match: <lastKnownEtag>`를 포함한다. `If-Match`는 리소스 수정 시 “lost update” 문제를 방지하는 용도로 쓰일 수 있다. citeturn6search10turn2search33
-- 불일치 시 서버는 `412 Precondition Failed`를 반환한다. citeturn2search5turn2search33
+- 클라이언트는 업데이트 요청에 `If-Match: <lastKnownEtag>`를 포함한다. `If-Match`는 리소스 수정 시 “lost update” 문제를 방지하는 용도로 쓰일 수 있다.
+- 불일치 시 서버는 `412 Precondition Failed`를 반환한다.
 
 **412 처리 알고리즘(권장)**
 
