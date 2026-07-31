@@ -14,15 +14,9 @@ import '../frontend/app/styles/global.css';
 
 export const links: Route.LinksFunction = () => [];
 
-// 페이지 로드 전에 즉시 실행되는 테마 초기화 스크립트 (FOUC 방지 + 하이드레이션 전 인터랙션 처리).
-// React가 하이드레이션되기 전에도 테마 토글이 동작하도록 클릭 인터셉터를 등록한다.
+// 페이지 로드 전에 즉시 실행되는 테마 초기화 스크립트 (FOUC 방지).
 const THEME_INIT_SCRIPT = `(function(){
   var k = '${storageKeys.theme}';
-  function save(d) {
-    var v = JSON.stringify({ version: 1, data: d });
-    try { sessionStorage.setItem(k, v); } catch(e) {}
-    try { localStorage.setItem(k, v); } catch(e) {}
-  }
   function resolveTheme(preference) {
     return preference === 'dark' || (preference === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   }
@@ -57,16 +51,6 @@ const THEME_INIT_SCRIPT = `(function(){
   } catch(e) {
     applyTheme('system');
   }
-  // React 하이드레이션 전 클릭을 처리해 상태 불일치와 경쟁 조건을 방지한다 (data-theme-toggle 속성 기반)
-  document.addEventListener('click', function(e) {
-    var btn = e.target && e.target.closest && e.target.closest('button[data-theme-toggle]');
-    if (!btn) return;
-    var val = btn.getAttribute('data-theme-toggle');
-    if (val === 'dark' || val === 'light') {
-      applyTheme(val);
-      save(val);
-    }
-  }, true);
 })();`;
 
 export function Layout({ children }: { children: React.ReactNode }) {
