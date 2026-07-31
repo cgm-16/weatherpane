@@ -96,6 +96,8 @@ jobs:
             echo "::error::OpenWeather API key leaked into the client bundle (issue #73 regression)"
             exit 1
           fi
+      - name: Verify catalog route isolation and bundle budgets
+        run: pnpm check:bundle-budget
       - name: Verify production server starts
         env:
           HOST: 127.0.0.1

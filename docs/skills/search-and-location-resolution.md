@@ -10,7 +10,6 @@
 
 - [AGENTS.md](../../AGENTS.md)
 - [docs/specs.md](../specs.md)
-- [docs/prompt.md](../prompt.md)
 - [docs/taskmap.md](../taskmap.md)
 - current search and resolution files located with `rg -n "search|resolve|location|catalog" app docs tests`
 
@@ -18,7 +17,10 @@
 
 - Search source is the local preprocessed Korea catalog.
 - The generated Search artifact is `catalog.search.generated.json`; its compact tuples are directly searchable without catalog-wide runtime preparation.
-- Keep `catalog.generated.json` as the version-1 canonical artifact, and use the aligned fixed-width-ID lookup artifact for single-entry reconstruction when needed.
+- The generator owns all three artifacts: `catalog.generated.json` is the version-1 canonical artifact, `catalog.search.generated.json` owns ready-to-search synchronous tuples, and `catalog.lookup.generated.json` owns fixed-width-ID lookup data.
+- Reconstruct one selected Search tuple only when selection needs its full entry. Do not introduce catalog-wide runtime decode or preparation.
+- Cold Detail owns the lightweight lookup artifact for a single-entry reconstruction. Search must not reach that lookup artifact.
+- `catalog.generated.json` is forbidden from every client graph. Detail must not reach the Search artifact.
 - Search normalization stays narrow and explicit:
   - NFC-normalize query text
   - fold whitespace and punctuation for matching
