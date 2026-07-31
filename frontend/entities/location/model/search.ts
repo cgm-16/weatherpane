@@ -1,5 +1,11 @@
-import catalogData from '../catalog.generated.json';
+import searchCatalogData from '../catalog.search.generated.json';
 
+import {
+  buildCatalogEntryFromParts,
+  type GeneratedSearchCatalog,
+  type GeneratedSearchEntry,
+  type GeneratedSearchSegment,
+} from './catalog-artifacts';
 import type { CatalogEntry, LocationCatalog } from './catalog';
 import { buildComparableVariants, normalizeComparable } from './location-match';
 
@@ -17,14 +23,25 @@ interface PreparedCatalogEntry {
   pathComparable: string;
 }
 
+interface RankedPreparedEntry {
+  matchRank: MatchRank;
+  preparedEntry: PreparedCatalogEntry;
+}
+
+interface RankedGeneratedEntry {
+  entry: GeneratedSearchEntry;
+  index: number;
+  matchRank: MatchRank;
+}
+
 enum MatchRank {
   ExactLeaf = 1,
   ExactSegment = 2,
   PathSubstring = 4,
 }
 
-const defaultCatalog = catalogData as LocationCatalog;
-const defaultPreparedEntries = defaultCatalog.entries.map(prepareCatalogEntry);
+const generatedSearchCatalog =
+  searchCatalogData as unknown as GeneratedSearchCatalog;
 const preparedEntriesCache = new WeakMap<
   LocationCatalog,
   PreparedCatalogEntry[]
@@ -54,10 +71,6 @@ function prepareCatalogEntry(entry: CatalogEntry): PreparedCatalogEntry {
 }
 
 function getPreparedEntries(catalog: LocationCatalog): PreparedCatalogEntry[] {
-  if (catalog === defaultCatalog) {
-    return defaultPreparedEntries;
-  }
-
   const cachedEntries = preparedEntriesCache.get(catalog);
 
   if (cachedEntries) {
@@ -70,7 +83,7 @@ function getPreparedEntries(catalog: LocationCatalog): PreparedCatalogEntry[] {
   return preparedEntries;
 }
 
-function classifyMatch(
+function classifyPreparedMatch(
   queryComparable: string,
   queryVariants: Set<string>,
   preparedEntry: PreparedCatalogEntry
@@ -92,11 +105,6 @@ function classifyMatch(
   }
 
   return null;
-}
-
-interface RankedPreparedEntry {
-  matchRank: MatchRank;
-  preparedEntry: PreparedCatalogEntry;
 }
 
 function comparePreparedEntries(
@@ -138,9 +146,132 @@ function mapCatalogEntryToSearchResult(
   };
 }
 
+function getGeneratedSegments(
+  entry: GeneratedSearchEntry
+): GeneratedSearchSegment[] {
+  const segmentIndexes = entry.slice(4) as number[];
+
+  return segmentIndexes.map(
+    (segmentIndex) => generatedSearchCatalog.segments[segmentIndex]
+  );
+}
+
+function getGeneratedCanonicalPath(entry: GeneratedSearchEntry): string {
+  return getGeneratedSegments(entry)
+    .map(([label]) => label)
+    .join('-');
+}
+
+function mapGeneratedEntryToSearchResult(
+  entry: GeneratedSearchEntry
+): SearchCatalogResult {
+  const segments = getGeneratedSegments(entry);
+  const labels = segments.map(([label]) => label);
+
+  return {
+    canonicalPath: labels.join('-'),
+    catalogLocationId: entry[0],
+    primaryLabel: labels[labels.length - 1],
+    secondaryPath: labels.length === 1 ? null : labels.slice(0, -1).join('-'),
+  };
+}
+
+function classifyGeneratedMatch(
+  queryComparable: string,
+  entry: GeneratedSearchEntry
+): MatchRank | null {
+  const leafSegment =
+    generatedSearchCatalog.segments[entry[entry.length - 1] as number];
+
+  if (
+    queryComparable === leafSegment[1] ||
+    queryComparable === leafSegment[2]
+  ) {
+    return MatchRank.ExactLeaf;
+  }
+
+  for (let index = 4; index < entry.length; index += 1) {
+    const [, comparable, omittedSuffixComparable] =
+      generatedSearchCatalog.segments[entry[index] as number];
+
+    if (
+      queryComparable === comparable ||
+      queryComparable === omittedSuffixComparable
+    ) {
+      return MatchRank.ExactSegment;
+    }
+  }
+
+  return entry[1].includes(queryComparable) ? MatchRank.PathSubstring : null;
+}
+
+function compareGeneratedEntries(
+  left: RankedGeneratedEntry,
+  right: RankedGeneratedEntry
+): number {
+  if (left.matchRank !== right.matchRank) {
+    return left.matchRank - right.matchRank;
+  }
+
+  const leftDepth = left.entry.length - 4;
+  const rightDepth = right.entry.length - 4;
+  if (leftDepth !== rightDepth) {
+    return leftDepth - rightDepth;
+  }
+
+  return left.index - right.index;
+}
+
+function searchGeneratedCatalog(
+  queryComparable: string
+): SearchCatalogResult[] {
+  const matches: RankedGeneratedEntry[] = [];
+
+  for (const [index, entry] of generatedSearchCatalog.entries.entries()) {
+    const matchRank = classifyGeneratedMatch(queryComparable, entry);
+
+    if (matchRank !== null) {
+      matches.push({ entry, index, matchRank });
+    }
+  }
+
+  return matches
+    .sort(compareGeneratedEntries)
+    .map(({ entry }) => mapGeneratedEntryToSearchResult(entry));
+}
+
+function findGeneratedEntry(
+  result: Pick<SearchCatalogResult, 'canonicalPath'> & {
+    catalogLocationId?: string;
+  }
+): GeneratedSearchEntry | null {
+  for (const entry of generatedSearchCatalog.entries) {
+    if (
+      (result.catalogLocationId === undefined ||
+        entry[0] === result.catalogLocationId) &&
+      getGeneratedCanonicalPath(entry) === result.canonicalPath
+    ) {
+      return entry;
+    }
+  }
+
+  return null;
+}
+
+function buildCatalogEntryFromGeneratedEntry(
+  entry: GeneratedSearchEntry
+): CatalogEntry {
+  return buildCatalogEntryFromParts(
+    entry[0],
+    getGeneratedCanonicalPath(entry),
+    entry[2],
+    entry[3]
+  );
+}
+
 export function searchCatalogLocations(
   query: string,
-  catalog: LocationCatalog = defaultCatalog
+  catalog?: LocationCatalog
 ): SearchCatalogResult[] {
   const queryComparable = normalizeComparable(query);
 
@@ -148,11 +279,19 @@ export function searchCatalogLocations(
     return [];
   }
 
+  if (!catalog) {
+    return searchGeneratedCatalog(queryComparable);
+  }
+
   const queryVariants = buildComparableVariants(query, false);
 
   return getPreparedEntries(catalog)
     .map((preparedEntry) => ({
-      matchRank: classifyMatch(queryComparable, queryVariants, preparedEntry),
+      matchRank: classifyPreparedMatch(
+        queryComparable,
+        queryVariants,
+        preparedEntry
+      ),
       preparedEntry,
     }))
     .filter((match): match is RankedPreparedEntry => match.matchRank !== null)
@@ -164,26 +303,31 @@ export function searchCatalogLocations(
 
 export function getCatalogLocationResultsByCanonicalPath(
   canonicalPaths: readonly string[],
-  catalog: LocationCatalog = defaultCatalog
+  catalog?: LocationCatalog
 ): SearchCatalogResult[] {
-  const entriesByCanonicalPath = new Map(
-    catalog.entries.map((entry) => [entry.canonicalPath, entry])
-  );
+  if (catalog) {
+    const entriesByCanonicalPath = new Map(
+      catalog.entries.map((entry) => [entry.canonicalPath, entry])
+    );
+
+    return canonicalPaths.flatMap((canonicalPath) => {
+      const entry = entriesByCanonicalPath.get(canonicalPath);
+
+      return entry ? [mapCatalogEntryToSearchResult(entry)] : [];
+    });
+  }
 
   return canonicalPaths.flatMap((canonicalPath) => {
-    const entry = entriesByCanonicalPath.get(canonicalPath);
+    const entry = findGeneratedEntry({ canonicalPath });
 
-    return entry ? [mapCatalogEntryToSearchResult(entry)] : [];
+    return entry ? [mapGeneratedEntryToSearchResult(entry)] : [];
   });
 }
 
-export function getCatalogEntryById(
-  catalogLocationId: string,
-  catalog: LocationCatalog = defaultCatalog
+export function getCatalogEntryFromSearchResult(
+  result: SearchCatalogResult
 ): CatalogEntry | null {
-  return (
-    catalog.entries.find(
-      (entry) => entry.catalogLocationId === catalogLocationId
-    ) ?? null
-  );
+  const entry = findGeneratedEntry(result);
+
+  return entry ? buildCatalogEntryFromGeneratedEntry(entry) : null;
 }

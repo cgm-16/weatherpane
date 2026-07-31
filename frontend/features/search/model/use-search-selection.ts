@@ -6,11 +6,13 @@ import { useWeatherProvider } from '~/shared/api/weather-provider';
 import {
   buildCatalogLocationFromEntry,
   createCatalogLocationResolver,
-  getCatalogEntryById,
 } from '~/entities/location';
+import {
+  getCatalogEntryFromSearchResult,
+  type SearchCatalogResult,
+} from '~/entities/location/model/search';
 import { createUnsupportedRouteContextRepository } from '~/shared/lib/storage/repositories/unsupported-route-context-repository';
 import { persistRecent } from '~/features/recents';
-import type { SearchCatalogResult } from '~/entities/location/model/search';
 import type { ActiveLocation } from '~/entities/location/model/types';
 
 export function useSearchSelection() {
@@ -28,7 +30,7 @@ export function useSearchSelection() {
     setSelectionError(null);
 
     try {
-      const entry = getCatalogEntryById(result.catalogLocationId);
+      const entry = getCatalogEntryFromSearchResult(result);
       const now = new Date().toISOString();
 
       const resolver = createCatalogLocationResolver({

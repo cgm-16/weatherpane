@@ -50,16 +50,12 @@ test('유효한 상세 페이지에서 날씨 대시보드가 표시된다', asy
   await expect(sketchImg).toHaveAttribute('src', /^\/sketches\/.+\.webp$/);
 });
 
-test('활성 위치 없이 접근하면 찾을 수 없음 페이지가 표시된다', async ({
-  page,
-}) => {
-  // localStorage를 미리 심지 않아 활성 위치가 없는 상태
-  await page.goto('/location/KR-Seoul');
-
-  // 메인 컨텐츠 영역 확인
+test('저장 상태 없이 생성 카탈로그 ID 딥링크를 복구한다', async ({ page }) => {
+  await page.goto('/location/loc_5f5def784f91');
+  await expect(page).toHaveURL('/location/loc_5f5def784f91');
   await expect(page.getByRole('main')).toBeVisible();
-  // 홈으로 돌아가기 링크 확인
-  await expect(page.getByRole('link', { name: /홈으로/ })).toBeVisible();
+  await expect(page.getByText('청운동')).toBeVisible();
+  await expect(page.getByText(/17°/).first()).toBeVisible();
 });
 
 test('지원하지 않는 토큰으로 접근하면 미지원 페이지가 표시된다', async ({

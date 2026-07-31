@@ -18,6 +18,7 @@ import {
   storageKeys,
   storageSchemaVersion,
 } from '../frontend/shared/lib/storage/storage-keys';
+import * as searchCatalog from '../frontend/entities/location/model/search';
 import type { RecentLocation } from '../frontend/entities/location/model/types';
 import { createMemoryStorage } from './storage/test-storage';
 import { ActiveLocationProvider } from '../frontend/features/app-bootstrap/active-location-context';
@@ -330,6 +331,47 @@ describe('search route', () => {
 });
 
 describe('search result selection', () => {
+  test('선택한 기본 검색 결과의 카탈로그 항목은 검색 산출물에서 복원한다', async () => {
+    const reconstructEntry = vi.spyOn(
+      searchCatalog,
+      'getCatalogEntryFromSearchResult'
+    );
+    vi.mocked(useWeatherProvider).mockReturnValue({
+      mode: 'mock',
+      getCoreWeather: vi.fn(),
+      getAqi: vi.fn(),
+      geocode: vi.fn().mockResolvedValue([
+        {
+          name: '청운동',
+          admin1: '서울특별시',
+          admin2: '종로구',
+          countryCode: 'KR',
+          latitude: 37.5729,
+          longitude: 126.9794,
+          timezone: 'Asia/Seoul',
+        },
+      ]),
+    });
+    const { user } = renderSearchRouteWithStorage(
+      '/search?q=%EC%B2%AD%EC%9A%B4%EB%8F%99'
+    );
+
+    await user.click(
+      await screen.findByRole('option', {
+        name: /서울특별시-종로구-청운동/i,
+      })
+    );
+
+    await waitFor(() => {
+      expect(reconstructEntry).toHaveBeenCalledWith(
+        expect.objectContaining({
+          canonicalPath: '서울특별시-종로구-청운동',
+          catalogLocationId: '5f5def784f91',
+        })
+      );
+    });
+  });
+
   test('성공한 선택은 detail로 이동하고 active location을 업데이트한다', async () => {
     vi.mocked(useWeatherProvider).mockReturnValue({
       mode: 'mock',
