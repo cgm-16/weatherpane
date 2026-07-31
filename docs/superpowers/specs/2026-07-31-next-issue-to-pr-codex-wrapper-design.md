@@ -19,11 +19,9 @@ Out of scope:
 - changing issue selection, implementation, review, or PR policy
 - changing application code or user-facing UI
 
-## Dependency on PR #103
+## Canonical Workflow Boundary
 
-PR #103 redesigns the canonical skill around a low-context controller with researcher and planner handoffs. The wrapper must inherit that redesign automatically when it reaches the repository.
-
-The wrapper must not name or summarize PR #103's stages, `.sdd` artifacts, subagent roles, dispatch limits, or context targets. Those details remain canonical-skill internals. This keeps the wrapper valid before and after PR #103 and prevents a second workflow copy from drifting.
+The canonical skill owns its controller model, workflow stages, scratch artifacts, subagent roles, dispatch limits, and context targets. The wrapper must not name or summarize those details. Resolving the canonical skill at invocation time lets the wrapper inherit workflow changes without creating a second copy that can drift.
 
 ## Structure
 
@@ -61,7 +59,7 @@ GREEN verifies:
 - `quick_validate.py` accepts the skill directory.
 - YAML contains only required frontmatter and approved UI metadata.
 - A fresh context resolves the canonical skill from the active repository and reads it completely.
-- Delegation works with both the current canonical skill and PR #103's redesigned canonical skill.
+- Delegation works with the canonical skill tracked by the synchronized repository.
 - The wrapper contains no canonical stage, handoff, or context-budget instructions.
 
 ## Completion Criteria
