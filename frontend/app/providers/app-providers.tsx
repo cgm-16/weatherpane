@@ -9,8 +9,7 @@ import {
 import type { ConfigError } from '~/shared/lib/env-config';
 import { WeatherProviderContext } from '~/shared/api/weather-provider';
 import { ActiveLocationProvider } from '~/features/app-bootstrap/active-location-context';
-import { SettingsProvider } from '~/features/settings';
-import { ThemeProvider } from '~/shared/hooks/use-theme';
+import { SettingsProvider, ThemeProvider } from '~/features/settings';
 import { SketchManifestProvider, loadSessionManifest } from '~/entities/asset';
 import { HomeConfigError } from '~/pages/home/ui/home-config-error';
 import { isProduction } from '~/shared/lib/runtime-env';

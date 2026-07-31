@@ -120,6 +120,20 @@ describe('useSettings — 저장 및 모션 환경설정', () => {
     expect(result.current.reduceMotion).toBe(false);
   });
 
+  test('명시적 full 이후 system으로 돌아가면 현재 시스템 모션 값을 즉시 반영한다', () => {
+    const media = createMotionMedia(false);
+    const { result } = renderSettings();
+
+    act(() => result.current.setMotionPreference('full'));
+    act(() => media.setReduced(true));
+    expect(result.current.reduceMotion).toBe(false);
+
+    act(() => result.current.setMotionPreference('system'));
+
+    expect(result.current.reduceMotion).toBe(true);
+    expect(document.documentElement).toHaveAttribute('data-motion', 'reduced');
+  });
+
   test('단위와 모션 선택을 하나의 버전 설정 payload로 저장한다', () => {
     createMotionMedia(false);
     const { result } = renderSettings();
