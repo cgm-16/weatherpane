@@ -1,25 +1,31 @@
-# Codex `next-issue-to-pr` 래퍼 설계
+# Codex `next-issue-to-pr` Wrapper Design
 
-## 목표
+## Goal
 
-Codex가 Weatherpane 저장소에서 `$next-issue-to-pr`를 직접 호출할 수 있게 한다. 기존 `.claude/skills/next-issue-to-pr`는 워크플로의 단일 진실 공급원으로 유지하고, Codex 전용 스킬은 원본을 찾아 위임하는 역할만 담당한다.
+Make `$next-issue-to-pr` directly invokable by Codex inside the Weatherpane repository. Keep `.claude/skills/next-issue-to-pr` as the workflow's single source of truth. The Codex skill only discovers and delegates to that canonical skill.
 
-## 범위
+## Scope
 
-포함 범위:
+In scope:
 
 - `.agents/skills/next-issue-to-pr/SKILL.md`
 - `.agents/skills/next-issue-to-pr/agents/openai.yaml`
-- 스킬 구조 검증과 새 컨텍스트 위임 평가
+- structural validation and fresh-context delegation evaluation
 
-제외 범위:
+Out of scope:
 
-- 기존 Claude 스킬 본문 또는 지원 파일 변경
-- 스크립트, 테스트, 평가 파일 복사
-- 이슈 선택, 구현, 검토, PR 생성 정책 변경
-- 애플리케이션 코드 또는 사용자 UI 변경
+- changing the canonical Claude skill or its supporting files
+- copying scripts, tests, evaluations, workflow stages, handoff rules, or context-budget guidance
+- changing issue selection, implementation, review, or PR policy
+- changing application code or user-facing UI
 
-## 구조
+## Dependency on PR #103
+
+PR #103 redesigns the canonical skill around a low-context controller with researcher and planner handoffs. The wrapper must inherit that redesign automatically when it reaches the repository.
+
+The wrapper must not name or summarize PR #103's stages, `.sdd` artifacts, subagent roles, dispatch limits, or context targets. Those details remain canonical-skill internals. This keeps the wrapper valid before and after PR #103 and prevents a second workflow copy from drifting.
+
+## Structure
 
 ```text
 .agents/skills/next-issue-to-pr/
@@ -28,37 +34,38 @@ Codex가 Weatherpane 저장소에서 `$next-issue-to-pr`를 직접 호출할 수
     └── openai.yaml
 ```
 
-`SKILL.md`는 Codex가 스킬을 검색하고 실행하는 진입점이다. `agents/openai.yaml`은 스킬 선택 UI에 표시할 이름, 짧은 설명, 기본 호출 프롬프트만 제공한다. 별도 `scripts/`, `references/`, `assets/`는 만들지 않는다.
+`SKILL.md` is the Codex discovery and execution entry point. `agents/openai.yaml` contains only the display name, short description, and default invocation prompt. The wrapper adds no `scripts/`, `references/`, or `assets/`.
 
-## 위임 흐름
+## Delegation Flow
 
-1. Codex가 `$next-issue-to-pr` 명시 호출 또는 설명 기반 암시 호출로 래퍼를 읽는다.
-2. 래퍼는 `git rev-parse --show-toplevel`로 현재 Weatherpane 저장소 루트를 확인한다.
-3. 저장소 루트의 `.claude/skills/next-issue-to-pr/SKILL.md`를 처음부터 끝까지 읽는다.
-4. 원본 스킬이 요구하는 관련 저장소 문서와 적용 가능한 런타임 스킬을 읽는다.
-5. 원본 워크플로를 권위 있는 절차로 실행한다.
+1. Codex loads the wrapper through explicit `$next-issue-to-pr` invocation or description-based matching.
+2. The wrapper resolves the active repository root with `git rev-parse --show-toplevel`.
+3. It reads `<repository-root>/.claude/skills/next-issue-to-pr/SKILL.md` completely.
+4. It loads the canonical skill's required repository guidance and applicable runtime skills.
+5. It executes the canonical workflow as the authoritative procedure.
 
-래퍼는 원본 워크플로 단계를 요약하거나 복제하지 않는다. 원본의 이식성 메모가 현재 Codex 런타임에 실제로 제공된 도구나 스킬과 충돌하면, 현재 런타임에서 확인된 기능을 우선한다. 이 예외는 원본의 업무 규칙을 바꾸지 않고 런타임 기능 설명의 노후화만 방지한다.
+The wrapper does not restate the canonical workflow. When the canonical portability note conflicts with tools or skills verified in the current Codex session, the verified runtime capabilities take precedence. This exception changes no workflow rule; it prevents stale capability descriptions from disabling available Codex functionality.
 
-## 오류 처리
+## Error Handling
 
-- Git 저장소 루트를 확인할 수 없으면 실행을 중단하고 Ori에게 현재 경로와 실패 명령을 알린다.
-- 원본 스킬이 없거나 읽을 수 없으면 실행을 중단하고 누락된 절대 경로를 알린다.
-- 원본 내용을 기억이나 래퍼 본문으로 재구성하지 않는다.
+- If the Git repository root cannot be resolved, stop and tell Ori the current path and failed command.
+- If the canonical skill is missing or unreadable, stop and report its resolved absolute path.
+- Do not reconstruct the canonical workflow from memory or wrapper text.
 
-## 검증
+## Validation
 
-RED 단계에서는 래퍼가 없는 새 컨텍스트에서 `$next-issue-to-pr`를 사용할 수 없거나 원본으로 위임되지 않는 사실을 기록한다.
+RED records that a fresh Codex context without the wrapper cannot discover `$next-issue-to-pr` or delegate to the canonical skill.
 
-GREEN 단계에서는 다음을 확인한다.
+GREEN verifies:
 
-- `quick_validate.py`가 스킬 폴더를 통과한다.
-- YAML에는 필수 필드와 승인된 UI 메타데이터만 있다.
-- 새 컨텍스트에서 래퍼가 원본 스킬의 절대 경로를 해석하고 전체 내용을 읽는다.
-- 래퍼가 원본 워크플로를 복제하거나 다른 동작을 발명하지 않는다.
+- `quick_validate.py` accepts the skill directory.
+- YAML contains only required frontmatter and approved UI metadata.
+- A fresh context resolves the canonical skill from the active repository and reads it completely.
+- Delegation works with both the current canonical skill and PR #103's redesigned canonical skill.
+- The wrapper contains no canonical stage, handoff, or context-budget instructions.
 
-## 완료 조건
+## Completion Criteria
 
-- 이슈 #101과 연결된 기능 브랜치에는 이 설계 문서와 래퍼 파일만 추가된다.
-- 검증 결과가 실제 명령 및 평가 출력으로 남는다.
-- PR은 비범위, 검증 근거, 위험, 롤백 방법을 명시한다.
+- The issue #101 branch adds only this design record and the wrapper files.
+- Fresh command and evaluation output supports every validation claim.
+- The PR states non-scope, test evidence, risks, and rollback steps.
