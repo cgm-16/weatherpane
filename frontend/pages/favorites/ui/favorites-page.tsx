@@ -6,12 +6,14 @@ import {
 } from '~/features/favorites';
 import { FavoriteCard } from './favorite-card';
 import { FavoritesEmptyState } from './favorites-empty-state';
+import { useSettings } from '~/features/settings';
 import type { FavoriteLocation } from '~/entities/location/model/types';
 
 export function FavoritesPage() {
   const { favorites, undoEntry, undoRemove, updateNickname, reorderFavorites } =
     useFavorites();
   useRefreshQueue(favorites);
+  const { temperatureUnit } = useSettings();
   const [isEditMode, setIsEditMode] = useState(false);
   // 편집 모드에서 순서 변경을 로컬에 보관하다가 "완료" 시점에 한 번만 저장한다
   const [draftFavorites, setDraftFavorites] =
@@ -98,6 +100,7 @@ export function FavoritesPage() {
               >
                 <FavoriteCard
                   favorite={fav}
+                  temperatureUnit={temperatureUnit}
                   editProps={
                     isEditMode
                       ? {

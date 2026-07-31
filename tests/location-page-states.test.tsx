@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { LocationUnsupported } from '../frontend/pages/location/ui/location-unsupported';
@@ -10,6 +10,7 @@ import { LocationConnectionError } from '../frontend/pages/location/ui/location-
 import { useDetailBootstrap } from '../frontend/features/app-bootstrap/use-detail-bootstrap';
 import { useWeatherRefresh } from '../frontend/features/weather-queries/use-weather-refresh';
 import { LocationPage } from '../frontend/pages/location/ui/location-page';
+import { useSettings } from '../frontend/features/settings';
 import {
   SketchManifestProvider,
   BASELINE_MANIFEST,
@@ -33,6 +34,9 @@ vi.mock('../frontend/features/favorites/use-favorites', () => ({
     updateNickname: vi.fn(),
     reorderFavorites: vi.fn(),
   })),
+}));
+vi.mock('../frontend/features/settings', () => ({
+  useSettings: vi.fn(() => ({ temperatureUnit: 'F' })),
 }));
 
 afterEach(() => {
@@ -220,6 +224,18 @@ const loc = {
   timezone: 'Asia/Seoul',
 };
 
+function settingsValue(
+  temperatureUnit: 'C' | 'F'
+): ReturnType<typeof useSettings> {
+  return {
+    temperatureUnit,
+    motionPreference: 'system',
+    reduceMotion: false,
+    setTemperatureUnit: vi.fn(),
+    setMotionPreference: vi.fn(),
+  };
+}
+
 const locationPageCondition = {
   code: 'CLEAR',
   text: '맑음',
@@ -245,6 +261,10 @@ function renderPage(resolvedLocationId = 'KR-Seoul') {
 }
 
 describe('LocationPage 상태별 렌더링', () => {
+  beforeEach(() => {
+    vi.mocked(useSettings).mockReturnValue(settingsValue('C'));
+  });
+
   test('unsupported → LocationUnsupported를 표시한다', () => {
     vi.mocked(useDetailBootstrap).mockReturnValue({
       kind: 'unsupported',
@@ -295,7 +315,8 @@ describe('LocationPage 상태별 렌더링', () => {
     expect(mockRefresh).toHaveBeenCalledWith(loc.locationId);
   });
 
-  test('stale-fallback → 기온을 표시한다', () => {
+  test('stale-fallback → 선택한 화씨 단위로 기온, 최고·최저 기온을 표시한다', () => {
+    vi.mocked(useSettings).mockReturnValue(settingsValue('F'));
     const now = new Date().toISOString();
     vi.mocked(useDetailBootstrap).mockReturnValue({
       kind: 'stale-fallback',
@@ -304,7 +325,7 @@ describe('LocationPage 상태별 렌더링', () => {
         locationId: 'loc_KR-Seoul',
         fetchedAt: now,
         observedAt: now,
-        temperatureC: 17,
+        temperatureC: 17.2,
         conditionCode: 'CLEAR',
         conditionText: '맑음',
         todayMinC: 10,
@@ -314,7 +335,9 @@ describe('LocationPage 상태별 렌더링', () => {
       aqi: null,
     });
     renderPage();
-    expect(screen.getByText(/17/)).toBeInTheDocument();
+    expect(screen.getByText('63°')).toBeInTheDocument();
+    expect(screen.getByText('H 72°')).toBeInTheDocument();
+    expect(screen.getByText('L 50°')).toBeInTheDocument();
   });
 
   test('data → DetailDashboard를 표시한다', () => {

@@ -17,6 +17,15 @@ vi.mock('../frontend/features/favorites/use-favorites', () => ({
 vi.mock('../frontend/features/favorites/use-refresh-queue', () => ({
   useRefreshQueue: vi.fn(),
 }));
+vi.mock('../frontend/features/settings', () => ({
+  useSettings: vi.fn(() => ({
+    temperatureUnit: 'F',
+    motionPreference: 'system',
+    reduceMotion: false,
+    setTemperatureUnit: vi.fn(),
+    setMotionPreference: vi.fn(),
+  })),
+}));
 
 import '@testing-library/jest-dom/vitest';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -126,7 +135,7 @@ function makeTestQueryClient() {
 
 function renderCard(favorite: FavoriteLocation) {
   const qc = makeTestQueryClient();
-  return render(<FavoriteCard favorite={favorite} />, {
+  return render(<FavoriteCard favorite={favorite} temperatureUnit="C" />, {
     wrapper: ({ children }) => (
       <SketchManifestProvider manifest={BASELINE_MANIFEST}>
         <QueryClientProvider client={qc}>
@@ -173,6 +182,34 @@ describe('FavoriteCard', () => {
       clearActiveLocation: vi.fn(),
     });
   }
+
+  test('화씨 선택 시 현재·최고·최저 기온을 변환해 표시한다', () => {
+    setupActiveLocation();
+    vi.mocked(useCoreWeather).mockReturnValue(
+      makeWeatherQuery({
+        data: {
+          ...freshWeatherData,
+          current: { ...freshWeatherData.current, temperatureC: 17.2 },
+          today: { minC: 10, maxC: 22 },
+        },
+      })
+    );
+
+    const qc = makeTestQueryClient();
+    render(<FavoriteCard favorite={seoulFav} temperatureUnit="F" />, {
+      wrapper: ({ children }) => (
+        <SketchManifestProvider manifest={BASELINE_MANIFEST}>
+          <QueryClientProvider client={qc}>
+            <MemoryRouter>{children}</MemoryRouter>
+          </QueryClientProvider>
+        </SketchManifestProvider>
+      ),
+    });
+
+    expect(screen.getByText('63°')).toBeInTheDocument();
+    expect(screen.getByText('72°')).toBeInTheDocument();
+    expect(screen.getByText('50°')).toBeInTheDocument();
+  });
 
   test('renders skeleton when no data and loading', () => {
     setupActiveLocation();

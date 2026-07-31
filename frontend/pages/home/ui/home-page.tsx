@@ -6,10 +6,13 @@ import { HomeNoLocation } from './home-no-location';
 import { HomeConnectionError } from './home-connection-error';
 import { HomeConfigError } from './home-config-error';
 import { LastUpdated } from '~/shared/ui/last-updated';
+import { useSettings } from '~/features/settings';
+import { formatTemperature } from '~/shared/lib/temperature';
 
 export function HomePage() {
   const bootstrap = useHomeBootstrap();
   const refresh = useWeatherRefresh();
+  const { temperatureUnit } = useSettings();
 
   if (bootstrap.kind === 'no-location') {
     return <HomeNoLocation />;
@@ -48,17 +51,17 @@ export function HomePage() {
       >
         {/* 최소 날씨 표시 */}
         <p className="font-display text-5xl font-extrabold text-foreground">
-          {Math.round(bootstrap.weather.temperatureC)}°C
+          {formatTemperature(bootstrap.weather.temperatureC, temperatureUnit)}
         </p>
         <p className="font-body text-muted-foreground">
           {bootstrap.weather.conditionText}
         </p>
         <div className="flex gap-4">
           <span className="font-body text-sm text-muted-foreground">
-            H {bootstrap.weather.todayMaxC}°
+            H {formatTemperature(bootstrap.weather.todayMaxC, temperatureUnit)}
           </span>
           <span className="font-body text-sm text-muted-foreground">
-            L {bootstrap.weather.todayMinC}°
+            L {formatTemperature(bootstrap.weather.todayMinC, temperatureUnit)}
           </span>
         </div>
         <LastUpdated
@@ -78,6 +81,7 @@ export function HomePage() {
       isRefreshing={bootstrap.isRefreshing}
       hasRefreshError={bootstrap.hasRefreshError}
       onRefresh={() => refresh(bootstrap.location.locationId)}
+      temperatureUnit={temperatureUnit}
     />
   );
 }

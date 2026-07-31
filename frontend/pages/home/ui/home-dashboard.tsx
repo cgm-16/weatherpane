@@ -2,6 +2,10 @@ import { Link } from 'react-router';
 import { useFavorites, FavoriteUndoToast } from '~/features/favorites';
 import { persistRecent } from '~/features/recents';
 import { HourlyStrip } from '~/shared/ui/hourly-strip';
+import {
+  formatTemperature,
+  type TemperatureUnit,
+} from '~/shared/lib/temperature';
 import { SketchBackground } from '~/entities/asset';
 import type {
   ResolvedLocation,
@@ -17,23 +21,30 @@ interface HomeDashboardProps {
   isRefreshing: boolean;
   hasRefreshError: boolean;
   onRefresh: () => void;
+  temperatureUnit: TemperatureUnit;
 }
 
-function WeatherSummaryContent({ weather }: { weather: CoreWeather }) {
+function WeatherSummaryContent({
+  weather,
+  temperatureUnit,
+}: {
+  weather: CoreWeather;
+  temperatureUnit: TemperatureUnit;
+}) {
   return (
     <>
       <p className="font-display text-7xl font-extrabold text-foreground">
-        {Math.round(weather.current.temperatureC)}°
+        {formatTemperature(weather.current.temperatureC, temperatureUnit)}
       </p>
       <p className="font-body text-base text-muted-foreground">
         {weather.current.condition.text}
       </p>
       <div className="flex gap-4">
         <span className="font-body text-sm text-muted-foreground">
-          H {Math.round(weather.today.maxC)}°
+          H {formatTemperature(weather.today.maxC, temperatureUnit)}
         </span>
         <span className="font-body text-sm text-muted-foreground">
-          L {Math.round(weather.today.minC)}°
+          L {formatTemperature(weather.today.minC, temperatureUnit)}
         </span>
       </div>
     </>
@@ -55,6 +66,7 @@ export function HomeDashboard({
   isRefreshing,
   hasRefreshError,
   onRefresh,
+  temperatureUnit,
 }: HomeDashboardProps) {
   const {
     isFavorite,
@@ -146,16 +158,22 @@ export function HomeDashboard({
           <Link
             to={`/location/${location.catalogLocationId}`}
             className="relative flex flex-col items-center gap-2 px-6 py-8"
-            aria-label={`${location.name}: ${Math.round(weather.current.temperatureC)}° ${weather.current.condition.text}, 날씨 상세 보기`}
+            aria-label={`${location.name}: ${formatTemperature(weather.current.temperatureC, temperatureUnit)} ${weather.current.condition.text}, 날씨 상세 보기`}
           >
-            <WeatherSummaryContent weather={weather} />
+            <WeatherSummaryContent
+              weather={weather}
+              temperatureUnit={temperatureUnit}
+            />
             <span className="mt-2 rounded-full bg-primary px-4 py-1 font-body text-sm font-semibold text-primary-foreground">
               상세 보기
             </span>
           </Link>
         ) : (
           <div className="relative flex flex-col items-center gap-2 px-6 py-8">
-            <WeatherSummaryContent weather={weather} />
+            <WeatherSummaryContent
+              weather={weather}
+              temperatureUnit={temperatureUnit}
+            />
           </div>
         )}
       </div>
@@ -163,7 +181,11 @@ export function HomeDashboard({
       {/* 6시간 시간별 미리보기 — resolved 위치만 timezone을 가짐 */}
       {canFavorite && weather.hourly.length > 0 && (
         <section className="px-4 pt-4">
-          <HourlyStrip hourly={weather.hourly} timeZone={location.timezone} />
+          <HourlyStrip
+            hourly={weather.hourly}
+            timeZone={location.timezone}
+            temperatureUnit={temperatureUnit}
+          />
         </section>
       )}
 

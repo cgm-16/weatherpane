@@ -17,6 +17,15 @@ vi.mock('../frontend/features/favorites/use-favorites', () => ({
 vi.mock('../frontend/features/favorites/use-refresh-queue', () => ({
   useRefreshQueue: vi.fn(),
 }));
+vi.mock('../frontend/features/settings', () => ({
+  useSettings: vi.fn(() => ({
+    temperatureUnit: 'C',
+    motionPreference: 'system',
+    reduceMotion: false,
+    setTemperatureUnit: vi.fn(),
+    setMotionPreference: vi.fn(),
+  })),
+}));
 
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';

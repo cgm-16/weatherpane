@@ -7,6 +7,10 @@ import { useOnlineStatus } from '~/shared/hooks/use-online-status';
 import { SketchBackground } from '~/entities/asset';
 import type { FavoriteLocation } from '~/entities/location/model/types';
 import type { CoreWeather } from '~/entities/weather/model/core-weather';
+import {
+  formatTemperature,
+  type TemperatureUnit,
+} from '~/shared/lib/temperature';
 
 const VERY_STALE_MS = 60 * 60_000;
 
@@ -78,12 +82,14 @@ function CardSnapshot({
   hasRefreshError,
   onCardClick,
   editProps,
+  temperatureUnit,
 }: {
   favorite: FavoriteLocation;
   weather: CoreWeather;
   hasRefreshError: boolean;
   onCardClick: () => void;
   editProps?: CardEditProps;
+  temperatureUnit: TemperatureUnit;
 }) {
   // 시간이 지남에 따라 신선도 뱃지를 갱신하기 위해 1분마다 리렌더링한다
   const [, tick] = useReducer((n: number) => n + 1, 0);
@@ -204,7 +210,7 @@ function CardSnapshot({
   const bottomSection = (
     <div className="flex flex-col gap-2">
       <span className="font-headline text-5xl leading-none font-extrabold text-card-foreground">
-        {Math.round(weather.current.temperatureC)}°
+        {formatTemperature(weather.current.temperatureC, temperatureUnit)}
       </span>
       <div className="flex items-center gap-2">
         <span className="font-body text-xs font-medium text-muted-foreground">
@@ -213,11 +219,15 @@ function CardSnapshot({
         <div className="ml-auto flex gap-1.5">
           <span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 font-body text-[10px] font-bold text-foreground">
             <span className="text-muted-foreground">H</span>
-            <span>{Math.round(weather.today.maxC)}°</span>
+            <span>
+              {formatTemperature(weather.today.maxC, temperatureUnit)}
+            </span>
           </span>
           <span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 font-body text-[10px] font-bold text-foreground">
             <span className="text-muted-foreground">L</span>
-            <span>{Math.round(weather.today.minC)}°</span>
+            <span>
+              {formatTemperature(weather.today.minC, temperatureUnit)}
+            </span>
           </span>
         </div>
       </div>
@@ -277,9 +287,14 @@ export interface CardEditProps {
 interface FavoriteCardProps {
   favorite: FavoriteLocation;
   editProps?: CardEditProps;
+  temperatureUnit: TemperatureUnit;
 }
 
-export function FavoriteCard({ favorite, editProps }: FavoriteCardProps) {
+export function FavoriteCard({
+  favorite,
+  editProps,
+  temperatureUnit,
+}: FavoriteCardProps) {
   const navigate = useNavigate();
   const { setActiveLocation } = useActiveLocation();
   const weatherQuery = useCoreWeather(favorite.location);
@@ -311,6 +326,7 @@ export function FavoriteCard({ favorite, editProps }: FavoriteCardProps) {
       hasRefreshError={weatherQuery.isError}
       onCardClick={handleCardClick}
       editProps={editProps}
+      temperatureUnit={temperatureUnit}
     />
   );
 }
