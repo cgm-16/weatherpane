@@ -12,6 +12,9 @@ test.describe('오프라인 배너 및 복구', () => {
     // 온라인 상태에서 배너가 없음을 확인합니다
     await expect(page.getByRole('alert')).not.toBeVisible();
 
+    // /__manifest 경합 가드 — 근거는 tests/fixtures.ts의 manifestIssues 주석 참고
+    await page.waitForLoadState('networkidle');
+
     // 오프라인으로 전환합니다
     await context.setOffline(true);
 
