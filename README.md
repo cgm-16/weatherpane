@@ -122,23 +122,33 @@ pnpm dev
 # http://localhost:5173
 ```
 
-### 프로덕션 빌드
-
-```bash
-VITE_WEATHER_PROVIDER_MODE=real pnpm build
-```
+### 프로덕션 빌드 및 로컬 실행
 
 `OPENWEATHER_API_KEY`는 빌드 시점이 아니라 서버가 요청을 처리하는 시점에 읽힌다
 (`frontend/shared/api/openweather-proxy.server.ts`). 빌드 명령에 포함해도 효과가 없다 —
 아래처럼 실제로 서버를 실행하는 환경(`pnpm start`/`pnpm preview`, 또는 배포 플랫폼의
 환경 변수 설정)에 설정해야 한다.
 
-### 로컬 프리뷰
+Mock 모드는 외부 API 요청이나 API 키 없이 프로덕션 번들을 검증할 때 사용한다.
 
 ```bash
-OPENWEATHER_API_KEY=your_key pnpm preview
-# http://localhost:4173
+VITE_WEATHER_PROVIDER_MODE=mock pnpm build
+HOST=127.0.0.1 PORT=3000 VITE_WEATHER_PROVIDER_MODE=mock pnpm start
+# http://127.0.0.1:3000
 ```
+
+Real 모드는 빌드 시 프로바이더 모드를 설정하고, 서버 실행 시 `OPENWEATHER_API_KEY`를 전달한다.
+
+```bash
+VITE_WEATHER_PROVIDER_MODE=real pnpm build
+HOST=127.0.0.1 PORT=3000 VITE_WEATHER_PROVIDER_MODE=real \
+  OPENWEATHER_API_KEY=your_key pnpm start
+# http://127.0.0.1:3000
+```
+
+`pnpm preview`도 `pnpm start`와 같은 프로덕션 서버 진입점을 사용한다. `PORT`를 생략하면
+서버는 3000번부터 사용 가능한 포트를 선택하고 실제 URL을 출력한다. 로컬 검증과 CI에서는
+예상하지 않은 인터페이스 노출이나 포트 탐색을 피하도록 `HOST`와 `PORT`를 명시한다.
 
 ### 정적 호스팅
 
