@@ -5,8 +5,8 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
-    "preview": "react-router-serve ./build/server/index.js",
-    "start": "react-router-serve ./build/server/index.js",
+    "preview": "node ./scripts/serve-production-build.js",
+    "start": "node ./scripts/serve-production-build.js",
     "typecheck": "react-router typegen && tsc",
     "prepare": "husky",
     "test": "pnpm test:unit",

@@ -96,6 +96,45 @@ jobs:
             echo "::error::OpenWeather API key leaked into the client bundle (issue #73 regression)"
             exit 1
           fi
+      - name: Verify production server starts
+        env:
+          HOST: 127.0.0.1
+          PORT: 43184
+          VITE_WEATHER_PROVIDER_MODE: real
+          OPENWEATHER_API_KEY: SENTINEL_KEY_XYZ123
+        run: |
+          set -euo pipefail
+          server_log="${RUNNER_TEMP}/weatherpane-production-server.log"
+          pnpm start >"${server_log}" 2>&1 &
+          server_pid=$!
+
+          cleanup() {
+            if kill -0 "${server_pid}" 2>/dev/null; then
+              kill "${server_pid}"
+            fi
+            wait "${server_pid}" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ready=false
+          for attempt in $(seq 1 20); do
+            if ! kill -0 "${server_pid}" 2>/dev/null; then
+              cat "${server_log}"
+              echo "::error::Production server exited before becoming ready"
+              exit 1
+            fi
+            if curl -fsS -o /dev/null "http://${HOST}:${PORT}/" 2>/dev/null; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+
+          if [[ "${ready}" != true ]]; then
+            cat "${server_log}"
+            echo "::error::Production server did not become ready within 20 seconds"
+            exit 1
+          fi
 
   e2e:
     name: E2E Tests
