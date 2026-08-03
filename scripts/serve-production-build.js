@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, isAbsolute, resolve } from 'node:path';
+import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
@@ -44,7 +44,20 @@ export function resolveProductionServerBuild(
       `${BUILD_RESULT_PATH}: bundle file must be a non-empty relative path`
     );
   }
-  const serverBuildPath = resolve(projectRoot, bundle.file);
+  const resolvedProjectRoot = resolve(projectRoot);
+  const serverBuildPath = resolve(resolvedProjectRoot, bundle.file);
+  const relativeServerBuildPath = relative(
+    resolvedProjectRoot,
+    serverBuildPath
+  );
+  if (
+    relativeServerBuildPath === '..' ||
+    relativeServerBuildPath.startsWith(`..${sep}`)
+  ) {
+    throw new Error(
+      `${BUILD_RESULT_PATH}: bundle file must stay within the project root`
+    );
+  }
   if (!fileExists(serverBuildPath)) {
     throw new Error(
       `${BUILD_RESULT_PATH}: server bundle does not exist: ${serverBuildPath}`

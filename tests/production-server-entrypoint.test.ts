@@ -6,7 +6,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { afterEach, describe, expect, test } from 'vitest';
 
 interface ProductionServerLauncher {
@@ -129,6 +129,30 @@ describe('resolveProductionServerBuild', () => {
         { projectRoot }
       )
     ).toThrow('bundle file must be a non-empty relative path');
+  });
+
+  test('번들 file이 프로젝트 루트를 벗어나면 오류를 던진다', () => {
+    const projectRoot = createProjectRoot();
+    const outsideRoot = mkdtempSync(
+      join(tmpdir(), 'weatherpane-entrypoint-outside-')
+    );
+    temporaryRoots.push(outsideRoot);
+    const outsidePath = join(outsideRoot, 'index.js');
+    writeFileSync(outsidePath, 'export {};\n', 'utf8');
+    const relativePath = relative(projectRoot, outsidePath);
+
+    expect(() =>
+      resolveProductionServerBuild(
+        buildResult({
+          node: {
+            id: 'node',
+            file: relativePath,
+            config: { runtime: 'nodejs' },
+          },
+        }),
+        { projectRoot }
+      )
+    ).toThrow('bundle file must stay within the project root');
   });
 
   test('매니페스트가 가리키는 파일이 없으면 오류를 던진다', () => {
