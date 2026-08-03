@@ -34,6 +34,11 @@ export interface GeneratedCatalogBundleBudgets {
   lookup: GeneratedCatalogBundleBudget;
 }
 
+export interface ValidatedCatalogBundleBudgets {
+  baseline: CatalogBundleBytes;
+  limits: CatalogBundleBudgets;
+}
+
 export interface CatalogBundleEvidence {
   search: CatalogBundleRouteEvidence;
   lookup: CatalogBundleRouteEvidence;
@@ -164,27 +169,24 @@ function assertWithinBudget(
 
 function toRouteEvidence(
   reachableChunks: ClientBundleChunk[],
-  catalogChunks: ClientBundleChunk[]
+  catalogChunks: ClientBundleChunk[],
+  baseline: CatalogBundleBytes
 ): CatalogBundleRouteEvidence {
   const actual = sumChunkBytes(catalogChunks);
 
   return {
     actual,
     baselineDelta: {
-      gzipBytes: actual.gzipBytes - catalogBundleBaseline.gzipBytes,
-      rawBytes: actual.rawBytes - catalogBundleBaseline.rawBytes,
+      gzipBytes: actual.gzipBytes - baseline.gzipBytes,
+      rawBytes: actual.rawBytes - baseline.rawBytes,
     },
     catalogChunkFileNames: catalogChunks.map((chunk) => chunk.fileName),
     reachableChunkFileNames: reachableChunks.map((chunk) => chunk.fileName),
     reductionPercentage: {
       gzipBytes:
-        ((catalogBundleBaseline.gzipBytes - actual.gzipBytes) /
-          catalogBundleBaseline.gzipBytes) *
-        100,
+        ((baseline.gzipBytes - actual.gzipBytes) / baseline.gzipBytes) * 100,
       rawBytes:
-        ((catalogBundleBaseline.rawBytes - actual.rawBytes) /
-          catalogBundleBaseline.rawBytes) *
-        100,
+        ((baseline.rawBytes - actual.rawBytes) / baseline.rawBytes) * 100,
     },
   };
 }
@@ -214,7 +216,18 @@ export function deriveCatalogBundleBudgets(
 
 export function assertGeneratedCatalogBundleBudgets(
   generatedBudgets: GeneratedCatalogBundleBudgets
-): CatalogBundleBudgets {
+): ValidatedCatalogBundleBudgets {
+  if (generatedBudgets.version !== 1) {
+    throw new Error('카탈로그 예산 파일 버전이 일치하지 않습니다.');
+  }
+
+  if (
+    generatedBudgets.baseline.rawBytes !== catalogBundleBaseline.rawBytes ||
+    generatedBudgets.baseline.gzipBytes !== catalogBundleBaseline.gzipBytes
+  ) {
+    throw new Error('카탈로그 baseline이 일치하지 않습니다.');
+  }
+
   if (generatedBudgets.headroomRatio !== catalogBundleHeadroomRatio) {
     throw new Error('카탈로그 예산 여유 비율이 일치하지 않습니다.');
   }
@@ -244,12 +257,13 @@ export function assertGeneratedCatalogBundleBudgets(
     throw new Error('조회 카탈로그 예산 공식이 일치하지 않습니다.');
   }
 
-  return budgets;
+  return { baseline: generatedBudgets.baseline, limits: budgets };
 }
 
 export function assertCatalogBundleBudget(
   report: ClientBundleReport,
-  budgets: CatalogBundleBudgets
+  budgets: CatalogBundleBudgets,
+  baseline: CatalogBundleBytes = catalogBundleBaseline
 ): CatalogBundleEvidence {
   if (report.chunks.length === 0) {
     throw new Error('클라이언트 번들 보고서가 비어 있습니다.');
@@ -272,12 +286,12 @@ export function assertCatalogBundleBudget(
     detailRoute,
     'Detail 라우트 청크를 찾을 수 없습니다.'
   );
-  const searchArtifactChunk = findChunkByModuleSuffix(
+  const searchArtifactChunks = findCatalogChunks(
     report.chunks,
     searchCatalog,
     '검색 카탈로그 청크를 찾을 수 없습니다.'
   );
-  const lookupArtifactChunk = findChunkByModuleSuffix(
+  const lookupArtifactChunks = findCatalogChunks(
     report.chunks,
     lookupCatalog,
     '조회 카탈로그 청크를 찾을 수 없습니다.'
@@ -297,11 +311,19 @@ export function assertCatalogBundleBudget(
     detailReachableChunks.map((chunk) => chunk.fileName)
   );
 
-  if (detailReachableFileNames.has(searchArtifactChunk.fileName)) {
+  if (
+    searchArtifactChunks.some((chunk) =>
+      detailReachableFileNames.has(chunk.fileName)
+    )
+  ) {
     throw new Error('Detail 라우트가 검색 카탈로그에 도달합니다.');
   }
 
-  if (searchReachableFileNames.has(lookupArtifactChunk.fileName)) {
+  if (
+    lookupArtifactChunks.some((chunk) =>
+      searchReachableFileNames.has(chunk.fileName)
+    )
+  ) {
     throw new Error('Search 라우트가 조회 카탈로그에 도달합니다.');
   }
 
@@ -315,8 +337,16 @@ export function assertCatalogBundleBudget(
     lookupCatalog,
     'Detail 라우트가 조회 카탈로그에 도달하지 않습니다.'
   );
-  const search = toRouteEvidence(searchReachableChunks, searchCatalogChunks);
-  const lookup = toRouteEvidence(detailReachableChunks, lookupCatalogChunks);
+  const search = toRouteEvidence(
+    searchReachableChunks,
+    searchCatalogChunks,
+    baseline
+  );
+  const lookup = toRouteEvidence(
+    detailReachableChunks,
+    lookupCatalogChunks,
+    baseline
+  );
 
   assertWithinBudget('검색 카탈로그', search.actual, budgets.search);
   assertWithinBudget('상세 조회', lookup.actual, budgets.lookup);
