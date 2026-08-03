@@ -19,6 +19,7 @@
 - Use mocked API responses by default in tests.
 - Local demo mode may use a mock provider.
 - Production must not silently fall back to demo data.
+- Production server launchers must forward `SIGINT` and `SIGTERM` to the server child so PID-targeted supervisors can shut it down gracefully.
 - Production entrypoint or build-workflow changes must run a bounded production-build startup smoke:
   - Start `pnpm start` in an isolated process group with explicit `HOST`/`PORT`.
   - Give every readiness and cleanup curl a one-second connect timeout and a two-second total timeout.
