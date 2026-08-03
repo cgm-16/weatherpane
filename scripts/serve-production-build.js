@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import process from 'node:process';
@@ -98,30 +98,49 @@ export function runProductionServer({ projectRoot = PROJECT_ROOT } = {}) {
   const serverBuildPath = resolveProductionServerBuild(buildResult, {
     projectRoot,
   });
-  const result = spawnSync(
-    process.execPath,
-    [resolveServeBin(), serverBuildPath],
-    {
-      cwd: projectRoot,
-      env: process.env,
-      stdio: 'inherit',
-    }
-  );
-  if (result.error) {
-    throw new Error('Failed to start react-router-serve', {
-      cause: result.error,
-    });
-  }
-  if (result.signal) {
-    process.kill(process.pid, result.signal);
-    return;
-  }
-  process.exitCode = result.status ?? 1;
+  const child = spawn(process.execPath, [resolveServeBin(), serverBuildPath], {
+    cwd: projectRoot,
+    env: process.env,
+    stdio: 'inherit',
+  });
+
+  return new Promise((resolveRun, rejectRun) => {
+    const forwardSigint = () => child.kill('SIGINT');
+    const forwardSigterm = () => child.kill('SIGTERM');
+    const removeListeners = () => {
+      process.off('SIGINT', forwardSigint);
+      process.off('SIGTERM', forwardSigterm);
+      child.off('error', onError);
+      child.off('exit', onExit);
+    };
+    const onError = (error) => {
+      removeListeners();
+      rejectRun(
+        new Error('Failed to start react-router-serve', {
+          cause: error,
+        })
+      );
+    };
+    const onExit = (status, signal) => {
+      removeListeners();
+      if (signal) {
+        process.kill(process.pid, signal);
+        return;
+      }
+      process.exitCode = status ?? 1;
+      resolveRun();
+    };
+
+    process.on('SIGINT', forwardSigint);
+    process.on('SIGTERM', forwardSigterm);
+    child.once('error', onError);
+    child.once('exit', onExit);
+  });
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   try {
-    runProductionServer();
+    await runProductionServer();
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
     process.exitCode = 1;
