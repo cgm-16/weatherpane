@@ -101,7 +101,13 @@ export async function readOptionalGeneratedJsonFile<T>(
   prerequisiteCommand: string
 ): Promise<T | null> {
   try {
-    return await parseGeneratedJsonFile<T>(filePath);
+    const generatedJson = await parseGeneratedJsonFile<T>(filePath);
+
+    if (generatedJson === null) {
+      throw createGeneratedFileReadError(filePath, prerequisiteCommand);
+    }
+
+    return generatedJson;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return null;
