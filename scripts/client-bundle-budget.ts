@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+
 export interface ClientBundleChunk {
   fileName: string;
   imports: string[];
@@ -69,6 +71,45 @@ const searchCatalog =
   '/frontend/entities/location/catalog.search.generated.json';
 const lookupCatalog =
   '/frontend/entities/location/catalog.lookup.generated.json';
+
+async function parseGeneratedJsonFile<T>(filePath: string): Promise<T> {
+  return JSON.parse(await readFile(filePath, 'utf8')) as T;
+}
+
+function createGeneratedFileReadError(
+  filePath: string,
+  prerequisiteCommand: string
+): Error {
+  return new Error(
+    `생성 파일을 읽을 수 없습니다: ${filePath}. 먼저 \`${prerequisiteCommand}\`을 실행하세요.`
+  );
+}
+
+export async function readGeneratedJsonFile<T>(
+  filePath: string,
+  prerequisiteCommand: string
+): Promise<T> {
+  try {
+    return await parseGeneratedJsonFile<T>(filePath);
+  } catch {
+    throw createGeneratedFileReadError(filePath, prerequisiteCommand);
+  }
+}
+
+export async function readOptionalGeneratedJsonFile<T>(
+  filePath: string,
+  prerequisiteCommand: string
+): Promise<T | null> {
+  try {
+    return await parseGeneratedJsonFile<T>(filePath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return null;
+    }
+
+    throw createGeneratedFileReadError(filePath, prerequisiteCommand);
+  }
+}
 
 function normalizePath(value: string): string {
   return value.replaceAll('\\', '/');
@@ -212,6 +253,35 @@ export function deriveCatalogBundleBudgets(
       ),
     },
   };
+}
+
+const catalogBundleCalibrationFields = [
+  ['search', 'measuredRawBytes', '검색 measured raw'],
+  ['search', 'measuredGzipBytes', '검색 measured gzip'],
+  ['search', 'rawBytes', '검색 raw 한도'],
+  ['search', 'gzipBytes', '검색 gzip 한도'],
+  ['lookup', 'measuredRawBytes', '조회 measured raw'],
+  ['lookup', 'measuredGzipBytes', '조회 measured gzip'],
+  ['lookup', 'rawBytes', '조회 raw 한도'],
+  ['lookup', 'gzipBytes', '조회 gzip 한도'],
+] as const;
+
+export function assertCatalogBundleBudgetCalibration(
+  previous: GeneratedCatalogBundleBudgets,
+  next: GeneratedCatalogBundleBudgets,
+  allowIncrease: boolean
+): void {
+  if (allowIncrease) {
+    return;
+  }
+
+  for (const [route, field, label] of catalogBundleCalibrationFields) {
+    if (next[route][field] > previous[route][field]) {
+      throw new Error(
+        `${label} 값이 증가했습니다: ${previous[route][field]} -> ${next[route][field]}. 의도한 경우 --allow-increase를 사용하세요.`
+      );
+    }
+  }
 }
 
 export function assertGeneratedCatalogBundleBudgets(

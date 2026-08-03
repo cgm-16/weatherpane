@@ -1,20 +1,30 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import {
   assertCatalogBundleBudget,
+  assertCatalogBundleBudgetCalibration,
+  assertGeneratedCatalogBundleBudgets,
   catalogBundleBaseline,
   catalogBundleHeadroomRatio,
   deriveCatalogBundleBudgets,
+  readGeneratedJsonFile,
+  readOptionalGeneratedJsonFile,
   type ClientBundleReport,
   type GeneratedCatalogBundleBudgets,
 } from './client-bundle-budget';
 
 const reportPath = resolve('build/client/catalog-bundle-report.json');
 const budgetPath = resolve('scripts/catalog-bundle-budgets.generated.json');
-const report = JSON.parse(
-  await readFile(reportPath, 'utf8')
-) as ClientBundleReport;
+const report = await readGeneratedJsonFile<ClientBundleReport>(
+  reportPath,
+  'pnpm build'
+);
+const previousBudgets =
+  await readOptionalGeneratedJsonFile<GeneratedCatalogBundleBudgets>(
+    budgetPath,
+    'pnpm calibrate:bundle-budget'
+  );
 const measuredEvidence = assertCatalogBundleBudget(
   report,
   deriveCatalogBundleBudgets({
@@ -50,5 +60,14 @@ const generatedBudgets: GeneratedCatalogBundleBudgets = {
     gzipBytes: limits.lookup.gzipBytes,
   },
 };
+
+if (previousBudgets) {
+  assertGeneratedCatalogBundleBudgets(previousBudgets);
+  assertCatalogBundleBudgetCalibration(
+    previousBudgets,
+    generatedBudgets,
+    process.argv.includes('--allow-increase')
+  );
+}
 
 await writeFile(budgetPath, `${JSON.stringify(generatedBudgets, null, 2)}\n`);

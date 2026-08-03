@@ -1,10 +1,10 @@
-import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import {
   assertCatalogBundleBudget,
   assertGeneratedCatalogBundleBudgets,
   formatCatalogBundleEvidence,
+  readGeneratedJsonFile,
   type CatalogBundleBudgets,
   type ClientBundleReport,
   type GeneratedCatalogBundleBudgets,
@@ -12,12 +12,15 @@ import {
 
 const reportPath = resolve('build/client/catalog-bundle-report.json');
 const budgetPath = resolve('scripts/catalog-bundle-budgets.generated.json');
-const report = JSON.parse(
-  await readFile(reportPath, 'utf8')
-) as ClientBundleReport;
-const generatedBudgets = JSON.parse(
-  await readFile(budgetPath, 'utf8')
-) as GeneratedCatalogBundleBudgets;
+const report = await readGeneratedJsonFile<ClientBundleReport>(
+  reportPath,
+  'pnpm build'
+);
+const generatedBudgets =
+  await readGeneratedJsonFile<GeneratedCatalogBundleBudgets>(
+    budgetPath,
+    'pnpm calibrate:bundle-budget'
+  );
 const { baseline, limits } =
   assertGeneratedCatalogBundleBudgets(generatedBudgets);
 const evidence = assertCatalogBundleBudget(report, limits, baseline);
