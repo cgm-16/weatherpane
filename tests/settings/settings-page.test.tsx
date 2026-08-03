@@ -2,29 +2,20 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ComponentType } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import * as SettingsFeature from '../../frontend/features/settings';
-
-const SettingsControls = (
-  SettingsFeature as typeof SettingsFeature & {
-    SettingsControls?: ComponentType;
-  }
-).SettingsControls;
+import {
+  SettingsControls,
+  SettingsProvider,
+  ThemeProvider,
+} from '../../frontend/features/settings';
 
 function renderSettingsControls() {
-  expect(
-    SettingsControls,
-    '설정 컨트롤은 settings feature 공개 API에서 제공되어야 한다'
-  ).toBeTypeOf('function');
-  if (!SettingsControls) return;
-
   render(
-    <SettingsFeature.ThemeProvider>
-      <SettingsFeature.SettingsProvider>
+    <ThemeProvider>
+      <SettingsProvider>
         <SettingsControls />
-      </SettingsFeature.SettingsProvider>
-    </SettingsFeature.ThemeProvider>
+      </SettingsProvider>
+    </ThemeProvider>
   );
 }
 
