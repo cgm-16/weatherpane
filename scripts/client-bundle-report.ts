@@ -1,21 +1,15 @@
+import { writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
-import type { Plugin } from 'vite';
+import type { Plugin, Rollup } from 'vite';
 
 import type {
   ClientBundleChunk,
   ClientBundleReport,
 } from './client-bundle-budget';
 
-interface FinalClientChunk {
-  fileName: string;
-  imports: string[];
-  dynamicImports: string[];
-  modules: Record<string, unknown>;
-  code: string;
-}
-
-function toClientBundleChunk(chunk: FinalClientChunk): ClientBundleChunk {
+function toClientBundleChunk(chunk: Rollup.OutputChunk): ClientBundleChunk {
   return {
     dynamicImports: [...chunk.dynamicImports].sort(),
     fileName: chunk.fileName,
@@ -29,9 +23,16 @@ function toClientBundleChunk(chunk: FinalClientChunk): ClientBundleChunk {
 export function clientBundleReportPlugin(): Plugin {
   return {
     applyToEnvironment(environment) {
-      return environment.name === 'client';
+      return (
+        environment.name === 'client' &&
+        process.env.CATALOG_BUNDLE_REPORT === '1'
+      );
     },
-    generateBundle(_outputOptions, bundle) {
+    async writeBundle(outputOptions, bundle) {
+      if (!outputOptions.dir) {
+        throw new Error('client-bundle-report: 출력 디렉터리가 필요합니다.');
+      }
+
       const chunks = Object.values(bundle)
         .filter((output) => output.type === 'chunk')
         .map(toClientBundleChunk)
@@ -39,12 +40,13 @@ export function clientBundleReportPlugin(): Plugin {
           left.fileName.localeCompare(right.fileName, 'en')
         );
       const report: ClientBundleReport = { chunks };
+      const reportPath = resolve(
+        outputOptions.dir,
+        '..',
+        'catalog-bundle-report.json'
+      );
 
-      this.emitFile({
-        fileName: 'catalog-bundle-report.json',
-        source: `${JSON.stringify(report, null, 2)}\n`,
-        type: 'asset',
-      });
+      await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
     },
     name: 'client-bundle-report',
   };

@@ -14,11 +14,11 @@ import {
   type GeneratedCatalogBundleBudgets,
 } from './client-bundle-budget';
 
-const reportPath = resolve('build/client/catalog-bundle-report.json');
+const reportPath = resolve('build/catalog-bundle-report.json');
 const budgetPath = resolve('scripts/catalog-bundle-budgets.generated.json');
 const report = await readGeneratedJsonFile<ClientBundleReport>(
   reportPath,
-  'pnpm build'
+  'CATALOG_BUNDLE_REPORT=1 VITE_WEATHER_PROVIDER_MODE=mock pnpm build'
 );
 const previousBudgets =
   await readOptionalGeneratedJsonFile<GeneratedCatalogBundleBudgets>(
