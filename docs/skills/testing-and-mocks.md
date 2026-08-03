@@ -19,7 +19,15 @@
 - Use mocked API responses by default in tests.
 - Local demo mode may use a mock provider.
 - Production must not silently fall back to demo data.
-- Production entrypoint or build-workflow changes must run a bounded production-build startup smoke: start `pnpm start` in an isolated process group with explicit `HOST`/`PORT`; give every readiness and cleanup curl a one-second connect timeout and two-second total timeout; verify child liveness while polling `/` with `curl -fsS` for at most 20 attempts; on cleanup, send `TERM`, poll the process group for at most five one-second attempts, escalate to `KILL` followed by one bounded second if it remains, and call `wait` only after a negative process-group check. Require another negative process-group check after `wait` and cleanup curl status 7 (`CURLE_COULDNT_CONNECT`), keeping the cleanup ceiling at eight seconds. A successful response, status 28 timeout, or any other curl failure must fail the cleanup proof.
+- Production entrypoint or build-workflow changes must run a bounded production-build startup smoke:
+  - Start `pnpm start` in an isolated process group with explicit `HOST`/`PORT`.
+  - Give every readiness and cleanup curl a one-second connect timeout and a two-second total timeout.
+  - Verify child liveness while polling `/` with `curl -fsS` for at most 20 attempts.
+  - On cleanup, send `TERM`, then poll the process group for at most five one-second attempts.
+  - If the group remains, escalate to `KILL` and wait one bounded second.
+  - Call `wait` only after a negative process-group check, then repeat the check.
+  - Require cleanup curl status 7 (`CURLE_COULDNT_CONNECT`). A success, a status 28 timeout, or any other curl failure fails the cleanup proof.
+  - Keep the cleanup ceiling at eight seconds.
 - Unit and component tests use Vitest and RTL.
 - End-to-end smoke tests use Playwright.
 - Every `tests/*.e2e.ts` file must import `test`/`expect` from `tests/fixtures.ts`, never directly from `@playwright/test`. The shared fixture fails any test where the page emits a hydration-related console error/warning or `pageerror` (matched by `/hydrat/i`), so SSR/client mismatches fail CI instead of only appearing in dev server stdout. This is mechanically enforced by an ESLint `no-restricted-imports` rule scoped to `tests/**/*.e2e.ts`; `tests/fixtures.ts` itself is the one legitimate place to import `test`/`expect` from `@playwright/test`.
