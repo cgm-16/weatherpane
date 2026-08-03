@@ -57,6 +57,17 @@ describe('generated bundle file loading', () => {
     ).resolves.toBeNull();
   });
 
+  it('선택 생성 파일의 값이 null이면 누락으로 처리하지 않는다', async () => {
+    const filePath = join(await createTemporaryDirectory(), 'null.json');
+    await writeFile(filePath, 'null');
+
+    await expect(
+      readOptionalGeneratedJsonFile(filePath, prerequisiteCommand)
+    ).rejects.toThrow(
+      `생성 파일을 읽을 수 없습니다: ${filePath}. 먼저 \`${prerequisiteCommand}\`을 실행하세요.`
+    );
+  });
+
   it('선택 생성 파일의 JSON이 잘못되면 오류를 숨기지 않는다', async () => {
     const filePath = join(await createTemporaryDirectory(), 'malformed.json');
     await writeFile(filePath, '{');
