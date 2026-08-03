@@ -210,6 +210,7 @@ describe('getCatalogLocationResultsByCanonicalPath', () => {
     const originalSegments = generatedSearchCatalog.segments;
     let entryIterations = 0;
     let segmentReads = 0;
+    const maxSegmentReadsPerPath = 4 * 2;
 
     generatedSearchCatalog.entries = new Proxy(originalEntries, {
       get(target, property, receiver) {
@@ -241,7 +242,9 @@ describe('getCatalogLocationResultsByCanonicalPath', () => {
         POPULAR_LOCATIONS
       );
       expect(entryIterations).toBe(1);
-      expect(segmentReads).toBeLessThanOrEqual(80);
+      expect(segmentReads).toBeLessThanOrEqual(
+        POPULAR_LOCATIONS.length * maxSegmentReadsPerPath
+      );
     } finally {
       generatedSearchCatalog.entries = originalEntries;
       generatedSearchCatalog.segments = originalSegments;
