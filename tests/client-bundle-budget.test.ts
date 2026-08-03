@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   assertCatalogBundleBudget,
+  assertCatalogBundleBudgetCalibration,
   assertGeneratedCatalogBundleBudgets,
   deriveCatalogBundleBudgets,
   formatCatalogBundleEvidence,
@@ -42,6 +43,17 @@ function createGeneratedBudgets(): GeneratedCatalogBundleBudgets {
     version: 1,
   };
 }
+
+const calibrationIncreaseCases = [
+  ['search', 'measuredRawBytes', '검색 measured raw'],
+  ['search', 'measuredGzipBytes', '검색 measured gzip'],
+  ['search', 'rawBytes', '검색 raw 한도'],
+  ['search', 'gzipBytes', '검색 gzip 한도'],
+  ['lookup', 'measuredRawBytes', '조회 measured raw'],
+  ['lookup', 'measuredGzipBytes', '조회 measured gzip'],
+  ['lookup', 'rawBytes', '조회 raw 한도'],
+  ['lookup', 'gzipBytes', '조회 gzip 한도'],
+] as const;
 
 function createReport(
   overrides: Partial<ClientBundleReport> = {}
@@ -139,6 +151,31 @@ describe('catalog bundle budgets', () => {
       baseline: { gzipBytes: 847_465, rawBytes: 8_733_640 },
       limits: deriveCatalogBundleBudgets(measured),
     });
+  });
+
+  it.each(calibrationIncreaseCases)(
+    '보정 증가를 거부한다: %s.%s',
+    (route, field, label) => {
+      const previous = createGeneratedBudgets();
+      const next = structuredClone(previous);
+      next[route][field] += 1;
+
+      expect(() =>
+        assertCatalogBundleBudgetCalibration(previous, next, false)
+      ).toThrow(
+        `${label} 값이 증가했습니다: ${previous[route][field]} -> ${next[route][field]}. 의도한 경우 --allow-increase를 사용하세요.`
+      );
+    }
+  );
+
+  it('명시적으로 허용한 보정 증가는 통과한다', () => {
+    const previous = createGeneratedBudgets();
+    const next = structuredClone(previous);
+    next.search.measuredRawBytes += 1;
+
+    expect(() =>
+      assertCatalogBundleBudgetCalibration(previous, next, true)
+    ).not.toThrow();
   });
 
   it('accepts exact-limit catalog-bearing chunks', () => {
