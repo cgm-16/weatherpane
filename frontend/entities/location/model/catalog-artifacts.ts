@@ -35,6 +35,21 @@ export interface GeneratedCatalogLookup {
   entries: GeneratedCatalogLookupEntry[];
 }
 
+export const GENERATED_CATALOG_LOCATION_ID_LENGTH = 12;
+
+export function assertGeneratedCatalogLookup(
+  lookup: GeneratedCatalogLookup
+): void {
+  if (
+    lookup.ids.length !== lookup.total * GENERATED_CATALOG_LOCATION_ID_LENGTH ||
+    lookup.entries.length !== lookup.total
+  ) {
+    throw new Error(
+      'catalog-lookup: fixed-width ID artifact length is invalid'
+    );
+  }
+}
+
 const catalogLocationIdPattern = /^[0-9a-f]{12}$/;
 
 function assertCatalogLocationId(catalogLocationId: string) {
