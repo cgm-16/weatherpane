@@ -105,14 +105,23 @@ jobs:
         run: |
           set -euo pipefail
           server_log="${RUNNER_TEMP}/weatherpane-production-server.log"
-          pnpm start >"${server_log}" 2>&1 &
+          setsid pnpm start >"${server_log}" 2>&1 &
           server_pid=$!
 
           cleanup() {
-            if kill -0 "${server_pid}" 2>/dev/null; then
-              kill "${server_pid}"
-            fi
+            kill -TERM -- "-${server_pid}" 2>/dev/null || true
             wait "${server_pid}" 2>/dev/null || true
+
+            for attempt in $(seq 1 5); do
+              if ! curl --connect-timeout 1 -sS -o /dev/null "http://${HOST}:${PORT}/" 2>/dev/null; then
+                return
+              fi
+              sleep 1
+            done
+
+            cat "${server_log}"
+            echo "::error::Production server still responds after cleanup"
+            exit 1
           }
           trap cleanup EXIT
 
