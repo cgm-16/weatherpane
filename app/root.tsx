@@ -9,7 +9,10 @@ import {
 
 import type { Route } from './+types/root';
 import { AppProviders } from '../frontend/app/providers/app-providers';
-import { storageKeys } from '../frontend/shared/lib/storage/storage-keys';
+import {
+  storageKeys,
+  storageSchemaVersion,
+} from '../frontend/shared/lib/storage/storage-keys';
 import '../frontend/app/styles/global.css';
 
 export const links: Route.LinksFunction = () => [];
@@ -17,6 +20,7 @@ export const links: Route.LinksFunction = () => [];
 // 페이지 로드 전에 즉시 실행되는 테마 초기화 스크립트 (FOUC 방지).
 const THEME_INIT_SCRIPT = `(function(){
   var k = '${storageKeys.theme}';
+  var expectedVersion = ${storageSchemaVersion};
   function resolveTheme(preference) {
     return preference === 'dark' || (preference === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   }
@@ -27,7 +31,7 @@ const THEME_INIT_SCRIPT = `(function(){
     if (!raw) return null;
     try {
       var stored = JSON.parse(raw);
-      var preference = stored && stored.version === 1 ? stored.data : null;
+      var preference = stored && stored.version === expectedVersion ? stored.data : null;
       return preference === 'system' || preference === 'light' || preference === 'dark'
         ? preference
         : null;
