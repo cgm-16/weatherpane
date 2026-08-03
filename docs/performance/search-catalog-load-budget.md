@@ -8,7 +8,7 @@
 
 ## 측정값과 한도
 
-측정은 최종 mock 생산 빌드의 `build/client/catalog-bundle-report.json`을 사용한다. 이 보고서는 chunk code의 `Buffer.byteLength`와 `gzipSync(code).byteLength`를 기록하므로 Vite 화면의 kB 단위 표기가 아닌 재현 가능한 byte 단위다.
+측정은 최종 mock 생산 빌드의 `build/catalog-bundle-report.json`을 사용한다. `CATALOG_BUNDLE_REPORT=1`일 때만 진단 보고서를 생성하며, 배포 대상인 `build/client` 밖에 기록한다. 이 보고서는 chunk code의 `Buffer.byteLength`와 `gzipSync(code).byteLength`를 기록하므로 Vite 화면의 kB 단위 표기가 아닌 재현 가능한 byte 단위다.
 
 | 대상            |  측정 raw | 측정 gzip |  raw 한도 | gzip 한도 |
 | --------------- | --------: | --------: | --------: | --------: |
@@ -30,12 +30,14 @@ Search는 동기적으로 검색 가능한 compact tuple만 사용하고, 선택
 ## 실행과 증거
 
 ```bash
-VITE_WEATHER_PROVIDER_MODE=mock pnpm build
+CATALOG_BUNDLE_REPORT=1 VITE_WEATHER_PROVIDER_MODE=mock pnpm build
 pnpm calibrate:bundle-budget
 pnpm check:bundle-budget -- --prove-red
 pnpm check:bundle-budget
 ```
 
-마지막 검사는 위 실제 값을 출력하고 전체 카탈로그 제외와 양방향 경로 격리를 확인한다. `--prove-red`는 메모리에서 Search/Detail의 raw/gzip 한도를 각각 실제 값보다 1 byte 낮춰 네 번의 실패를 확인한 뒤, 파일을 변경하지 않고 커밋된 한도로 GREEN을 다시 확인한다.
+기존 측정값이나 한도가 증가하면 보정은 기본적으로 중단된다. 증가가 의도되었고 리뷰 근거가 있을 때만 `pnpm calibrate:bundle-budget -- --allow-increase`로 명시적으로 허용한다. 감소하거나 동일한 값은 기본 명령으로 보정할 수 있다.
+
+마지막 검사는 위 실제 값을 출력하고 전체 카탈로그 제외와 양방향 경로 격리를 확인한다. `--prove-red`는 메모리에서 Search/Detail의 raw/gzip 한도를 각각 실제 값보다 1 byte 낮춰 네 번의 실패를 확인한 뒤, 파일을 변경하지 않고 커밋된 한도로 GREEN을 다시 확인한다. 일반 `pnpm build`는 진단 보고서를 만들지 않는다.
 
 로컬 Chromium 타이밍은 코드 파싱/실행 변화를 살피는 진단 자료일 뿐, 현장 RUM 또는 사용자 백분위 성능 증거가 아니다. 이 문서는 그 타이밍을 제품 성능 지표로 주장하지 않는다.
