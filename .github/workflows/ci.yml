@@ -105,22 +105,69 @@ jobs:
         run: |
           set -euo pipefail
           server_log="${RUNNER_TEMP}/weatherpane-production-server.log"
+          probe_error="${RUNNER_TEMP}/weatherpane-production-probe.log"
           setsid pnpm start >"${server_log}" 2>&1 &
           server_pid=$!
 
+          process_group_exists() {
+            kill -0 -- "-${server_pid}" 2>/dev/null
+          }
+
           cleanup() {
             kill -TERM -- "-${server_pid}" 2>/dev/null || true
-            wait "${server_pid}" 2>/dev/null || true
-
+            group_exited=false
             for attempt in $(seq 1 5); do
-              if ! curl --connect-timeout 1 -sS -o /dev/null "http://${HOST}:${PORT}/" 2>/dev/null; then
-                return
+              if ! process_group_exists; then
+                group_exited=true
+                break
               fi
               sleep 1
             done
 
+            if [[ "${group_exited}" != true ]]; then
+              kill -KILL -- "-${server_pid}" 2>/dev/null || true
+              sleep 1
+              if ! process_group_exists; then
+                group_exited=true
+              fi
+            fi
+
+            if [[ "${group_exited}" != true ]]; then
+              cat "${server_log}"
+              echo "::error::Production server process group still exists after cleanup"
+              trap - EXIT
+              exit 1
+            fi
+            wait "${server_pid}" 2>/dev/null || true
+            if process_group_exists; then
+              cat "${server_log}"
+              echo "::error::Production server process group reappeared after wait"
+              trap - EXIT
+              exit 1
+            fi
+
+            set +e
+            curl --connect-timeout 1 --max-time 2 -sS -o /dev/null "http://${HOST}:${PORT}/" 2>"${probe_error}"
+            curl_status=$?
+            set -e
+
+            case "${curl_status}" in
+              7)
+                return
+                ;;
+              0)
+                echo "::error::Production server still responds after cleanup"
+                ;;
+              28)
+                echo "::error::Production server cleanup probe timed out"
+                ;;
+              *)
+                echo "::error::Production server cleanup probe failed unexpectedly with curl status ${curl_status}"
+                ;;
+            esac
             cat "${server_log}"
-            echo "::error::Production server still responds after cleanup"
+            cat "${probe_error}"
+            trap - EXIT
             exit 1
           }
           trap cleanup EXIT
@@ -132,7 +179,7 @@ jobs:
               echo "::error::Production server exited before becoming ready"
               exit 1
             fi
-            if curl -fsS -o /dev/null "http://${HOST}:${PORT}/" 2>/dev/null; then
+            if curl --connect-timeout 1 --max-time 2 -fsS -o /dev/null "http://${HOST}:${PORT}/" 2>/dev/null; then
               ready=true
               break
             fi
@@ -141,7 +188,7 @@ jobs:
 
           if [[ "${ready}" != true ]]; then
             cat "${server_log}"
-            echo "::error::Production server did not become ready within 20 seconds"
+            echo "::error::Production server did not become ready after 20 bounded attempts"
             exit 1
           fi
 
