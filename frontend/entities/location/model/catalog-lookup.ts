@@ -1,20 +1,16 @@
 import lookupData from '../catalog.lookup.generated.json';
 
 import {
+  assertGeneratedCatalogLookup,
   buildCatalogEntryFromParts,
+  GENERATED_CATALOG_LOCATION_ID_LENGTH,
   type GeneratedCatalogLookup,
 } from './catalog-artifacts';
 import type { CatalogEntry, LocationCatalog } from './catalog';
 
-const catalogLocationIdLength = 12;
 const defaultLookup = lookupData as unknown as GeneratedCatalogLookup;
 
-if (
-  defaultLookup.ids.length !==
-  defaultLookup.total * catalogLocationIdLength
-) {
-  throw new Error('catalog-lookup: fixed-width ID artifact length is invalid');
-}
+assertGeneratedCatalogLookup(defaultLookup);
 
 export function getCatalogEntryById(
   catalogLocationId: string,
@@ -28,26 +24,31 @@ export function getCatalogEntryById(
     );
   }
 
-  for (let index = 0; index < defaultLookup.total; index += 1) {
-    const idStart = index * catalogLocationIdLength;
-
-    if (
-      defaultLookup.ids.slice(idStart, idStart + catalogLocationIdLength) !==
-      catalogLocationId
-    ) {
-      continue;
-    }
-
-    const [canonicalPath, archetypeKey, overrideKey] =
-      defaultLookup.entries[index];
-
-    return buildCatalogEntryFromParts(
-      catalogLocationId,
-      canonicalPath,
-      archetypeKey,
-      overrideKey
-    );
+  if (catalogLocationId.length !== GENERATED_CATALOG_LOCATION_ID_LENGTH) {
+    return null;
   }
 
-  return null;
+  let idStart = defaultLookup.ids.indexOf(catalogLocationId);
+
+  while (
+    idStart !== -1 &&
+    idStart % GENERATED_CATALOG_LOCATION_ID_LENGTH !== 0
+  ) {
+    idStart = defaultLookup.ids.indexOf(catalogLocationId, idStart + 1);
+  }
+
+  if (idStart === -1) {
+    return null;
+  }
+
+  const entryIndex = idStart / GENERATED_CATALOG_LOCATION_ID_LENGTH;
+  const [canonicalPath, archetypeKey, overrideKey] =
+    defaultLookup.entries[entryIndex];
+
+  return buildCatalogEntryFromParts(
+    catalogLocationId,
+    canonicalPath,
+    archetypeKey,
+    overrideKey
+  );
 }
