@@ -18,10 +18,11 @@ const report = JSON.parse(
 const generatedBudgets = JSON.parse(
   await readFile(budgetPath, 'utf8')
 ) as GeneratedCatalogBundleBudgets;
-const budgets = assertGeneratedCatalogBundleBudgets(generatedBudgets);
-const evidence = assertCatalogBundleBudget(report, budgets);
+const { baseline, limits } =
+  assertGeneratedCatalogBundleBudgets(generatedBudgets);
+const evidence = assertCatalogBundleBudget(report, limits, baseline);
 
-console.log(formatCatalogBundleEvidence(evidence, budgets));
+console.log(formatCatalogBundleEvidence(evidence, limits));
 
 if (process.argv.includes('--prove-red')) {
   const checks = [
@@ -32,13 +33,13 @@ if (process.argv.includes('--prove-red')) {
   ] as const;
 
   for (const [route, byteType, label, byteLabel] of checks) {
-    const falsifiedBudgets = structuredClone(budgets) as CatalogBundleBudgets;
+    const falsifiedBudgets = structuredClone(limits) as CatalogBundleBudgets;
     const actual = evidence[route].actual[byteType];
     falsifiedBudgets[route][byteType] = actual - 1;
     const expectedMessage = `${label} ${byteLabel} 예산 초과: ${actual} > ${actual - 1}`;
 
     try {
-      assertCatalogBundleBudget(report, falsifiedBudgets);
+      assertCatalogBundleBudget(report, falsifiedBudgets, baseline);
     } catch (error) {
       if (error instanceof Error && error.message === expectedMessage) {
         console.log(`예상 RED: ${expectedMessage}`);
@@ -50,6 +51,6 @@ if (process.argv.includes('--prove-red')) {
     throw new Error(`예상 RED가 발생하지 않았습니다: ${expectedMessage}`);
   }
 
-  assertCatalogBundleBudget(report, budgets);
+  assertCatalogBundleBudget(report, limits, baseline);
   console.log('복원된 커밋 예산 GREEN을 확인했습니다.');
 }
