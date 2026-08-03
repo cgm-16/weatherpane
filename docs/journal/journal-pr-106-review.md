@@ -39,6 +39,7 @@ Detail bootstrap 테스트 이름 변경과 build provenance 스키마 추가는
 - Search/lookup의 measured raw/gzip 및 limit raw/gzip 증가 테스트 8개와 override 테스트 1개가 guard 부재로 RED였고, anti-ratchet 추가 후 GREEN이었다.
 - 보고서 opt-in 테스트는 client 빌드에 항상 적용되어 RED였고, `CATALOG_BUNDLE_REPORT=1` 조건 추가 후 GREEN이었다.
 - 보고서 배치 테스트는 `generateBundle` asset emission 때문에 RED였고, `writeBundle`로 `build/catalog-bundle-report.json`을 기록한 뒤 GREEN이었다.
+- 독립 코드 리뷰에서 optional 생성 파일의 JSON 값 `null`이 `ENOENT`와 같은 반환값으로 처리되는 Important 문제를 찾았다. `null` 파일 테스트는 기존 코드에서 누락으로 통과해 RED였고, optional loader가 이를 오류로 거부한 뒤 GREEN이었다.
 - 일반 mock 생산 빌드는 보고서를 만들지 않았고, 활성화한 mock 생산 빌드는 root 보고서만 만들었다. budget gate는 종료 코드 0이었다.
 
 ## 커밋
@@ -48,6 +49,7 @@ Detail bootstrap 테스트 이름 변경과 build provenance 스키마 추가는
 - `c798e0b` `fix(bundle): 생성 파일 로딩과 예산 보정 보호`
 - `50cd89d` `fix(bundle): 진단 보고서를 배포 산출물에서 분리`
 - `3da2f1b` `test(search): 인기 지역 조회 상한을 입력 수에 맞춤`
+- `955b513` `fix(bundle): null 예산 파일을 누락으로 처리하지 않음`
 
 ## 남은 증거와 외부 상태
 
