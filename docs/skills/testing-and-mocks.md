@@ -19,6 +19,7 @@
 - Use mocked API responses by default in tests.
 - Local demo mode may use a mock provider.
 - Production must not silently fall back to demo data.
+- Production entrypoint or build-workflow changes must run a bounded production-build startup smoke: start `pnpm start` with explicit `HOST`/`PORT`, verify child liveness while polling `/` with `curl -fsS`, and always terminate and reap the child.
 - Unit and component tests use Vitest and RTL.
 - End-to-end smoke tests use Playwright.
 - Every `tests/*.e2e.ts` file must import `test`/`expect` from `tests/fixtures.ts`, never directly from `@playwright/test`. The shared fixture fails any test where the page emits a hydration-related console error/warning or `pageerror` (matched by `/hydrat/i`), so SSR/client mismatches fail CI instead of only appearing in dev server stdout. This is mechanically enforced by an ESLint `no-restricted-imports` rule scoped to `tests/**/*.e2e.ts`; `tests/fixtures.ts` itself is the one legitimate place to import `test`/`expect` from `@playwright/test`.
@@ -56,6 +57,7 @@
    - run the available repository checks from the implementation worktree
    - use `pnpm typecheck`
    - run the targeted Vitest and Playwright commands that match the touched behavior
+   - when the production entrypoint or build workflow changes, run the bounded build/start smoke from `.github/workflows/ci.yml`
    - if `lint` or another expected script does not exist, report that exact gap instead of claiming it passed
      Done-check: every claimed check has fresh command output behind it.
 
@@ -70,6 +72,7 @@
 - `pnpm typecheck`
 - `pnpm exec vitest run path/to/changed.test.ts` for touched logic or component behavior
 - `pnpm exec playwright test path/to/changed-flow.spec.ts` when a user flow changed
+- `VITE_WEATHER_PROVIDER_MODE=mock pnpm build` followed by the bounded `HOST=127.0.0.1 PORT=<unused-port> pnpm start` + `curl -fsS` + cleanup smoke when the production entrypoint or build workflow changes
 - screenshots or traces for UI changes
 
 Required smoke coverage when these flows are touched:
