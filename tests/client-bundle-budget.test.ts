@@ -6,6 +6,7 @@ import {
   deriveCatalogBundleBudgets,
   formatCatalogBundleEvidence,
   type ClientBundleReport,
+  type GeneratedCatalogBundleBudgets,
 } from '../scripts/client-bundle-budget';
 
 const searchRoute = '/project/app/routes/search.tsx';
@@ -21,6 +22,26 @@ const measured = {
   lookup: { gzipBytes: 50, rawBytes: 500 },
   search: { gzipBytes: 100, rawBytes: 1_000 },
 };
+
+function createGeneratedBudgets(): GeneratedCatalogBundleBudgets {
+  return {
+    baseline: { gzipBytes: 847_465, rawBytes: 8_733_640 },
+    headroomRatio: 0.05,
+    lookup: {
+      gzipBytes: 53,
+      measuredGzipBytes: 50,
+      measuredRawBytes: 500,
+      rawBytes: 525,
+    },
+    search: {
+      gzipBytes: 105,
+      measuredGzipBytes: 100,
+      measuredRawBytes: 1_000,
+      rawBytes: 1_050,
+    },
+    version: 1,
+  };
+}
 
 function createReport(
   overrides: Partial<ClientBundleReport> = {}
@@ -83,25 +104,41 @@ describe('catalog bundle budgets', () => {
   });
 
   it('rejects generated limits that do not equal the documented formula', () => {
-    expect(() =>
-      assertGeneratedCatalogBundleBudgets({
-        baseline: { gzipBytes: 847_465, rawBytes: 8_733_640 },
-        headroomRatio: 0.05,
-        lookup: {
-          gzipBytes: 53,
-          measuredGzipBytes: 50,
-          measuredRawBytes: 500,
-          rawBytes: 524,
-        },
-        search: {
-          gzipBytes: 105,
-          measuredGzipBytes: 100,
-          measuredRawBytes: 1_000,
-          rawBytes: 1_050,
-        },
-        version: 1,
-      })
-    ).toThrow('조회 카탈로그 예산 공식이 일치하지 않습니다.');
+    const generatedBudgets = createGeneratedBudgets();
+    generatedBudgets.lookup.rawBytes -= 1;
+
+    expect(() => assertGeneratedCatalogBundleBudgets(generatedBudgets)).toThrow(
+      '조회 카탈로그 예산 공식이 일치하지 않습니다.'
+    );
+  });
+
+  it('생성 예산 버전이 다르면 거부한다', () => {
+    const generatedBudgets = {
+      ...createGeneratedBudgets(),
+      version: 2,
+    } as unknown as GeneratedCatalogBundleBudgets;
+
+    expect(() => assertGeneratedCatalogBundleBudgets(generatedBudgets)).toThrow(
+      '카탈로그 예산 파일 버전이 일치하지 않습니다.'
+    );
+  });
+
+  it('생성 예산 baseline이 다르면 거부한다', () => {
+    const generatedBudgets = createGeneratedBudgets();
+    generatedBudgets.baseline.rawBytes -= 1;
+
+    expect(() => assertGeneratedCatalogBundleBudgets(generatedBudgets)).toThrow(
+      '카탈로그 baseline이 일치하지 않습니다.'
+    );
+  });
+
+  it('검증한 생성 예산에서 baseline과 limits를 반환한다', () => {
+    expect(
+      assertGeneratedCatalogBundleBudgets(createGeneratedBudgets())
+    ).toEqual({
+      baseline: { gzipBytes: 847_465, rawBytes: 8_733_640 },
+      limits: deriveCatalogBundleBudgets(measured),
+    });
   });
 
   it('accepts exact-limit catalog-bearing chunks', () => {
@@ -138,6 +175,23 @@ describe('catalog bundle budgets', () => {
     });
     expect(evidence.lookup.reductionPercentage.rawBytes).toBeCloseTo(
       ((8_733_640 - measured.lookup.rawBytes) / 8_733_640) * 100
+    );
+  });
+
+  it('검증된 baseline으로 증거의 차이와 감소율을 계산한다', () => {
+    const baseline = { gzipBytes: 200, rawBytes: 2_000 };
+    const evidence = assertCatalogBundleBudget(
+      createReport(),
+      deriveCatalogBundleBudgets(measured),
+      baseline
+    );
+
+    expect(evidence.search.baselineDelta).toEqual({
+      gzipBytes: measured.search.gzipBytes - baseline.gzipBytes,
+      rawBytes: measured.search.rawBytes - baseline.rawBytes,
+    });
+    expect(evidence.lookup.reductionPercentage.rawBytes).toBeCloseTo(
+      ((baseline.rawBytes - measured.lookup.rawBytes) / baseline.rawBytes) * 100
     );
   });
 
@@ -262,6 +316,57 @@ describe('catalog bundle budgets', () => {
     );
   });
 
+  it('중복된 카탈로그 청크가 반대 라우트에 도달하면 거부한다', () => {
+    const budgets = deriveCatalogBundleBudgets(measured);
+    const detailToDuplicateSearch = createReport({
+      chunks: [
+        ...createReport().chunks.map((chunk) =>
+          chunk.fileName === 'assets/detail-route.js'
+            ? {
+                ...chunk,
+                dynamicImports: ['assets/duplicate-search-catalog.js'],
+              }
+            : chunk
+        ),
+        {
+          dynamicImports: [],
+          fileName: 'assets/duplicate-search-catalog.js',
+          gzipBytes: 1,
+          imports: [],
+          modules: [searchCatalog],
+          rawBytes: 1,
+        },
+      ],
+    });
+    const searchToDuplicateLookup = createReport({
+      chunks: [
+        ...createReport().chunks.map((chunk) =>
+          chunk.fileName === 'assets/search-route.js'
+            ? {
+                ...chunk,
+                imports: ['assets/duplicate-detail-catalog.js'],
+              }
+            : chunk
+        ),
+        {
+          dynamicImports: [],
+          fileName: 'assets/duplicate-detail-catalog.js',
+          gzipBytes: 1,
+          imports: [],
+          modules: [lookupCatalog],
+          rawBytes: 1,
+        },
+      ],
+    });
+
+    expect(() =>
+      assertCatalogBundleBudget(detailToDuplicateSearch, budgets)
+    ).toThrow('Detail 라우트가 검색 카탈로그에 도달합니다.');
+    expect(() =>
+      assertCatalogBundleBudget(searchToDuplicateLookup, budgets)
+    ).toThrow('Search 라우트가 조회 카탈로그에 도달합니다.');
+  });
+
   it('follows recursive static and dynamic imports once', () => {
     const budgets = deriveCatalogBundleBudgets({
       lookup: { gzipBytes: 60, rawBytes: 600 },
@@ -308,11 +413,22 @@ describe('catalog bundle budgets', () => {
     ]);
   });
 
-  it('fails closed when route owners or catalog artifacts are missing', () => {
+  it('필수 라우트와 카탈로그 증거가 없으면 닫힌 상태로 실패한다', () => {
     const budgets = deriveCatalogBundleBudgets(measured);
+    const emptyReport = createReport({ chunks: [] });
     const missingSearchRoute = createReport({
       chunks: createReport().chunks.filter(
         (chunk) => chunk.fileName !== 'assets/search-route.js'
+      ),
+    });
+    const missingDetailRoute = createReport({
+      chunks: createReport().chunks.filter(
+        (chunk) => chunk.fileName !== 'assets/detail-route.js'
+      ),
+    });
+    const missingSearchArtifact = createReport({
+      chunks: createReport().chunks.filter(
+        (chunk) => chunk.fileName !== 'assets/search-catalog.js'
       ),
     });
     const missingLookupArtifact = createReport({
@@ -320,12 +436,41 @@ describe('catalog bundle budgets', () => {
         (chunk) => chunk.fileName !== 'assets/detail-catalog.js'
       ),
     });
+    const searchDoesNotReachArtifact = createReport({
+      chunks: createReport().chunks.map((chunk) =>
+        chunk.fileName === 'assets/search-route.js'
+          ? { ...chunk, dynamicImports: [] }
+          : chunk
+      ),
+    });
+    const detailDoesNotReachArtifact = createReport({
+      chunks: createReport().chunks.map((chunk) =>
+        chunk.fileName === 'assets/detail-route.js'
+          ? { ...chunk, imports: [] }
+          : chunk
+      ),
+    });
 
+    expect(() => assertCatalogBundleBudget(emptyReport, budgets)).toThrow(
+      '클라이언트 번들 보고서가 비어 있습니다.'
+    );
     expect(() =>
       assertCatalogBundleBudget(missingSearchRoute, budgets)
     ).toThrow('Search 라우트 청크를 찾을 수 없습니다.');
     expect(() =>
+      assertCatalogBundleBudget(missingDetailRoute, budgets)
+    ).toThrow('Detail 라우트 청크를 찾을 수 없습니다.');
+    expect(() =>
+      assertCatalogBundleBudget(missingSearchArtifact, budgets)
+    ).toThrow('검색 카탈로그 청크를 찾을 수 없습니다.');
+    expect(() =>
       assertCatalogBundleBudget(missingLookupArtifact, budgets)
     ).toThrow('조회 카탈로그 청크를 찾을 수 없습니다.');
+    expect(() =>
+      assertCatalogBundleBudget(searchDoesNotReachArtifact, budgets)
+    ).toThrow('Search 라우트가 검색 카탈로그에 도달하지 않습니다.');
+    expect(() =>
+      assertCatalogBundleBudget(detailDoesNotReachArtifact, budgets)
+    ).toThrow('Detail 라우트가 조회 카탈로그에 도달하지 않습니다.');
   });
 });
