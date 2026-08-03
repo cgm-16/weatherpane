@@ -19,7 +19,7 @@
 - Use mocked API responses by default in tests.
 - Local demo mode may use a mock provider.
 - Production must not silently fall back to demo data.
-- Production entrypoint or build-workflow changes must run a bounded production-build startup smoke: start `pnpm start` in an isolated process group with explicit `HOST`/`PORT`, verify child liveness while polling `/` with `curl -fsS`, terminate and reap the whole process group, and prove the server no longer responds.
+- Production entrypoint or build-workflow changes must run a bounded production-build startup smoke: start `pnpm start` in an isolated process group with explicit `HOST`/`PORT`; give every readiness and cleanup curl a one-second connect timeout and two-second total timeout; verify child liveness while polling `/` with `curl -fsS` for at most 20 attempts; on cleanup, send `TERM`, poll the process group for at most five one-second attempts, escalate to `KILL` followed by one bounded second if it remains, and call `wait` only after a negative process-group check. Require another negative process-group check after `wait` and cleanup curl status 7 (`CURLE_COULDNT_CONNECT`), keeping the cleanup ceiling at eight seconds. A successful response, status 28 timeout, or any other curl failure must fail the cleanup proof.
 - Unit and component tests use Vitest and RTL.
 - End-to-end smoke tests use Playwright.
 - Every `tests/*.e2e.ts` file must import `test`/`expect` from `tests/fixtures.ts`, never directly from `@playwright/test`. The shared fixture fails any test where the page emits a hydration-related console error/warning or `pageerror` (matched by `/hydrat/i`), so SSR/client mismatches fail CI instead of only appearing in dev server stdout. This is mechanically enforced by an ESLint `no-restricted-imports` rule scoped to `tests/**/*.e2e.ts`; `tests/fixtures.ts` itself is the one legitimate place to import `test`/`expect` from `@playwright/test`.
@@ -72,7 +72,7 @@
 - `pnpm typecheck`
 - `pnpm exec vitest run path/to/changed.test.ts` for touched logic or component behavior
 - `pnpm exec playwright test path/to/changed-flow.spec.ts` when a user flow changed
-- `VITE_WEATHER_PROVIDER_MODE=mock pnpm build` followed by the bounded `HOST=127.0.0.1 PORT=<unused-port> pnpm start` + `curl -fsS` + process-group cleanup + no-response proof smoke when the production entrypoint or build workflow changes
+- `VITE_WEATHER_PROVIDER_MODE=mock pnpm build` followed by the `.github/workflows/ci.yml` smoke with `HOST=127.0.0.1 PORT=<unused-port> pnpm start`, at most 20 one-second-connect/two-second-total readiness curls, five one-second `TERM` process-group polls, `KILL` plus one-second confirmation, `wait` only after negative process-group proof, a repeated negative proof, and cleanup curl status 7 within the eight-second cleanup ceiling when the production entrypoint or build workflow changes
 - screenshots or traces for UI changes
 
 Required smoke coverage when these flows are touched:
