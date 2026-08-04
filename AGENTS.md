@@ -15,6 +15,7 @@ Do not treat TanStack Query cache as long-term persistence.
 - Use `type/issue-area-slug`.
 - One issue per primary branch.
 - No direct commits to `main` or `release/*`.
+- `production` is the Vercel Production deploy branch; it is updated only via tagged-release PRs (see `docs/skills/github-flow-and-release.md`), never direct commits.
 - No silent scope expansion.
 - If scope changes, open a follow-up issue.
 
