@@ -405,28 +405,32 @@ export interface Aqi {
 
 ### Favorites / Recents / Settings 모델
 
-> **구현 상태:** `Favorite`는 구현됨이나 실제 필드는 `locationId` 단일 문자열이 아니라 `location: ResolvedLocation` 전체다(`FavoriteLocation`, `frontend/entities/location/model/types.ts`). `Recent`는 구현됨이나 실제 필드는 `locationId`/`openCount`가 아니라 `location`/`lastOpenedAt`이며 `openCount`는 존재하지 않는다(`RecentLocation`, 동일 파일; `MAX_RECENTS = 10`). `Settings`는 구현됨(이슈 #77)이나 실제 타입명은 `SettingsPreferences`다(`frontend/features/settings/model/settings-repository.ts`). 테마는 이 타입에 포함되지 않고 별도로 `weatherpane.theme.v1`에 저장된다(`frontend/shared/lib/storage/repositories/theme-repository.ts`).
+> **구현 상태:** 아래 예시는 현재 구현 타입과 필드를 따른다. `FavoriteLocation`과 `RecentLocation`은 `frontend/entities/location/model/types.ts`, `SettingsPreferences`는 `frontend/features/settings/model/settings-repository.ts`에 정의되어 있다. 테마는 `SettingsPreferences`에 포함되지 않고 `ThemePreference`로 분리되어 `weatherpane.theme.v1`에 저장된다(`frontend/shared/lib/storage/repositories/theme-repository.ts`). 최근 위치는 최대 10개다(`MAX_RECENTS = 10`).
 
 ```ts
-export interface Favorite {
+export interface FavoriteLocation {
   favoriteId: string;
-  locationId: string;
-  nickname: string | null; // <= 20 chars hard cap (FAV-11)
-  order: number; // 0..n-1
+  location: ResolvedLocation;
+  nickname: string | null;
+  order: number;
   createdAt: ISODateTime;
   updatedAt: ISODateTime;
 }
 
-export interface Recent {
-  locationId: string;
+export interface RecentLocation {
+  location: ResolvedLocation | RawGpsFallbackLocation;
   lastOpenedAt: ISODateTime;
-  openCount: number;
 }
 
-export interface Settings {
-  temperatureUnit: 'C' | 'F'; // 기본값 C
-  motionPreference: 'system' | 'reduced' | 'full';
+export type TemperatureUnit = 'C' | 'F';
+export type MotionPreference = 'system' | 'reduced' | 'full';
+
+export interface SettingsPreferences {
+  temperatureUnit: TemperatureUnit;
+  motionPreference: MotionPreference;
 }
+
+export type ThemePreference = 'system' | 'light' | 'dark';
 ```
 
 ### Settings 계약
@@ -717,8 +721,9 @@ PR/이슈 템플릿, CODEOWNERS, 보호 브랜치는 entity["company","Git
 
 ### 구현 체크리스트(요약)
 
-- [x] UI
-  - [x] Home/Search/Detail/Favorites/Recents/Settings의 스켈레톤/오류/stale 상태 구현 — 구현됨(Settings는 이슈 #77)
+- [ ] UI
+  - [x] Home/Search/Favorites/Recents/Settings의 스켈레톤/오류/stale 상태 구현 — 구현됨(Settings는 이슈 #77)
+  - [ ] Detail 상태 완성 — 현재/시간별 표시, 로딩/오류, 현재 날씨 요약 stale fallback은 구현됨. 다일 일별 예보 모델/UI와 일별 스켈레톤은 미구현
   - [x] Favorites “편집/정렬” 모드 토글, 위/아래 버튼, 닉네임 20자 하드캡, 완료 auto-blur 커밋 — 구현됨
 - [x] 데이터
   - [x] 버전드 Web Storage 키/payload `version` 관리 — 구현됨(`frontend/shared/lib/storage/`)
