@@ -1,0 +1,108 @@
+name: release / production-drift-check
+
+# production 브랜치가 최신 릴리스 태그보다 뒤처졌는지 주기적으로 확인한다.
+# 배경: production은 PR #70(2026-04-22) 이후 갱신이 멈춘 채 104일간 아무도
+# 눈치채지 못했다 (이슈 #83도 production이 최신이라고 그냥 가정했다). 이
+# 워크플로는 "조용히 뒤처지는" 재발을 막기 위한 감시 장치다.
+on:
+  schedule:
+    - cron: '0 9 * * 1' # 매주 월요일 09:00 UTC. 필요하면 조정 가능.
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Fetch production branch
+        run: git fetch --no-tags origin +refs/heads/production:refs/remotes/origin/production
+
+      - name: Compare latest tag against production
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # 뒤처짐 이슈 본문 템플릿. 자리표시자는 아래 run 스크립트가 치환한다.
+          # bash heredoc을 run: 블록 안에 직접 쓰면 마크다운 제목 줄이 YAML 블록
+          # 스칼라 들여쓰기를 깨뜨리므로, env로 분리해 순수 YAML 블록 스칼라로 둔다.
+          DRIFT_BODY_TEMPLATE: |
+            production이 최신 릴리스 태그 `__LATEST_TAG__`보다 뒤처져 있다 (__DAYS_BEHIND__일 경과).
+
+            - production: `__PRODUCTION_SHA__`
+            - __LATEST_TAG__: `__LATEST_TAG_SHA__`
+            - 비교: __COMPARE_URL__
+
+            일반적으로는 `production-sync.yml`이 연 동기화 PR이 아직 병합되지 않았다는
+            뜻이다. 열려 있는 "production <- main" PR을 확인하고 병합하라. 그런 PR 자체가
+            없다면 production-sync.yml 실행이 실패했을 가능성이 있다 — Actions 로그를 확인하라.
+
+            ```
+            __DIFF_STAT__
+            ```
+        run: |
+          set -euo pipefail
+
+          LATEST_TAG="$(git tag --sort=-creatordate | head -1)"
+
+          if [ -z "$LATEST_TAG" ]; then
+            echo "아직 릴리스 태그가 없다. 확인할 대상 없음."
+            exit 0
+          fi
+
+          # 유예 기간: 마지막 태그가 최근(3일 이내)이면 아직 동기화 PR이 열리고
+          # 리뷰되는 정상적인 대기 시간일 수 있다. main이 다음 릴리스까지 앞서
+          # 있는 것은 뒤처짐이 아니라 정상 상태이므로, 매 릴리스 사이 간격마다
+          # 경보가 울리면 결국 무시하는 습관이 생긴다 — 그게 이슈 #83이 실패한
+          # 방식이다.
+          TAG_EPOCH="$(git log -1 --format=%ct "$LATEST_TAG")"
+          NOW_EPOCH="$(date +%s)"
+          GRACE_SECONDS=$((3 * 24 * 60 * 60))
+          if [ $((NOW_EPOCH - TAG_EPOCH)) -lt "$GRACE_SECONDS" ]; then
+            echo "${LATEST_TAG}가 아직 유예 기간(3일) 내에 있다. 확인 건너뜀."
+            exit 0
+          fi
+
+          # 조상 관계가 아니라 트리 내용을 비교한다 — production으로 향하는
+          # 동기화 PR은 squash 병합될 수 있어(#70의 전례) 조상 기반 판정은
+          # 병합 직후 오탐한다.
+          RELEASE_TREE="$(git rev-parse "${LATEST_TAG}^{tree}")"
+          PRODUCTION_TREE="$(git rev-parse origin/production^{tree})"
+
+          EXISTING_ISSUE="$(gh issue list --search 'in:title "[release-drift]"' --state open --json number --jq '.[0].number // empty')"
+
+          if [ "$RELEASE_TREE" = "$PRODUCTION_TREE" ]; then
+            echo "production이 ${LATEST_TAG}과 동일하다. 뒤처짐 없음."
+            if [ -n "$EXISTING_ISSUE" ]; then
+              gh issue close "$EXISTING_ISSUE" \
+                --comment "production이 ${LATEST_TAG}과 동일한 상태로 확인되어 자동으로 닫는다."
+            fi
+            exit 0
+          fi
+
+          if [ -n "$EXISTING_ISSUE" ]; then
+            echo "이미 열려 있는 뒤처짐 이슈 #${EXISTING_ISSUE}가 있다. 새로 만들지 않음."
+            exit 0
+          fi
+
+          DAYS_BEHIND=$(( (NOW_EPOCH - TAG_EPOCH) / 86400 ))
+          COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/production...${LATEST_TAG}"
+          DIFF_STAT="$(git diff --stat "${LATEST_TAG}" origin/production)"
+          PRODUCTION_SHA="$(git rev-parse origin/production)"
+          LATEST_TAG_SHA="$(git rev-parse "${LATEST_TAG}")"
+
+          BODY="${DRIFT_BODY_TEMPLATE//__LATEST_TAG__/$LATEST_TAG}"
+          BODY="${BODY//__DAYS_BEHIND__/$DAYS_BEHIND}"
+          BODY="${BODY//__PRODUCTION_SHA__/$PRODUCTION_SHA}"
+          BODY="${BODY//__LATEST_TAG_SHA__/$LATEST_TAG_SHA}"
+          BODY="${BODY//__COMPARE_URL__/$COMPARE_URL}"
+          BODY="${BODY//__DIFF_STAT__/$DIFF_STAT}"
+
+          gh issue create \
+            --title "[release-drift] production is behind ${LATEST_TAG}" \
+            --label "type:ci" \
+            --body "$BODY"
