@@ -20,27 +20,20 @@ Detail bootstrap 테스트 이름 변경과 build provenance 스키마 추가는
 
 ## 확인된 사실
 
-- PR 106은 이슈 #80, 브랜치 `chore/80-search-catalog-load-performance`와 연결되어 있다.
-- 확인 당시 해결되지 않았고 outdated가 아닌 인라인 스레드는 3개였다.
-- 변경 전 번들 경로 격리 검사는 같은 검색 카탈로그 모듈을 가진 두 번째 청크가 Detail에서 도달 가능해도 통과했다.
-- 변경 전 생성 예산 검증은 공식만 맞으면 잘못된 `version`과 `baseline`을 허용했다.
-- lookup 성능 진단에서 500회 미스/마지막 ID 조회 기준 aligned `indexOf`가 `slice` 순회보다 약 4~12배 빨랐다.
-- 인기 지역 10개 조회는 42회의 segment read를 사용하며, 파생 상한은 `POPULAR_LOCATIONS.length * 4 * 2`다.
-- `docs/skills/search-and-location-resolution.md`가 가리키는 `docs/prompt.md`는 존재하지 않고 원본은 `docs/legacy/prompt.md`로 보관되어 있다. 이번 범위에서는 수정하지 않았다.
+- `gh pr view 106 --json number,url,headRefName,baseRefName`을 실행했다. 결과는 PR `106`, head `chore/80-search-catalog-load-performance`, base `main`, URL `https://github.com/cgm-16/weatherpane/pull/106`이었다. PR 본문의 `Closes #80`으로 이슈 연결도 확인했다.
+- 해당 PR 브랜치에서 `gh-address-comments` 스킬의 `scripts/fetch_comments.py`를 실행하고 `isResolved == false && isOutdated == false`로 필터링했다. 전체 인라인 스레드 5개 중 미해결 스레드는 2개였고, 둘 다 `docs/journal/journal-pr-106-review.md`를 가리켰다.
+- `git merge-base --is-ancestor origin/main HEAD`의 종료 코드는 `0`이었다. `git diff --name-only --diff-filter=U` 출력은 비어 있어 `fd207c3`에서 `main` 통합과 충돌 해결이 완료됐음을 확인했다.
+- `! rg -n 'docs/prompt\.md' docs/skills/search-and-location-resolution.md`의 종료 코드는 `0`이었다. 현재 검색 스킬에는 문제의 링크가 없으므로, 링크가 남아 있다는 기존 저널 문구를 제거했다.
 
-## RED/GREEN 증거
+## 재현 가능한 검증 증거
 
-- lookup `entries.length` 불일치 테스트는 기존 코드에서 모듈 import가 성공해 RED였고, 공용 validator 추가 후 generation 포함 60개 테스트가 통과했다.
-- 고정 폭 레코드 경계 문자열 테스트는 refactor 전후 모두 통과했고, lookup/search 집중 테스트 76개가 통과했다.
-- 중복 카탈로그 청크 누출 테스트는 기존 첫 청크 검사에서 RED였고, 전체 산출물 집합 검사 후 GREEN이었다.
-- 생성 예산의 잘못된 version, baseline, 반환 shape 테스트 3개가 RED였고, 검증 결과를 `{ baseline, limits }`로 바꾼 뒤 GREEN이었다.
-- 사용자 지정 baseline 증거 테스트는 모듈 상수 사용으로 RED였고, baseline 전달 후 GREEN이었다.
-- 생성 파일 테스트 4개는 공용 로더가 없어 RED였고, strict/optional 로더 추가 후 GREEN이었다.
-- Search/lookup의 measured raw/gzip 및 limit raw/gzip 증가 테스트 8개와 override 테스트 1개가 guard 부재로 RED였고, anti-ratchet 추가 후 GREEN이었다.
-- 보고서 opt-in 테스트는 client 빌드에 항상 적용되어 RED였고, `CATALOG_BUNDLE_REPORT=1` 조건 추가 후 GREEN이었다.
-- 보고서 배치 테스트는 `generateBundle` asset emission 때문에 RED였고, `writeBundle`로 `build/catalog-bundle-report.json`을 기록한 뒤 GREEN이었다.
-- 독립 코드 리뷰에서 optional 생성 파일의 JSON 값 `null`이 `ENOENT`와 같은 반환값으로 처리되는 Important 문제를 찾았다. `null` 파일 테스트는 기존 코드에서 누락으로 통과해 RED였고, optional loader가 이를 오류로 거부한 뒤 GREEN이었다.
-- 일반 mock 생산 빌드는 보고서를 만들지 않았고, 활성화한 mock 생산 빌드는 root 보고서만 만들었다. budget gate는 종료 코드 0이었다.
+- `pnpm exec vitest run tests/catalog-lookup-artifact.test.ts tests/catalog-generation.test.ts tests/search-catalog-engine.test.ts` — 종료 코드 `0`, 테스트 파일 3개와 테스트 76개 통과.
+- `pnpm exec vitest run tests/client-bundle-budget.test.ts tests/client-bundle-generated-files.test.ts tests/client-bundle-report.test.ts` — 종료 코드 `0`, 테스트 파일 3개와 테스트 33개 통과.
+- `pnpm exec vitest run tests/production-server-entrypoint.test.ts tests/client-bundle-budget.test.ts` — 종료 코드 `0`, 테스트 파일 2개와 테스트 43개 통과. 충돌 지점에서 보존한 두 CI 게이트의 직접 동작을 함께 확인했다.
+- `CATALOG_BUNDLE_REPORT=1 VITE_WEATHER_PROVIDER_MODE=mock pnpm build` — 종료 코드 `0`, client 296개 모듈과 SSR 118개 모듈 변환 완료. 500 kB 초과 청크 경고는 출력됐지만 빌드는 성공했다.
+- `test -f build/catalog-bundle-report.json && test ! -e build/client/catalog-bundle-report.json` — 종료 코드 `0`. 보고서는 배포 대상인 `build/client` 밖에만 존재했다.
+- `pnpm check:bundle-budget` — 종료 코드 `0`. Search raw `2,208,922 / 2,319,078 bytes`, Search gzip `482,305 / 506,304 bytes`, Detail raw `1,427,999 / 1,499,419 bytes`, Detail gzip `270,392 / 283,909 bytes`였고, 전체 카탈로그 제외와 Search/Detail 경로 격리 검사가 통과했다.
+- 각 결함의 테스트 우선 변경은 아래 커밋에서 파일 단위로 확인할 수 있다. 현재 GREEN 결과는 위 명령으로 재현한다. 당시 RED 콘솔 출력은 저장된 아티팩트가 없어 검증 근거로 다시 주장하지 않는다.
 
 ## 커밋
 
@@ -53,8 +46,7 @@ Detail bootstrap 테스트 이름 변경과 build provenance 스키마 추가는
 
 ## 남은 증거와 외부 상태
 
-- Vite 생산 빌드는 기존 500 kB 초과 청크 경고를 출력한다.
-- `pnpm check:bundle-budget`은 종료 코드 0이지만 기존 `EMFILE` watcher 경고를 반복 출력하므로 깨끗한 출력은 아니다.
-- UI 동작은 변경하지 않아 Playwright와 스크린샷은 필요하지 않다.
-- 생성 카탈로그 JSON 내용은 변경하지 않았다.
-- GitHub 리뷰 답글 작성, 스레드 해결, push는 수행하지 않았다.
+- Vite 생산 빌드는 500 kB 초과 청크 경고를 출력한다. 위 build 명령의 종료 코드는 `0`이다.
+- `pnpm check:bundle-budget`은 종료 코드 `0`이지만 `EMFILE: too many open files, watch` 경고를 반복 출력하므로 깨끗한 출력은 아니다.
+- `git diff --name-only 72c0124..HEAD -- 'frontend/entities/location/*.generated.json'` 출력은 비어 있어 리뷰 수정과 `main` 통합이 생성 카탈로그 JSON 내용을 바꾸지 않았음을 확인했다.
+- GitHub 리뷰 답글 작성과 스레드 해결은 별도 원격 쓰기이므로 이 작업 범위에 포함하지 않았다.
