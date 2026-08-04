@@ -20,7 +20,7 @@ Detail bootstrap 테스트 이름 변경과 build provenance 스키마 추가는
 
 ## 확인된 사실
 
-- `gh pr view 106 --json number,url,headRefName,baseRefName`을 실행했다. 결과는 PR `106`, head `chore/80-search-catalog-load-performance`, base `main`, URL `https://github.com/cgm-16/weatherpane/pull/106`이었다. PR 본문의 `Closes #80`으로 이슈 연결도 확인했다.
+- `gh pr view 106 --json number,url,headRefName,baseRefName,body`를 실행했다. 결과는 PR `106`, head `chore/80-search-catalog-load-performance`, base `main`, URL `https://github.com/cgm-16/weatherpane/pull/106`이었고, 반환된 body의 `Linked issue` 절은 `Closes #80`이었다.
 - 해당 PR 브랜치에서 `gh-address-comments` 스킬의 `scripts/fetch_comments.py`를 실행하고 `isResolved == false && isOutdated == false`로 필터링했다. 전체 인라인 스레드 5개 중 미해결 스레드는 2개였고, 둘 다 `docs/journal/journal-pr-106-review.md`를 가리켰다.
 - `git merge-base --is-ancestor origin/main HEAD`의 종료 코드는 `0`이었다. `git diff --name-only --diff-filter=U` 출력은 비어 있어 `fd207c3`에서 `main` 통합과 충돌 해결이 완료됐음을 확인했다.
 - `! rg -n 'docs/prompt\.md' docs/skills/search-and-location-resolution.md`의 종료 코드는 `0`이었다. 현재 검색 스킬에는 문제의 링크가 없으므로, 링크가 남아 있다는 기존 저널 문구를 제거했다.
@@ -33,7 +33,7 @@ Detail bootstrap 테스트 이름 변경과 build provenance 스키마 추가는
 - `CATALOG_BUNDLE_REPORT=1 VITE_WEATHER_PROVIDER_MODE=mock pnpm build` — 종료 코드 `0`, client 296개 모듈과 SSR 118개 모듈 변환 완료. 500 kB 초과 청크 경고는 출력됐지만 빌드는 성공했다.
 - `test -f build/catalog-bundle-report.json && test ! -e build/client/catalog-bundle-report.json` — 종료 코드 `0`. 보고서는 배포 대상인 `build/client` 밖에만 존재했다.
 - `pnpm check:bundle-budget` — 종료 코드 `0`. Search raw `2,208,922 / 2,319,078 bytes`, Search gzip `482,305 / 506,304 bytes`, Detail raw `1,427,999 / 1,499,419 bytes`, Detail gzip `270,392 / 283,909 bytes`였고, 전체 카탈로그 제외와 Search/Detail 경로 격리 검사가 통과했다.
-- 각 결함의 테스트 우선 변경은 아래 커밋에서 파일 단위로 확인할 수 있다. 현재 GREEN 결과는 위 명령으로 재현한다. 당시 RED 콘솔 출력은 저장된 아티팩트가 없어 검증 근거로 다시 주장하지 않는다.
+- 각 결함의 회귀 테스트와 구현 변경은 아래 커밋에서 파일 단위로 함께 확인할 수 있다. 현재 통과 결과는 위 명령으로 재현한다. 당시 RED 콘솔 출력은 저장된 아티팩트가 없어 테스트 우선 순서의 검증 근거로 주장하지 않는다.
 
 ## 커밋
 
