@@ -48,5 +48,7 @@ Detail bootstrap 테스트 이름 변경과 build provenance 스키마 추가는
 
 - Vite 생산 빌드는 500 kB 초과 청크 경고를 출력한다. 위 build 명령의 종료 코드는 `0`이다.
 - `pnpm check:bundle-budget`은 종료 코드 `0`이지만 `EMFILE: too many open files, watch` 경고를 반복 출력하므로 깨끗한 출력은 아니다.
+- PR 브랜치에서 `pnpm exec playwright test tests/search-page.e2e.ts`를 실행했을 때 첫 실행은 React Router `/__manifest` 요청의 `net::ERR_ABORTED`와 `Failed to fetch manifest patches`로 1개 실패, 2개 통과했다. 같은 브랜치에서 `pnpm exec playwright test tests/search-page.e2e.ts --workers=2 --repeat-each=5 --reporter=line`을 실행한 결과는 15개 통과였다.
+- 현재 `origin/main`의 detached worktree에서 같은 5회 반복 명령을 실행한 결과도 같은 첫 번째 테스트와 같은 매니페스트 오류로 1개 실패, 14개 통과였다. `git diff origin/main..HEAD -- tests/search-page.e2e.ts tests/fixtures.ts`에서 PR 차이는 해당 테스트의 내비게이션 전 단언 3개뿐이므로, 이 비결정적 teardown 경합은 PR 106이 만든 회귀가 아니다. 이슈 #80 범위를 넓혀 수정하지 않는다.
 - `git diff --name-only 72c0124..HEAD -- 'frontend/entities/location/*.generated.json'` 출력은 비어 있어 리뷰 수정과 `main` 통합이 생성 카탈로그 JSON 내용을 바꾸지 않았음을 확인했다.
 - GitHub 리뷰 답글 작성과 스레드 해결은 별도 원격 쓰기이므로 이 작업 범위에 포함하지 않았다.
