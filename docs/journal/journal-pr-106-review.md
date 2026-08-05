@@ -32,6 +32,7 @@ Detail bootstrap 테스트 이름 변경과 build provenance 스키마 추가는
 - `pnpm exec vitest run tests/production-server-entrypoint.test.ts tests/client-bundle-budget.test.ts` — 종료 코드 `0`, 테스트 파일 2개와 테스트 43개 통과. 충돌 지점에서 보존한 두 CI 게이트의 직접 동작을 함께 확인했다.
 - `CATALOG_BUNDLE_REPORT=1 VITE_WEATHER_PROVIDER_MODE=mock pnpm build` — 종료 코드 `0`, client 296개 모듈과 SSR 118개 모듈 변환 완료. 500 kB 초과 청크 경고는 출력됐지만 빌드는 성공했다.
 - `test -f build/catalog-bundle-report.json && test ! -e build/client/catalog-bundle-report.json` — 종료 코드 `0`. 보고서는 배포 대상인 `build/client` 밖에만 존재했다.
+- `rm -rf build && VITE_WEATHER_PROVIDER_MODE=mock pnpm build` — 종료 코드 `0`. `env | grep -c CATALOG_BUNDLE_REPORT`는 `0`으로 해당 환경변수가 실제로 꺼져 있었음을 확인했다. 빌드 후 `build/client/assets`에는 청크 파일이 정상 생성됐지만 `build/catalog-bundle-report.json`, `build/client/catalog-bundle-report.json`은 둘 다 존재하지 않아, client 빌드가 실제로 수행되면서도 `CATALOG_BUNDLE_REPORT`를 켜지 않은 일반 빌드는 보고서를 만들지 않음을 확인했다.
 - `pnpm check:bundle-budget` — 종료 코드 `0`. Search raw `2,208,922 / 2,319,078 bytes`, Search gzip `482,305 / 506,304 bytes`, Detail raw `1,427,999 / 1,499,419 bytes`, Detail gzip `270,392 / 283,909 bytes`였고, 전체 카탈로그 제외와 Search/Detail 경로 격리 검사가 통과했다.
 - 각 결함의 회귀 테스트와 구현 변경은 아래 커밋에서 파일 단위로 함께 확인할 수 있다. 현재 통과 결과는 위 명령으로 재현한다. 당시 RED 콘솔 출력은 저장된 아티팩트가 없어 테스트 우선 순서의 검증 근거로 주장하지 않는다.
 
