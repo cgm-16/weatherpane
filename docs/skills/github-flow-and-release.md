@@ -24,7 +24,13 @@
 - Every implementation branch maps to one issue.
 - Do not rebase pushed shared branches.
 - Do not silently expand scope inside a PR.
-- Release from tags. Pushing a `vX.Y.Z` tag on `main` triggers `.github/workflows/production-sync.yml`, which opens a `production <- main (vX.Y.Z)` PR for human review/merge. Merging that PR is what deploys to Vercel Production — never commit or push directly to `production`, even though GitHub does not enforce branch protection on it. `production <- main` sync PRs are exempt from the `Closes #<issue>` check in `agent-guardrails.yml` (base ref `production`), since they carry commits already issue-linked on `main`.
+- Release from tags. Pushing a `vX.Y.Z` tag on `main` triggers `.github/workflows/production-sync.yml`, which opens a `production <- main (vX.Y.Z)` PR for human review/merge. Merging that PR is what deploys to Vercel Production — never commit or push directly to `production`. Both `production` and `main` are covered by an active GitHub ruleset ("base rules") that requires a PR, enforces linear history, and restricts merges to `allowed_merge_methods: ["rebase"]` — merge `production <- main` sync PRs with "Rebase and merge", not "Create a merge commit" or "Squash and merge". Repo owners can bypass the ruleset, but doing so for a sync PR breaks the guarantee described below. `production <- main` sync PRs are exempt from the `Closes #<issue>` check in `agent-guardrails.yml` (base ref `production`), since they carry commits already issue-linked on `main`.
+
+## Reading `production` vs `main` divergence
+
+- `production` and `main` will not have identical commit graphs after a release, even when their content matches exactly. `production` is rebase-only, so every compliant `production <- main` sync PR merge mints a new commit SHA for each commit it promotes — `git log origin/main..origin/production` grows by that many commits per release, permanently.
+- Do not treat a nonzero `git log origin/main..origin/production` count, or a GitHub compare page showing "N commits ahead," as a problem on its own. The health check is content, not ancestry: `git diff <latest-tag> origin/production` (should be empty), or `production-drift-check.yml`'s weekly tree-hash comparison.
+- Known baseline: as of `v1.0.0`, `production` carries 5 commits with no equivalent SHA on `main` — 4 from PR #70 (2026-04-22, compliant rebase-merge) and 1 from PR #111 (2026-08-05, a ruleset bypass that used "Create a merge commit" instead of rebase). Both are historical; `production`'s tree matches `v1.0.0` exactly. Do not "clean up" this history — `production` is a live Vercel deploy target and a shared branch (see "Do not rebase pushed shared branches" above).
 
 ## Execution checklist
 
@@ -69,7 +75,7 @@
    - choose the next `vMAJOR.MINOR.PATCH` tag
    - `git tag vX.Y.Z && git push origin vX.Y.Z`
    - wait for `production-sync.yml` to open the `production <- main (vX.Y.Z)` PR
-   - review the diff and merge it — this is the step that deploys to Vercel Production
+   - review the diff and merge it using "Rebase and merge" — this is the step that deploys to Vercel Production
      Done-check: a new Vercel Production deployment exists at the tagged commit, and `production-drift-check.yml` reports no drift on its next run (or via manual `workflow_dispatch`).
 
 ## Verification
@@ -79,6 +85,7 @@
 - confirm the branch name matches `type/issue-area-slug`
 - confirm the PR links the issue and keeps the issue open until merge
 - after a tag push: confirm the `production <- main` sync PR opened, and that `production-drift-check.yml` shows no open `[release-drift]` issue once it's merged
+- do not use a nonzero `git log origin/main..origin/production` count as a drift signal by itself — see "Reading `production` vs `main` divergence" above
 
 ## Stop and ask Ori
 
