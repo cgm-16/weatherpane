@@ -524,13 +524,14 @@ Expected: all commands PASS with pristine output.
 
 - [ ] **Step 9: Verify both build modes**
 
-First run a normal diagnostic-disabled build:
+Remove any leftover report first, then run a normal diagnostic-disabled build:
 
 ```bash
+rm -rf build
 VITE_WEATHER_PROVIDER_MODE=mock pnpm build
 ```
 
-Done-check: neither `build/catalog-bundle-report.json` nor `build/client/catalog-bundle-report.json` exists.
+Done-check: neither `build/catalog-bundle-report.json` nor `build/client/catalog-bundle-report.json` exists. The `rm -rf build` keeps this deterministic regardless of a prior enabled build's leftover report.
 
 Then run the enabled build and gate:
 
@@ -614,7 +615,7 @@ Done-check: the bound remains 80 for the current ten paths but scales explicitly
 
 - [ ] **Step 1: Transfer and update the review journal**
 
-Use `apply_patch` to add the Korean journal to the PR worktree, remove stale statements that implementation scope is unselected, and record actual results only. Remove the temporary copy from the main checkout with `apply_patch` after confirming the PR-worktree copy is complete.
+Read the existing journal draft's content (copy it to an external temporary file first if it lives outside the PR worktree) and use `apply_patch` to create/update `docs/journal/journal-pr-106-review.md` inside the PR worktree, removing stale statements that implementation scope is unselected and recording actual results only. Do not modify or delete any file outside the PR worktree.
 
 - [ ] **Step 2: Commit the journal**
 
@@ -645,9 +646,10 @@ Expected: lint, typecheck, all unit/integration tests, build, and bundle budget 
 git log --oneline origin/chore/80-search-catalog-load-performance..HEAD
 git diff --stat origin/chore/80-search-catalog-load-performance..HEAD
 git diff origin/chore/80-search-catalog-load-performance..HEAD -- . ':!*.generated.json'
+git diff --exit-code origin/chore/80-search-catalog-load-performance..HEAD -- '*.generated.json'
 ```
 
-Done-check: every edit maps to selected review items, generated catalog content is unchanged, and no GitHub thread was written or resolved.
+Done-check: every edit maps to selected review items, the last command exits `0` to confirm generated catalog content is unchanged, and no GitHub thread was written or resolved.
 
 - [ ] **Step 5: Invoke requesting-code-review**
 
