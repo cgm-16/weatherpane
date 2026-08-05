@@ -93,6 +93,7 @@ describe('HomeDashboard — recents insertion', () => {
             isRefreshing={false}
             hasRefreshError={false}
             onRefresh={vi.fn()}
+            temperatureUnit="C"
           />
         </MemoryRouter>
       </SketchManifestProvider>
@@ -118,6 +119,7 @@ describe('HomeDashboard — recents insertion', () => {
             isRefreshing={false}
             hasRefreshError={false}
             onRefresh={vi.fn()}
+            temperatureUnit="C"
           />
         </MemoryRouter>
       </SketchManifestProvider>

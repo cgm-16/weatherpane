@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, production]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -79,7 +79,118 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      # Vite는 VITE_ 접두사 변수만 클라이언트 번들에 정적으로 인라인한다.
+      # 수정된 코드는 더 이상 VITE_OPENWEATHER_API_KEY를 읽지 않지만, 바로 그렇기 때문에
+      # 이 값을 함께 설정해야 다음 grep 단계가 회귀 감지 게이트로서 의미를 갖는다.
+      # 이 변수를 제거하면 게이트가 항상 통과해 유출이 재발해도 잡아내지 못한다.
+      - name: Build (real mode, sentinel key)
+        run: |
+          VITE_WEATHER_PROVIDER_MODE=real \
+          VITE_OPENWEATHER_API_KEY=SENTINEL_KEY_XYZ123 \
+          OPENWEATHER_API_KEY=SENTINEL_KEY_XYZ123 \
+          pnpm build
+      - name: Verify OpenWeather API key is not in the client bundle
+        run: |
+          test -d build/client || { echo "::error::build/client not found — leak gate cannot run"; exit 1; }
+          if grep -rl "SENTINEL_KEY_XYZ123" build/client; then
+            echo "::error::OpenWeather API key leaked into the client bundle (issue #73 regression)"
+            exit 1
+          fi
+      - name: Verify production server starts
+        env:
+          HOST: 127.0.0.1
+          PORT: 43184
+          VITE_WEATHER_PROVIDER_MODE: real
+          OPENWEATHER_API_KEY: SENTINEL_KEY_XYZ123
+        run: |
+          set -euo pipefail
+          server_log="${RUNNER_TEMP}/weatherpane-production-server.log"
+          probe_error="${RUNNER_TEMP}/weatherpane-production-probe.log"
+          setsid pnpm start >"${server_log}" 2>&1 &
+          server_pid=$!
+
+          process_group_exists() {
+            kill -0 -- "-${server_pid}" 2>/dev/null
+          }
+
+          cleanup() {
+            kill -TERM -- "-${server_pid}" 2>/dev/null || true
+            group_exited=false
+            for attempt in $(seq 1 5); do
+              if ! process_group_exists; then
+                group_exited=true
+                break
+              fi
+              sleep 1
+            done
+
+            if [[ "${group_exited}" != true ]]; then
+              kill -KILL -- "-${server_pid}" 2>/dev/null || true
+              sleep 1
+              if ! process_group_exists; then
+                group_exited=true
+              fi
+            fi
+
+            if [[ "${group_exited}" != true ]]; then
+              cat "${server_log}"
+              echo "::error::Production server process group still exists after cleanup"
+              trap - EXIT
+              exit 1
+            fi
+            wait "${server_pid}" 2>/dev/null || true
+            if process_group_exists; then
+              cat "${server_log}"
+              echo "::error::Production server process group reappeared after wait"
+              trap - EXIT
+              exit 1
+            fi
+
+            set +e
+            curl --connect-timeout 1 --max-time 2 -sS -o /dev/null "http://${HOST}:${PORT}/" 2>"${probe_error}"
+            curl_status=$?
+            set -e
+
+            case "${curl_status}" in
+              7)
+                return
+                ;;
+              0)
+                echo "::error::Production server still responds after cleanup"
+                ;;
+              28)
+                echo "::error::Production server cleanup probe timed out"
+                ;;
+              *)
+                echo "::error::Production server cleanup probe failed unexpectedly with curl status ${curl_status}"
+                ;;
+            esac
+            cat "${server_log}"
+            cat "${probe_error}"
+            trap - EXIT
+            exit 1
+          }
+          trap cleanup EXIT
+
+          ready=false
+          for attempt in $(seq 1 20); do
+            if ! kill -0 "${server_pid}" 2>/dev/null; then
+              cat "${server_log}"
+              echo "::error::Production server exited before becoming ready"
+              exit 1
+            fi
+            if curl --connect-timeout 1 --max-time 2 -fsS -o /dev/null "http://${HOST}:${PORT}/" 2>/dev/null; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+
+          if [[ "${ready}" != true ]]; then
+            cat "${server_log}"
+            echo "::error::Production server did not become ready after 20 bounded attempts"
+            exit 1
+          fi
 
   e2e:
     name: E2E Tests

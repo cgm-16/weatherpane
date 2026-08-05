@@ -128,12 +128,19 @@ const rawOwmAqi = {
 describe('realWeatherProvider', () => {
   describe('getCoreWeather', () => {
     afterEach(() => {
-      vi.unstubAllEnvs();
       vi.restoreAllMocks();
     });
 
-    test('API 키가 없으면 PROVIDER_NOT_IMPLEMENTED 오류를 발생시킨다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', '');
+    test('프록시가 PROVIDER_NOT_IMPLEMENTED를 반환하면 동일한 코드로 오류를 발생시킨다', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        Response.json(
+          {
+            code: 'PROVIDER_NOT_IMPLEMENTED',
+            message: 'OPENWEATHER_API_KEY가 설정되지 않았습니다.',
+          },
+          { status: 501 }
+        )
+      );
 
       await expect(
         realWeatherProvider.getCoreWeather(resolvedLocation)
@@ -145,9 +152,25 @@ describe('realWeatherProvider', () => {
     });
 
     test('HTTP 오류 시 INVALID_PROVIDER_RESPONSE 오류를 발생시킨다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'test-key');
       vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-        new Response('Unauthorized', { status: 401 })
+        Response.json(
+          { code: 'INVALID_PROVIDER_RESPONSE', message: '오류' },
+          { status: 502 }
+        )
+      );
+
+      await expect(
+        realWeatherProvider.getCoreWeather(resolvedLocation)
+      ).rejects.toMatchObject({
+        name: 'WeatherProviderError',
+        code: 'INVALID_PROVIDER_RESPONSE',
+        provider: 'openweather',
+      });
+    });
+
+    test('프록시 오류 응답이 JSON이 아니어도 INVALID_PROVIDER_RESPONSE 오류를 발생시킨다', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response('<html>502 Bad Gateway</html>', { status: 502 })
       );
 
       await expect(
@@ -160,7 +183,6 @@ describe('realWeatherProvider', () => {
     });
 
     test('네트워크 오류 시 INVALID_PROVIDER_RESPONSE 오류를 발생시킨다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'test-key');
       vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(
         new TypeError('Failed to fetch')
       );
@@ -175,7 +197,6 @@ describe('realWeatherProvider', () => {
     });
 
     test('유효한 응답을 CoreWeather로 정규화하여 반환한다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'test-key');
       vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
         Response.json(rawOwmCoreWeather)
       );
@@ -191,37 +212,43 @@ describe('realWeatherProvider', () => {
       expect(weather.source.provider).toBe('openweather');
     });
 
-    test('One Call 3.0 올바른 URL과 파라미터로 API를 호출한다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'my-api-key');
+    test('프록시 엔드포인트에 lat/lon 파라미터로 요청하고 appid는 포함하지 않는다', async () => {
       const fetchSpy = vi
         .spyOn(globalThis, 'fetch')
         .mockResolvedValueOnce(Response.json(rawOwmCoreWeather));
 
       await realWeatherProvider.getCoreWeather(resolvedLocation);
 
-      const calledUrl = new URL(fetchSpy.mock.calls[0][0] as string);
-      expect(calledUrl.origin + calledUrl.pathname).toBe(
-        'https://api.openweathermap.org/data/3.0/onecall'
+      const calledUrl = new URL(
+        fetchSpy.mock.calls[0][0] as string,
+        'http://localhost'
       );
+      expect(calledUrl.pathname).toBe('/v1/weather/core');
       expect(calledUrl.searchParams.get('lat')).toBe(
         String(resolvedLocation.latitude)
       );
       expect(calledUrl.searchParams.get('lon')).toBe(
         String(resolvedLocation.longitude)
       );
-      expect(calledUrl.searchParams.get('units')).toBe('metric');
-      expect(calledUrl.searchParams.get('appid')).toBe('my-api-key');
+      expect(calledUrl.searchParams.has('appid')).toBe(false);
     });
   });
 
   describe('getAqi', () => {
     afterEach(() => {
-      vi.unstubAllEnvs();
       vi.restoreAllMocks();
     });
 
-    test('API 키가 없으면 PROVIDER_NOT_IMPLEMENTED 오류를 발생시킨다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', '');
+    test('프록시가 PROVIDER_NOT_IMPLEMENTED를 반환하면 동일한 코드로 오류를 발생시킨다', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        Response.json(
+          {
+            code: 'PROVIDER_NOT_IMPLEMENTED',
+            message: 'OPENWEATHER_API_KEY가 설정되지 않았습니다.',
+          },
+          { status: 501 }
+        )
+      );
 
       await expect(
         realWeatherProvider.getAqi(resolvedLocation)
@@ -233,9 +260,11 @@ describe('realWeatherProvider', () => {
     });
 
     test('HTTP 오류 시 INVALID_PROVIDER_RESPONSE 오류를 발생시킨다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'test-key');
       vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-        new Response('Unauthorized', { status: 401 })
+        Response.json(
+          { code: 'INVALID_PROVIDER_RESPONSE', message: '오류' },
+          { status: 502 }
+        )
       );
 
       await expect(
@@ -248,7 +277,6 @@ describe('realWeatherProvider', () => {
     });
 
     test('네트워크 오류 시 INVALID_PROVIDER_RESPONSE 오류를 발생시킨다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'test-key');
       vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(
         new TypeError('Failed to fetch')
       );
@@ -263,7 +291,6 @@ describe('realWeatherProvider', () => {
     });
 
     test('유효한 응답을 Aqi로 정규화하여 반환한다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'test-key');
       vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
         Response.json(rawOwmAqi)
       );
@@ -276,36 +303,43 @@ describe('realWeatherProvider', () => {
       expect(aqi.source.provider).toBe('openweather');
     });
 
-    test('Air Pollution 올바른 URL과 파라미터로 API를 호출한다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'my-api-key');
+    test('프록시 엔드포인트에 lat/lon 파라미터로 요청하고 appid는 포함하지 않는다', async () => {
       const fetchSpy = vi
         .spyOn(globalThis, 'fetch')
         .mockResolvedValueOnce(Response.json(rawOwmAqi));
 
       await realWeatherProvider.getAqi(resolvedLocation);
 
-      const calledUrl = new URL(fetchSpy.mock.calls[0][0] as string);
-      expect(calledUrl.origin + calledUrl.pathname).toBe(
-        'https://api.openweathermap.org/data/2.5/air_pollution'
+      const calledUrl = new URL(
+        fetchSpy.mock.calls[0][0] as string,
+        'http://localhost'
       );
+      expect(calledUrl.pathname).toBe('/v1/weather/aqi');
       expect(calledUrl.searchParams.get('lat')).toBe(
         String(resolvedLocation.latitude)
       );
       expect(calledUrl.searchParams.get('lon')).toBe(
         String(resolvedLocation.longitude)
       );
-      expect(calledUrl.searchParams.get('appid')).toBe('my-api-key');
+      expect(calledUrl.searchParams.has('appid')).toBe(false);
     });
   });
 
   describe('geocode', () => {
     afterEach(() => {
-      vi.unstubAllEnvs();
       vi.restoreAllMocks();
     });
 
-    test('API 키가 없으면 PROVIDER_NOT_IMPLEMENTED 오류를 발생시킨다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', '');
+    test('프록시가 PROVIDER_NOT_IMPLEMENTED를 반환하면 동일한 코드로 오류를 발생시킨다', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        Response.json(
+          {
+            code: 'PROVIDER_NOT_IMPLEMENTED',
+            message: 'OPENWEATHER_API_KEY가 설정되지 않았습니다.',
+          },
+          { status: 501 }
+        )
+      );
 
       await expect(
         realWeatherProvider.geocode('서울-종로구')
@@ -316,10 +350,12 @@ describe('realWeatherProvider', () => {
       });
     });
 
-    test('API가 200이 아닌 상태를 반환하면 INVALID_PROVIDER_RESPONSE 오류를 발생시킨다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'test-key');
+    test('프록시가 오류 상태를 반환하면 INVALID_PROVIDER_RESPONSE 오류를 발생시킨다', async () => {
       vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-        new Response('Unauthorized', { status: 401 })
+        Response.json(
+          { code: 'INVALID_PROVIDER_RESPONSE', message: '오류' },
+          { status: 502 }
+        )
       );
 
       await expect(
@@ -332,7 +368,6 @@ describe('realWeatherProvider', () => {
     });
 
     test('네트워크 오류 시 INVALID_PROVIDER_RESPONSE 오류를 발생시킨다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'test-key');
       vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(
         new TypeError('Failed to fetch')
       );
@@ -347,7 +382,6 @@ describe('realWeatherProvider', () => {
     });
 
     test('유효한 API 응답을 LocationGeocodeCandidate 배열로 변환한다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'test-key');
       vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
         Response.json([
           {
@@ -374,7 +408,6 @@ describe('realWeatherProvider', () => {
     });
 
     test('응답에 local_names.ko가 있으면 영문 name 대신 한국어 이름을 사용한다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'test-key');
       vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
         Response.json([
           {
@@ -393,21 +426,20 @@ describe('realWeatherProvider', () => {
       expect(candidates[0].name).toBe('서울특별시');
     });
 
-    test('올바른 URL로 API를 호출한다', async () => {
-      vi.stubEnv('VITE_OPENWEATHER_API_KEY', 'my-api-key');
+    test('프록시 엔드포인트에 q 파라미터로 요청하고 appid는 포함하지 않는다', async () => {
       const fetchSpy = vi
         .spyOn(globalThis, 'fetch')
         .mockResolvedValueOnce(Response.json([]));
 
       await realWeatherProvider.geocode('서울-종로구');
 
-      const calledUrl = new URL(fetchSpy.mock.calls[0][0] as string);
-      expect(calledUrl.origin + calledUrl.pathname).toBe(
-        'https://api.openweathermap.org/geo/1.0/direct'
+      const calledUrl = new URL(
+        fetchSpy.mock.calls[0][0] as string,
+        'http://localhost'
       );
+      expect(calledUrl.pathname).toBe('/v1/geocode');
       expect(calledUrl.searchParams.get('q')).toBe('서울-종로구');
-      expect(calledUrl.searchParams.get('limit')).toBe('5');
-      expect(calledUrl.searchParams.get('appid')).toBe('my-api-key');
+      expect(calledUrl.searchParams.has('appid')).toBe(false);
     });
   });
 });

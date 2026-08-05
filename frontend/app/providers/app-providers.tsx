@@ -9,7 +9,7 @@ import {
 import type { ConfigError } from '~/shared/lib/env-config';
 import { WeatherProviderContext } from '~/shared/api/weather-provider';
 import { ActiveLocationProvider } from '~/features/app-bootstrap/active-location-context';
-import { ThemeProvider } from '~/shared/hooks/use-theme';
+import { SettingsProvider, ThemeProvider } from '~/features/settings';
 import { SketchManifestProvider, loadSessionManifest } from '~/entities/asset';
 import { HomeConfigError } from '~/pages/home/ui/home-config-error';
 import { isProduction } from '~/shared/lib/runtime-env';
@@ -42,24 +42,28 @@ export function AppProviders({ children }: AppProvidersProps) {
   if (isProduction() && configError) {
     return (
       <ThemeProvider>
-        <HomeConfigError error={configError} />
+        <SettingsProvider>
+          <HomeConfigError error={configError} />
+        </SettingsProvider>
       </ThemeProvider>
     );
   }
 
   return (
     <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <WeatherProviderContext value={weatherProvider}>
-          <ActiveLocationProvider>
-            <SketchManifestProvider manifest={sketchManifest}>
-              <AppEffects />
-              {children}
-              <DevProviderToggle currentMode={resolvedMode} />
-            </SketchManifestProvider>
-          </ActiveLocationProvider>
-        </WeatherProviderContext>
-      </QueryClientProvider>
+      <SettingsProvider>
+        <QueryClientProvider client={queryClient}>
+          <WeatherProviderContext value={weatherProvider}>
+            <ActiveLocationProvider>
+              <SketchManifestProvider manifest={sketchManifest}>
+                <AppEffects />
+                {children}
+                <DevProviderToggle currentMode={resolvedMode} />
+              </SketchManifestProvider>
+            </ActiveLocationProvider>
+          </WeatherProviderContext>
+        </QueryClientProvider>
+      </SettingsProvider>
     </ThemeProvider>
   );
 }

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { storageKeys } from '../frontend/shared/lib/storage/storage-keys';
 
 // 목 프로바이더는 어떤 위치에서도 17.2°C를 반환합니다.

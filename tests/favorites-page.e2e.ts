@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { storageKeys } from '../frontend/shared/lib/storage/storage-keys';
 
 const FAVORITES_KEY = storageKeys.favorites;
@@ -56,49 +56,67 @@ test.describe('Favorites page', () => {
     ).toBeVisible();
   });
 
-  test('renders a saved location after seeding localStorage', async ({
-    page,
-  }) => {
-    await page.addInitScript(
-      ({ key, value }) => localStorage.setItem(key, value),
-      { key: FAVORITES_KEY, value: favoritesPayload([seoulFav]) }
-    );
-    await page.goto('/favorites');
-    await expect(page.getByText('서울')).toBeVisible();
-  });
+  test.describe('저장된 즐겨찾기가 있을 때', () => {
+    // #92: 즐겨찾기 목록을 클라이언트에서만 localStorage로부터 읽는 기존 하이드레이션 버그.
+    // localStorage를 미리 심어 즐겨찾기를 렌더링하는 테스트에서만 재현된다.
+    // pattern: 편집 버튼의 핸들러 이름 handleEnterEdit가 서버·클라이언트 간 diff에
+    // 남는 #92 고유 서명이다.
+    test.use({
+      knownHydrationBug: { issue: '#92', pattern: 'handleEnterEdit' },
+    });
 
-  test('renders nickname when favorite has one', async ({ page }) => {
-    await page.addInitScript(
-      ({ key, value }) => localStorage.setItem(key, value),
-      { key: FAVORITES_KEY, value: favoritesPayload([busanFav]) }
-    );
-    await page.goto('/favorites');
-    await expect(page.getByText('해운대')).toBeVisible();
-  });
+    test('renders a saved location after seeding localStorage', async ({
+      page,
+    }) => {
+      await page.addInitScript(
+        ({ key, value }) => localStorage.setItem(key, value),
+        { key: FAVORITES_KEY, value: favoritesPayload([seoulFav]) }
+      );
+      await page.goto('/favorites');
+      await expect(page.getByText('서울')).toBeVisible();
+    });
 
-  test('favorites persist across page reload', async ({ page }) => {
-    await page.addInitScript(
-      ({ key, value }) => localStorage.setItem(key, value),
-      { key: FAVORITES_KEY, value: favoritesPayload([seoulFav]) }
-    );
-    await page.goto('/favorites');
-    await expect(page.getByText('서울')).toBeVisible();
-    await page.reload();
-    await expect(page.getByText('서울')).toBeVisible();
-  });
+    test('renders nickname when favorite has one', async ({ page }) => {
+      await page.addInitScript(
+        ({ key, value }) => localStorage.setItem(key, value),
+        { key: FAVORITES_KEY, value: favoritesPayload([busanFav]) }
+      );
+      await page.goto('/favorites');
+      await expect(page.getByText('해운대')).toBeVisible();
+    });
 
-  test('renders multiple favorites as a grid', async ({ page }) => {
-    await page.addInitScript(
-      ({ key, value }) => localStorage.setItem(key, value),
-      { key: FAVORITES_KEY, value: favoritesPayload([seoulFav, busanFav]) }
-    );
-    await page.goto('/favorites');
-    await expect(page.getByText('서울')).toBeVisible();
-    await expect(page.getByText('해운대')).toBeVisible();
+    test('favorites persist across page reload', async ({ page }) => {
+      await page.addInitScript(
+        ({ key, value }) => localStorage.setItem(key, value),
+        { key: FAVORITES_KEY, value: favoritesPayload([seoulFav]) }
+      );
+      await page.goto('/favorites');
+      await expect(page.getByText('서울')).toBeVisible();
+      // /__manifest 경합 가드 — 근거는 tests/fixtures.ts의 manifestIssues 주석 참고
+      await page.waitForLoadState('networkidle');
+      await page.reload();
+      await expect(page.getByText('서울')).toBeVisible();
+    });
+
+    test('renders multiple favorites as a grid', async ({ page }) => {
+      await page.addInitScript(
+        ({ key, value }) => localStorage.setItem(key, value),
+        { key: FAVORITES_KEY, value: favoritesPayload([seoulFav, busanFav]) }
+      );
+      await page.goto('/favorites');
+      await expect(page.getByText('서울')).toBeVisible();
+      await expect(page.getByText('해운대')).toBeVisible();
+    });
   });
 });
 
 test.describe('Favorites page — 편집/정렬 모드', () => {
+  // #92: 즐겨찾기 목록을 클라이언트에서만 localStorage로부터 읽는 기존 하이드레이션 버그.
+  // 이 describe 블록의 모든 테스트가 localStorage에 즐겨찾기를 미리 심어 재현한다.
+  // pattern: 편집 버튼의 핸들러 이름 handleEnterEdit가 서버·클라이언트 간 diff에
+  // 남는 #92 고유 서명이다.
+  test.use({ knownHydrationBug: { issue: '#92', pattern: 'handleEnterEdit' } });
+
   test('편집 button appears when favorites exist', async ({ page }) => {
     await page.addInitScript(
       ({ key, value }) => localStorage.setItem(key, value),
@@ -126,6 +144,7 @@ test.describe('Favorites page — 편집/정렬 모드', () => {
   test('nickname persists after editing and reload', async ({ page }) => {
     // page.evaluate로 씨딩하면 재로드 시 재실행되지 않아 앱이 저장한 상태가 유지된다
     await page.goto('/favorites');
+    await page.waitForLoadState('networkidle');
     await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
       key: FAVORITES_KEY,
       value: favoritesPayload([seoulFav]),
@@ -135,6 +154,7 @@ test.describe('Favorites page — 편집/정렬 모드', () => {
     const input = page.getByRole('textbox').first();
     await input.fill('서울역');
     await page.getByRole('button', { name: /완료/i }).click();
+    await page.waitForLoadState('networkidle');
     await page.reload();
     await expect(page.getByText('서울역')).toBeVisible();
   });
@@ -142,6 +162,7 @@ test.describe('Favorites page — 편집/정렬 모드', () => {
   test('reorder via 위로 button persists after reload', async ({ page }) => {
     // page.evaluate로 씨딩하면 재로드 시 재실행되지 않아 앱이 저장한 상태가 유지된다
     await page.goto('/favorites');
+    await page.waitForLoadState('networkidle');
     await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
       key: FAVORITES_KEY,
       value: favoritesPayload([seoulFav, busanFav]),
@@ -152,6 +173,7 @@ test.describe('Favorites page — 편집/정렬 모드', () => {
       .getByRole('button', { name: /즐겨찾기 해운대 위로 이동/i })
       .click();
     await page.getByRole('button', { name: /완료/i }).click();
+    await page.waitForLoadState('networkidle');
     await page.reload();
     // 두 카드 제목이 모두 DOM에 나타날 때까지 대기
     const headings = page.locator('h3');

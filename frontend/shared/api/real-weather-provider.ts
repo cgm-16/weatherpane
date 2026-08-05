@@ -16,10 +16,22 @@ interface OpenWeatherGeocodeEntry {
   lon: number;
 }
 
-async function fetchOwm(url: URL, errorMessage: string): Promise<unknown> {
+interface ProxyErrorBody {
+  code?: string;
+  message?: string;
+}
+
+// 서버 전용 프록시 라우트(app/routes/v1.weather.*.ts, v1.geocode.ts)를 호출한다.
+// OpenWeather API 키는 클라이언트에 전혀 노출되지 않고 프록시 내부에서만 다뤄진다.
+async function fetchProxy(
+  path: string,
+  params: Record<string, string>,
+  errorMessage: string
+): Promise<unknown> {
+  const query = new URLSearchParams(params);
   let response: Response;
   try {
-    response = await fetch(url.toString());
+    response = await fetch(`${path}?${query.toString()}`);
   } catch (cause) {
     throw new WeatherProviderError({
       code: 'INVALID_PROVIDER_RESPONSE',
@@ -30,6 +42,16 @@ async function fetchOwm(url: URL, errorMessage: string): Promise<unknown> {
   }
 
   if (!response.ok) {
+    const body = (await response
+      .json()
+      .catch(() => null)) as ProxyErrorBody | null;
+    if (body?.code === 'PROVIDER_NOT_IMPLEMENTED') {
+      throw new WeatherProviderError({
+        code: 'PROVIDER_NOT_IMPLEMENTED',
+        provider: 'openweather',
+        message: body.message ?? errorMessage,
+      });
+    }
     throw new WeatherProviderError({
       code: 'INVALID_PROVIDER_RESPONSE',
       provider: 'openweather',
@@ -40,31 +62,14 @@ async function fetchOwm(url: URL, errorMessage: string): Promise<unknown> {
   return response.json();
 }
 
-function requireApiKey(): string {
-  const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY;
-  if (!apiKey) {
-    throw new WeatherProviderError({
-      code: 'PROVIDER_NOT_IMPLEMENTED',
-      provider: 'openweather',
-      message: 'VITE_OPENWEATHER_API_KEY가 설정되지 않았습니다.',
-    });
-  }
-  return apiKey;
-}
-
 export const realWeatherProvider: WeatherProvider = {
   mode: 'real',
   async getCoreWeather(location: ResolvedLocation) {
-    const apiKey = requireApiKey();
-
-    const url = new URL('https://api.openweathermap.org/data/3.0/onecall');
-    url.searchParams.set('lat', String(location.latitude));
-    url.searchParams.set('lon', String(location.longitude));
-    url.searchParams.set('exclude', 'minutely,alerts');
-    url.searchParams.set('units', 'metric');
-    url.searchParams.set('appid', apiKey);
-
-    const data = await fetchOwm(url, '날씨 API 네트워크 오류가 발생했습니다');
+    const data = await fetchProxy(
+      '/v1/weather/core',
+      { lat: String(location.latitude), lon: String(location.longitude) },
+      '날씨 API 네트워크 오류가 발생했습니다'
+    );
     const result = normalizeOpenWeatherCoreWeatherResponse(
       { ...(data as object), fetchedAt: new Date().toISOString() },
       location
@@ -72,16 +77,11 @@ export const realWeatherProvider: WeatherProvider = {
     return { ...result, source: { provider: 'openweather' } };
   },
   async getAqi(location: ResolvedLocation) {
-    const apiKey = requireApiKey();
-
-    const url = new URL(
-      'https://api.openweathermap.org/data/2.5/air_pollution'
+    const data = await fetchProxy(
+      '/v1/weather/aqi',
+      { lat: String(location.latitude), lon: String(location.longitude) },
+      'AQI API 네트워크 오류가 발생했습니다'
     );
-    url.searchParams.set('lat', String(location.latitude));
-    url.searchParams.set('lon', String(location.longitude));
-    url.searchParams.set('appid', apiKey);
-
-    const data = await fetchOwm(url, 'AQI API 네트워크 오류가 발생했습니다');
     const result = normalizeOpenWeatherAqiResponse(
       { ...(data as object), fetchedAt: new Date().toISOString() },
       location
@@ -89,15 +89,9 @@ export const realWeatherProvider: WeatherProvider = {
     return { ...result, source: { provider: 'openweather' } };
   },
   async geocode(query: string): Promise<LocationGeocodeCandidate[]> {
-    const apiKey = requireApiKey();
-
-    const url = new URL('https://api.openweathermap.org/geo/1.0/direct');
-    url.searchParams.set('q', query);
-    url.searchParams.set('limit', '5');
-    url.searchParams.set('appid', apiKey);
-
-    const data = (await fetchOwm(
-      url,
+    const data = (await fetchProxy(
+      '/v1/geocode',
+      { q: query },
       '지오코딩 API 네트워크 오류가 발생했습니다'
     )) as OpenWeatherGeocodeEntry[];
 

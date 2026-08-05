@@ -1,3 +1,9 @@
+# 단일 패키지 저장소의 워크스페이스 범위를 '.' 하나로 명시적으로 고정한다.
+# pnpm 버전이나 설정이 바뀌어도 .worktrees/* 체크아웃이 워크스페이스
+# 멤버로 편입되지 않도록 하는 방어적 조치다.
+packages:
+  - '.'
+
 allowBuilds:
   esbuild: true
   msw: true

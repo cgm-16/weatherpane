@@ -31,10 +31,10 @@ cp .env.example .env
 
 ## 2. 환경 변수 설정
 
-| 변수                         | 필수 여부           | 설명               |
-| ---------------------------- | ------------------- | ------------------ |
-| `VITE_WEATHER_PROVIDER_MODE` | 필수                | `mock` 또는 `real` |
-| `VITE_OPENWEATHER_API_KEY`   | `real` 모드 시 필수 | OpenWeather API 키 |
+| 변수                         | 필수 여부           | 설명                                                               |
+| ---------------------------- | ------------------- | ------------------------------------------------------------------ |
+| `VITE_WEATHER_PROVIDER_MODE` | 필수                | `mock` 또는 `real`                                                 |
+| `OPENWEATHER_API_KEY`        | `real` 모드 시 필수 | OpenWeather API 키 (서버 전용 — 클라이언트 번들에 포함되지 않는다) |
 
 프로덕션 빌드에서 `VITE_WEATHER_PROVIDER_MODE`가 설정되지 않거나 잘못된 값이면
 앱은 데모 모드로 조용히 폴백하지 **않는다** — 명시적 설정 오류 화면을 표시한다.
@@ -55,11 +55,13 @@ VITE_WEATHER_PROVIDER_MODE=mock
 ### Real 모드
 
 OpenWeather API에 실제 요청을 보낸다. API 키가 필요하다.
+서버 전용 프록시 라우트(`/v1/weather/core`, `/v1/weather/aqi`, `/v1/geocode`)를 거쳐 호출되므로
+API 키는 클라이언트 번들에 포함되지 않는다.
 
 ```bash
 # .env
 VITE_WEATHER_PROVIDER_MODE=real
-VITE_OPENWEATHER_API_KEY=your_key_here
+OPENWEATHER_API_KEY=your_key_here
 ```
 
 ### 개발 중 빠른 전환
@@ -120,25 +122,42 @@ pnpm dev
 # http://localhost:5173
 ```
 
-### 프로덕션 빌드
+### 프로덕션 빌드 및 로컬 실행
+
+`OPENWEATHER_API_KEY`는 빌드 시점이 아니라 서버가 요청을 처리하는 시점에 읽힌다
+(`frontend/shared/api/openweather-proxy.server.ts`). 빌드 명령에 포함해도 효과가 없다 —
+아래처럼 실제로 서버를 실행하는 환경(`pnpm start`/`pnpm preview`, 또는 배포 플랫폼의
+환경 변수 설정)에 설정해야 한다.
+
+Mock 모드는 외부 API 요청이나 API 키 없이 프로덕션 번들을 검증할 때 사용한다.
 
 ```bash
-VITE_WEATHER_PROVIDER_MODE=real \
-VITE_OPENWEATHER_API_KEY=your_key \
-pnpm build
+VITE_WEATHER_PROVIDER_MODE=mock pnpm build
+HOST=127.0.0.1 PORT=3000 VITE_WEATHER_PROVIDER_MODE=mock pnpm start
+# http://127.0.0.1:3000
 ```
 
-### 로컬 프리뷰
+Real 모드는 빌드 시 프로바이더 모드를 설정하고, 서버 실행 시 `OPENWEATHER_API_KEY`를 전달한다.
 
 ```bash
-pnpm preview
-# http://localhost:4173
+VITE_WEATHER_PROVIDER_MODE=real pnpm build
+HOST=127.0.0.1 PORT=3000 VITE_WEATHER_PROVIDER_MODE=real \
+  OPENWEATHER_API_KEY=your_key pnpm start
+# http://127.0.0.1:3000
 ```
+
+`pnpm preview`도 `pnpm start`와 같은 프로덕션 서버 진입점을 사용한다. `PORT`를 생략하면
+서버는 3000번부터 사용 가능한 포트를 선택하고 실제 URL을 출력한다. 로컬 검증과 CI에서는
+예상하지 않은 인터페이스 노출이나 포트 탐색을 피하도록 `HOST`와 `PORT`를 명시한다.
 
 ### 정적 호스팅
 
 `build/client/` 디렉터리를 정적 호스트(Vercel, Netlify, S3 등)에 배포한다.
 SPA 라우팅을 위해 모든 경로를 `index.html`로 폴백하도록 호스트를 설정한다.
+
+`real` 모드는 OpenWeather 호출을 서버 전용 프록시 라우트(`/v1/weather/core` 등)로 처리하므로,
+`build/client/`만 배포하는 순수 정적 호스팅에서는 동작하지 않는다. `real` 모드를 쓰려면
+React Router SSR 서버(`pnpm start`)나 Vercel Functions처럼 서버 런타임이 있는 배포 대상이 필요하다.
 
 React Router SSR을 활성화한 경우, `pnpm start`로 Node.js 서버를 실행한다.
 

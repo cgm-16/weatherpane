@@ -9,45 +9,52 @@ import {
 
 import type { Route } from './+types/root';
 import { AppProviders } from '../frontend/app/providers/app-providers';
-import { storageKeys } from '../frontend/shared/lib/storage/storage-keys';
+import {
+  storageKeys,
+  storageSchemaVersion,
+} from '../frontend/shared/lib/storage/storage-keys';
 import '../frontend/app/styles/global.css';
 
 export const links: Route.LinksFunction = () => [];
 
-// 페이지 로드 전에 즉시 실행되는 테마 초기화 스크립트 (FOUC 방지 + 하이드레이션 전 인터랙션 처리).
-// React가 하이드레이션되기 전에도 테마 토글이 동작하도록 클릭 인터셉터를 등록한다.
+// 페이지 로드 전에 즉시 실행되는 테마 초기화 스크립트 (FOUC 방지).
 const THEME_INIT_SCRIPT = `(function(){
   var k = '${storageKeys.theme}';
-  function save(d) {
-    var v = JSON.stringify({ version: 1, data: d });
-    try { sessionStorage.setItem(k, v); } catch(e) {}
-    try { localStorage.setItem(k, v); } catch(e) {}
+  var expectedVersion = ${storageSchemaVersion};
+  function resolveTheme(preference) {
+    return preference === 'dark' || (preference === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   }
-  function applyTheme(dark) {
-    document.documentElement.classList.toggle('dark', dark);
-    save(dark ? 'dark' : 'light');
+  function applyTheme(preference) {
+    document.documentElement.classList.toggle('dark', resolveTheme(preference));
+  }
+  function parsePreference(raw) {
+    if (!raw) return null;
+    try {
+      var stored = JSON.parse(raw);
+      var preference = stored && stored.version === expectedVersion ? stored.data : null;
+      return preference === 'system' || preference === 'light' || preference === 'dark'
+        ? preference
+        : null;
+    } catch(e) {
+      return null;
+    }
+  }
+  function readPreference() {
+    try {
+      var sessionPreference = parsePreference(sessionStorage.getItem(k));
+      if (sessionPreference) return sessionPreference;
+    } catch(e) {}
+    try {
+      var localPreference = parsePreference(localStorage.getItem(k));
+      if (localPreference) return localPreference;
+    } catch(e) {}
+    return 'system';
   }
   try {
-    var raw = sessionStorage.getItem(k) || localStorage.getItem(k);
-    if (raw) {
-      var d = JSON.parse(raw).data;
-      if (d === 'dark') { document.documentElement.classList.add('dark'); }
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.classList.add('dark');
-    }
+    applyTheme(readPreference());
   } catch(e) {
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.classList.add('dark');
-    }
+    applyTheme('system');
   }
-  // React 하이드레이션 전 클릭을 처리해 상태 불일치와 경쟁 조건을 방지한다 (data-theme-toggle 속성 기반)
-  document.addEventListener('click', function(e) {
-    var btn = e.target && e.target.closest && e.target.closest('button[data-theme-toggle]');
-    if (!btn) return;
-    var val = btn.getAttribute('data-theme-toggle');
-    if (val === 'dark') { applyTheme(true); }
-    else if (val === 'light') { applyTheme(false); }
-  }, true);
 })();`;
 
 export function Layout({ children }: { children: React.ReactNode }) {

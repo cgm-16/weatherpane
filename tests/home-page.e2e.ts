@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { storageKeys } from '../frontend/shared/lib/storage/storage-keys';
 
 // 목 프로바이더는 어떤 위치에서도 17.2°C를 반환합니다.
@@ -22,6 +22,14 @@ const seoulActiveLocation = JSON.stringify({
       timezone: 'Asia/Seoul',
     },
   },
+});
+
+// #93: 홈 로딩 상태가 SSR과 클라이언트에서 서로 달라지는 기존 하이드레이션 버그.
+// 이 파일의 모든 테스트가 활성 위치가 설정된 홈 대시보드 렌더링을 검증하며 재현된다.
+// pattern: 로딩 문구 "날씨 정보를 불러오는 중"이 서버·클라이언트 간 diff에 남는
+// #93 고유 서명이다.
+test.use({
+  knownHydrationBug: { issue: '#93', pattern: '날씨 정보를 불러오는 중' },
 });
 
 test('위치가 설정된 홈에서 날씨 대시보드가 표시된다', async ({ page }) => {

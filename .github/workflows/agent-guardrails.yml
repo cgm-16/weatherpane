@@ -9,9 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check PR body contains linked issue
+        if: github.event.pull_request.base.ref != 'production'
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
+          # production을 base로 하는 PR은 production-sync.yml이 여는 자동
+          # 릴리스 동기화 PR이다 — 그 자체가 새 이슈로 추적되는 작업이 아니라
+          # main에 이미 개별적으로 머지된 커밋들의 감사 기록이므로 이 검사에서
+          # 제외한다. docs/skills/github-flow-and-release.md 참고.
           echo "$PR_BODY" | grep -Eq 'Closes #[0-9]+' || (echo "PR body must contain 'Closes #<issue>'" && exit 1)
 
       - name: Check changed UI/spec-sensitive files have docs touch

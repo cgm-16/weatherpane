@@ -8,6 +8,8 @@ import { LocationUnsupported } from './location-unsupported';
 import { LocationNotFound } from './location-not-found';
 import { LocationConnectionError } from './location-connection-error';
 import { LastUpdated } from '~/shared/ui/last-updated';
+import { useSettings } from '~/features/settings';
+import { formatTemperature } from '~/shared/lib/temperature';
 
 interface LocationPageProps {
   resolvedLocationId: string;
@@ -16,6 +18,7 @@ interface LocationPageProps {
 export function LocationPage({ resolvedLocationId }: LocationPageProps) {
   const bootstrap = useDetailBootstrap(resolvedLocationId);
   const refresh = useWeatherRefresh();
+  const { temperatureUnit } = useSettings();
 
   // Detail 진입 시 최근 지역에 추가 (data 또는 stale-fallback 상태에서만, 위치당 한 번)
   const addedLocationRef = useRef<string | null>(null);
@@ -65,17 +68,17 @@ export function LocationPage({ resolvedLocationId }: LocationPageProps) {
         role="main"
       >
         <p className="font-display text-5xl font-extrabold text-foreground">
-          {Math.round(bootstrap.weather.temperatureC)}°C
+          {formatTemperature(bootstrap.weather.temperatureC, temperatureUnit)}
         </p>
         <p className="font-body text-muted-foreground">
           {bootstrap.weather.conditionText}
         </p>
         <div className="flex gap-4">
           <span className="font-body text-sm text-muted-foreground">
-            H {Math.round(bootstrap.weather.todayMaxC)}°
+            H {formatTemperature(bootstrap.weather.todayMaxC, temperatureUnit)}
           </span>
           <span className="font-body text-sm text-muted-foreground">
-            L {Math.round(bootstrap.weather.todayMinC)}°
+            L {formatTemperature(bootstrap.weather.todayMinC, temperatureUnit)}
           </span>
         </div>
         <LastUpdated
@@ -95,6 +98,7 @@ export function LocationPage({ resolvedLocationId }: LocationPageProps) {
       isRefreshing={bootstrap.isRefreshing}
       hasRefreshError={bootstrap.hasRefreshError}
       onRefresh={() => refresh(bootstrap.location.locationId)}
+      temperatureUnit={temperatureUnit}
     />
   );
 }

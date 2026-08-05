@@ -1,0 +1,4 @@
+interface:
+  display_name: "Next Issue to PR"
+  short_description: "Take one Weatherpane issue through a green PR"
+  default_prompt: "Use $next-issue-to-pr to select and ship one Weatherpane issue through a green pull request."

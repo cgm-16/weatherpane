@@ -4,6 +4,10 @@ import { HourlyStrip } from '~/shared/ui/hourly-strip';
 import { SketchBackground } from '~/entities/asset';
 import { DetailAqiCard } from './detail-aqi-card';
 import { DetailUvCard } from './detail-uv-card';
+import {
+  formatTemperature,
+  type TemperatureUnit,
+} from '~/shared/lib/temperature';
 import type {
   ResolvedLocation,
   RawGpsFallbackLocation,
@@ -18,6 +22,7 @@ interface DetailDashboardProps {
   isRefreshing: boolean;
   hasRefreshError: boolean;
   onRefresh: () => void;
+  temperatureUnit: TemperatureUnit;
 }
 
 export function DetailDashboard({
@@ -27,6 +32,7 @@ export function DetailDashboard({
   isRefreshing,
   hasRefreshError,
   onRefresh,
+  temperatureUnit,
 }: DetailDashboardProps) {
   const {
     isFavorite,
@@ -120,17 +126,17 @@ export function DetailDashboard({
         />
         <div className="relative flex flex-col items-center gap-2 px-6 py-8">
           <p className="font-display text-7xl font-extrabold text-foreground">
-            {Math.round(weather.current.temperatureC)}°
+            {formatTemperature(weather.current.temperatureC, temperatureUnit)}
           </p>
           <p className="font-body text-base text-muted-foreground">
             {weather.current.condition.text}
           </p>
           <div className="flex gap-4">
             <span className="font-body text-sm text-muted-foreground">
-              H {Math.round(weather.today.maxC)}°
+              H {formatTemperature(weather.today.maxC, temperatureUnit)}
             </span>
             <span className="font-body text-sm text-muted-foreground">
-              L {Math.round(weather.today.minC)}°
+              L {formatTemperature(weather.today.minC, temperatureUnit)}
             </span>
           </div>
         </div>
@@ -143,6 +149,7 @@ export function DetailDashboard({
             hourly={weather.hourly}
             timeZone={location.timezone}
             count={12}
+            temperatureUnit={temperatureUnit}
           />
         </section>
       )}
@@ -173,7 +180,7 @@ export function DetailDashboard({
           <p className="font-body text-xs text-muted-foreground">이슬점</p>
           <p className="font-display text-2xl font-bold text-foreground">
             {weather.current.dewPointC != null
-              ? `${Math.round(weather.current.dewPointC)}°`
+              ? formatTemperature(weather.current.dewPointC, temperatureUnit)
               : '—'}
           </p>
         </div>

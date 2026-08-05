@@ -3,104 +3,129 @@ import '@testing-library/jest-dom/vitest';
 import { act, renderHook } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { ThemeProvider, useTheme } from '../frontend/features/settings';
 
-// matchMedia 모의: 인수에 따라 matches 제어
-function mockMatchMedia(prefersDark: boolean) {
+type ColorSchemeListener = (event: MediaQueryListEvent) => void;
+
+function createColorSchemeMedia(prefersDark: boolean) {
+  let matches = prefersDark;
+  const listeners = new Set<ColorSchemeListener>();
+  const addEventListener = vi.fn(
+    (_type: 'change', listener: ColorSchemeListener) => listeners.add(listener)
+  );
+  const removeEventListener = vi.fn(
+    (_type: 'change', listener: ColorSchemeListener) =>
+      listeners.delete(listener)
+  );
+
   Object.defineProperty(window, 'matchMedia', {
     value: vi.fn((query: string) => ({
-      matches: prefersDark && query === '(prefers-color-scheme: dark)',
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
+      addEventListener,
+      matches: query === '(prefers-color-scheme: dark)' && matches,
+      removeEventListener,
     })),
     writable: true,
   });
+
+  return {
+    addEventListener,
+    removeEventListener,
+    setDark(next: boolean) {
+      matches = next;
+      for (const listener of listeners) {
+        listener({ matches: next } as MediaQueryListEvent);
+      }
+    },
+  };
 }
 
-describe('useTheme — 시스템 테마 기본 경로', () => {
+function renderTheme() {
+  return renderHook(() => useTheme(), {
+    wrapper: ({ children }: { children: React.ReactNode }) => (
+      <ThemeProvider>{children}</ThemeProvider>
+    ),
+  });
+}
+
+describe('useTheme — 시스템 테마 동작', () => {
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
     document.documentElement.classList.remove('dark');
   });
 
-  test('저장값 없음 + 시스템 어두운 모드 → dark 테마 적용', async () => {
-    mockMatchMedia(true);
-    const { ThemeProvider, useTheme } =
-      await import('../frontend/shared/hooks/use-theme');
-    const { result } = renderHook(() => useTheme(), {
-      wrapper: ({ children }: { children: React.ReactNode }) => (
-        <ThemeProvider>{children}</ThemeProvider>
-      ),
-    });
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-    expect(result.current.theme).toBe('dark');
-  });
+  test('저장된 system은 어두운 시스템 설정을 따른다', () => {
+    const media = createColorSchemeMedia(true);
+    const stored = JSON.stringify({ version: 1, data: 'system' });
+    localStorage.setItem('weatherpane.theme.v1', stored);
+    sessionStorage.setItem('weatherpane.theme.v1', stored);
 
-  test('저장값 없음 + 시스템 밝은 모드 → light 테마 적용', async () => {
-    mockMatchMedia(false);
-    const { ThemeProvider, useTheme } =
-      await import('../frontend/shared/hooks/use-theme');
-    const { result } = renderHook(() => useTheme(), {
-      wrapper: ({ children }: { children: React.ReactNode }) => (
-        <ThemeProvider>{children}</ThemeProvider>
-      ),
-    });
-    expect(document.documentElement.classList.contains('dark')).toBe(false);
-    expect(result.current.theme).toBe('light');
-  });
-});
+    const { result } = renderTheme();
 
-describe('useTheme — 저장된 테마 복원', () => {
-  beforeEach(() => {
-    localStorage.clear();
-    sessionStorage.clear();
-    document.documentElement.classList.remove('dark');
-    mockMatchMedia(false); // 시스템은 밝은 모드
-  });
-
-  test('저장값 dark → 시스템 무관하게 dark 테마 적용', async () => {
-    localStorage.setItem(
-      'weatherpane.theme.v1',
-      JSON.stringify({ version: 1, data: 'dark' })
+    expect(media.addEventListener).toHaveBeenCalledWith(
+      'change',
+      expect.any(Function)
     );
-    const { ThemeProvider, useTheme } =
-      await import('../frontend/shared/hooks/use-theme');
-    const { result } = renderHook(() => useTheme(), {
-      wrapper: ({ children }: { children: React.ReactNode }) => (
-        <ThemeProvider>{children}</ThemeProvider>
-      ),
+    expect(result.current).toMatchObject({
+      preference: 'system',
+      theme: 'dark',
     });
     expect(document.documentElement.classList.contains('dark')).toBe(true);
-    expect(result.current.theme).toBe('dark');
   });
 
-  test('toggle() 호출 후 선택이 localStorage에 유지된다', async () => {
-    const { ThemeProvider, useTheme } =
-      await import('../frontend/shared/hooks/use-theme');
-    const { result } = renderHook(() => useTheme(), {
-      wrapper: ({ children }: { children: React.ReactNode }) => (
-        <ThemeProvider>{children}</ThemeProvider>
-      ),
-    });
-    expect(result.current.theme).toBe('light');
-    act(() => result.current.toggle());
+  test('system 선택은 실행 중인 시스템 색상 변경을 반영한다', () => {
+    const media = createColorSchemeMedia(false);
+    const { result } = renderTheme();
+
+    act(() => media.setDark(true));
+
     expect(result.current.theme).toBe('dark');
     expect(document.documentElement.classList.contains('dark')).toBe(true);
-    const stored = JSON.parse(localStorage.getItem('weatherpane.theme.v1')!);
-    expect(stored.data).toBe('dark');
   });
 
-  test('toggle() 두 번 호출 → 원래 테마로 복귀', async () => {
-    const { ThemeProvider, useTheme } =
-      await import('../frontend/shared/hooks/use-theme');
-    const { result } = renderHook(() => useTheme(), {
-      wrapper: ({ children }: { children: React.ReactNode }) => (
-        <ThemeProvider>{children}</ThemeProvider>
-      ),
-    });
-    act(() => result.current.toggle());
-    act(() => result.current.toggle());
-    expect(result.current.theme).toBe('light');
-    expect(document.documentElement.classList.contains('dark')).toBe(false);
+  test.each([
+    ['light', false, true, false],
+    ['dark', true, false, true],
+  ] as const)(
+    '명시적 %s 테마는 이후 시스템 색상 변경을 무시한다',
+    (preference, initialSystemDark, systemDark, expectedDark) => {
+      const media = createColorSchemeMedia(initialSystemDark);
+      const { result } = renderTheme();
+
+      act(() => result.current.setPreference(preference));
+      act(() => media.setDark(systemDark));
+
+      expect(result.current).toMatchObject({
+        preference,
+        theme: expectedDark ? 'dark' : 'light',
+      });
+      expect(document.documentElement.classList.contains('dark')).toBe(
+        expectedDark
+      );
+    }
+  );
+
+  test('명시적 선택은 두 테마 저장소에 같은 버전 payload로 저장한다', () => {
+    createColorSchemeMedia(false);
+    const { result } = renderTheme();
+
+    act(() => result.current.setPreference('dark'));
+
+    const expected = JSON.stringify({ data: 'dark', version: 1 });
+    expect(localStorage.getItem('weatherpane.theme.v1')).toBe(expected);
+    expect(sessionStorage.getItem('weatherpane.theme.v1')).toBe(expected);
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+  });
+
+  test('system 리스너는 Provider가 해제될 때 정리된다', () => {
+    const media = createColorSchemeMedia(false);
+    const { unmount } = renderTheme();
+
+    unmount();
+
+    expect(media.removeEventListener).toHaveBeenCalledWith(
+      'change',
+      expect.any(Function)
+    );
   });
 });

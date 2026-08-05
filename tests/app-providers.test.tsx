@@ -30,8 +30,11 @@ vi.mock('../frontend/features/app-bootstrap/active-location-context', () => ({
     ({ children }: { children: React.ReactNode }) => children
   ),
 }));
-// use-theme을 모킹합니다.
-vi.mock('../frontend/shared/hooks/use-theme', () => ({
+// SettingsProvider를 모킹합니다.
+vi.mock('../frontend/features/settings', () => ({
+  SettingsProvider: vi.fn(
+    ({ children }: { children: React.ReactNode }) => children
+  ),
   ThemeProvider: vi.fn(
     ({ children }: { children: React.ReactNode }) => children
   ),
@@ -127,7 +130,10 @@ describe('AppProviders — 프로덕션 설정 오류 오버레이', () => {
         ),
       })
     );
-    vi.doMock('../frontend/shared/hooks/use-theme', () => ({
+    vi.doMock('../frontend/features/settings', () => ({
+      SettingsProvider: vi.fn(
+        ({ children }: { children: React.ReactNode }) => children
+      ),
       ThemeProvider: vi.fn(
         ({ children }: { children: React.ReactNode }) => children
       ),

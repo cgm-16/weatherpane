@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('검색 결과 선택 시 Detail로 이동하고 날씨가 표시된다', async ({
   page,
@@ -48,6 +48,8 @@ test('최근 방문 지역은 재로드 후에도 유지되며 인기 지역 위
   await page.waitForURL(/\/location\//);
 
   // 검색 기본 상태로 돌아감
+  // /__manifest 경합 가드 — 근거는 tests/fixtures.ts의 manifestIssues 주석 참고
+  await page.waitForLoadState('networkidle');
   await page.goto('/search');
 
   // 최근 지역 섹션이 표시됨
@@ -68,6 +70,7 @@ test('최근 방문 지역은 재로드 후에도 유지되며 인기 지역 위
   expect(recentsY).toBeLessThan(popularY);
 
   // 재로드 후에도 최근 지역이 유지됨
+  await page.waitForLoadState('networkidle');
   await page.reload();
   await expect(page.getByRole('heading', { name: '최근 지역' })).toBeVisible();
   await expect(
