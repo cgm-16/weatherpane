@@ -118,7 +118,6 @@ background (#131313)                    ← 전체 페이지 기반
 
 - 밝은 모드: `surface-container-highest` 60% 불투명도 + `backdrop-blur: 20px`
 - 어두운 모드: `surface-bright (#393939)` 40% 불투명도 + `backdrop-blur: 20px`
-- **참고:** `surface-container-highest` 및 `surface-bright` 토큰은 현재 미구현 상태다 (T19 범위).
 
 ---
 
