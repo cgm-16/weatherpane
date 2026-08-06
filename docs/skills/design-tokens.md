@@ -112,6 +112,7 @@ Expected: no errors. The build output should include the font assets for Plus Ja
 | `tertiary`                               | `#006a45`             | `#62dca3`             | Emerald — weather condition status (good/hazard)     |
 | `surface-container-highest`              | `#ffffff`             | (same)                | Glass base: light mode glassmorphism                 |
 | `surface-bright`                         | `#f0eded`             | `#393939`             | Glass base: dark mode glassmorphism                  |
+| `scrim`                                  | `#131313`             | (same)                | Modal backdrop dimming — fixed, does not invert      |
 
 ### Non-color tokens
 
