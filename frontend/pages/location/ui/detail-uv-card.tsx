@@ -58,7 +58,7 @@ export function DetailUvCard({ uvIndex }: DetailUvCardProps) {
           aria-label="자외선 지수 상세"
         >
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-scrim/40"
             onClick={() => setOpen(false)}
           />
           <div className="absolute right-0 bottom-0 left-0 rounded-t-[--radius-lg] bg-card p-6">
