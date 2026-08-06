@@ -56,7 +56,7 @@
 
 **`home-config-error.tsx:13`** — `backdrop-blur-[20px]` 유리 카드 위 `bg-white/50`. `docs/Design.md` §유리형태(Glassmorphism)가 이 패턴을 테마별로 이미 명시한다: 라이트 모드는 `surface-container-highest` 60% 불투명도, 다크 모드는 `surface-bright` 40% 불투명도. 두 토큰 모두 `tokens.css`에 이미 정의돼 있다(`--color-surface-container-highest`는 라이트 전용 `#ffffff`, `--color-surface-bright`는 라이트 `#f0eded`/다크 `#393939`). 교체: `bg-surface-container-highest/60 dark:bg-surface-bright/40` — 값을 새로 만드는 것이 아니라 이미 문서화된 값을 그대로 적용한다.
 
-**`detail-aqi-card.tsx` / `detail-uv-card.tsx`** (모달 배경 스크림, `bg-black/40`) — 결정 2에 따라 `--color-scrim`을 신설한다. **제안 값**(구현 전 Ori 확정 필요 — `docs/Design.md`가 순수 `#000000`을 금지하지만 스크림용으로 문서화된 값은 없음): 이미 문서화된 팔레트 중 가장 어두운 값인 다크 모드 `background`(`#131313`)를 테마에 따라 반전되지 않는 고정 토큰으로 재사용한다 — `--color-scrim: #131313`을 `@theme {}`와 `.dark {}` 양쪽에 동일하게 추가하고, 기존 `/40` 불투명도를 유지해 시각적 무게를 바꾸지 않는다. 새 hex를 발명하지 않으면서 금지된 순수 검정도 피한다. 이 특정 값은 구현 직전 최종 확인이 필요하다.
+**`detail-aqi-card.tsx` / `detail-uv-card.tsx`** (모달 배경 스크림, `bg-black/40`) — 결정 2에 따라 `--color-scrim`을 신설한다. **확정 값** (Ori 확정, `docs/Design.md`가 순수 `#000000`을 금지하지만 스크림용으로 문서화된 값은 없었음): 이미 문서화된 팔레트 중 가장 어두운 값인 다크 모드 `background`(`#131313`)를 테마에 따라 반전되지 않는 고정 토큰으로 재사용한다 — `--color-scrim: #131313`을 `@theme {}`와 `.dark {}` 양쪽에 동일하게 추가하고, 기존 `/40` 불투명도를 유지해 시각적 무게를 바꾸지 않는다. 새 hex를 발명하지 않으면서 금지된 순수 검정도 피한다.
 
 ### `--color-scrim` 토큰 신설 — 전체 체크리스트
 
@@ -71,12 +71,13 @@
 
 ## 오류 처리
 
-이 작업은 새로운 런타임 오류 경로를 추가하지 않는다 — 문구와 색상 유틸리티 클래스 교체가 전부다. 유일한 "정지 조건"은 구현 시점의 것이다: `--color-scrim`의 제안 값(`#131313`)이 확정되지 않은 채로는 `tokens.css`에 쓰지 않는다(`docs/skills/design-tokens.md`의 "Stop and ask Ori" 규칙). MD3 미정의 토큰 9개는 이 PR에서 건드리지 않으므로 그로 인한 무배경 버튼·펄스 점은 이 PR 이후에도 남아 있으며, PR 설명에서 명시적으로 언급해 침묵하지 않는다.
+이 작업은 새로운 런타임 오류 경로를 추가하지 않는다 — 문구와 색상 유틸리티 클래스 교체가 전부다. 구현 시점의 유일한 "정지 조건"이었던 `--color-scrim` 값(`#131313`) 확정(`docs/skills/design-tokens.md`의 "Stop and ask Ori" 규칙)은 Ori가 승인해 해소됐다. MD3 미정의 토큰 9개는 이 PR에서 건드리지 않으므로 그로 인한 무배경 버튼·펄스 점은 이 PR 이후에도 남아 있으며, PR 설명에서 명시적으로 언급해 침묵하지 않는다.
 
 ## 테스트 전략
 
 - `tests/home-page.test.tsx`의 두 assertion을 새 한국어 문구로 갱신한다: `'Settings Update Needed'` → `'설정 업데이트가 필요합니다'`, `/Retry Connection/` → `/다시 시도/`. 테스트 이름(한국어이지만 영문 문구를 인용)도 함께 갱신한다.
-- 나머지 테스트 파일(`app-providers.test.tsx`, `search-page.test.tsx`, `*.e2e.ts`, `detail-dashboard.test.tsx`, `design-tokens.e2e.ts`)은 7개 문구 중 어느 것도 단언하지 않음을 직접 검색으로 확인했다 — 변경 불필요.
+- `tests/search-page.test.tsx`는 기존 assertion 중 7개 문구를 단언하는 것이 없어 갱신이 불필요하지만, 새 eyebrow 라벨 `'대한민국 지역 검색'`을 검증하는 회귀 테스트를 신규 추가한다.
+- 나머지 테스트 파일(`app-providers.test.tsx`, `*.e2e.ts`, `detail-dashboard.test.tsx`, `design-tokens.e2e.ts`)은 7개 문구 중 어느 것도 단언하지 않음을 직접 검색으로 확인했다 — 변경 불필요.
 - `--color-scrim` 신설에 대한 새 Playwright assertion을 §"토큰 신설" 절차대로 추가한다.
 - 자동 검사만으로는 부족하다 — PR #86이 지적했듯 lint·typecheck·유닛·E2E가 모두 통과한 상태에서도 4건의 실결함이 배포됐다(빌드 산출물을 직접 열거나 서버를 띄워야만 보였다). 개발 서버로 두 오류 상태(config-error, recoverable-error), `/search`, detail 페이지 AQI/UV 모달, 전역 ErrorBoundary를 라이트·다크 각각에서 직접 확인한다.
 

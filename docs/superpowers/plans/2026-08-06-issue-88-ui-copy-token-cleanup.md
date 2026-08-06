@@ -1,41 +1,41 @@
-# 이슈 88 UI 문구·토큰 정리 Implementation Plan
+# Issue 88 UI Copy & Token Cleanup Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 이슈 88에서 확인된, 실제로 렌더링되는 화면의 영문 문구 7곳을 한국어로 교체하고 raw Tailwind 색상 4개 파일을 디자인 토큰으로 교체한다.
+**Goal:** Replace the 7 English-copy locations identified in issue 88 that sit on actually-rendered screens with Korean, and replace raw Tailwind colors in 4 files with design tokens.
 
-**Architecture:** 새 컴포넌트나 추상화 없이 지정된 8개 파일만 최소 변경한다. 문구 교체는 기존 화면 톤에 맞추고, 색상 교체는 `docs/Design.md`에 이미 문서화된 값(유리형태 절)을 그대로 적용하거나 Ori가 확정한 새 토큰(`--color-scrim`)을 신설한다.
+**Architecture:** No new components or abstractions — make minimal changes to the 7 production files (plus 3 test files and 1 doc file, 11 unique paths total) listed in Tasks 1-6. Copy replacements follow the existing screen tone; color replacements either reuse values already documented in `docs/Design.md` (the glassmorphism section) or introduce the new token (`--color-scrim`) Ori confirmed.
 
 **Tech Stack:** React Router v7, Tailwind v4 CSS-first `@theme`, Vitest + Testing Library, Playwright.
 
 ## Global Constraints
 
-- 소스 파일의 UI 문구는 한국어여야 한다 (`AGENTS.md`).
-- 색상은 항상 시맨틱 토큰을 경유해야 한다. hardcoded hex 금지, `bg-primary`/`text-foreground` 같은 Tailwind 유틸리티 또는 `var(--token-name)`만 사용한다 (`docs/skills/design-tokens.md`).
-- 새 토큰은 `tokens.css`에만 정의한다. `@theme {}`(라이트)와 `.dark {}`(다크) 값이 다르면 둘 다 갱신한다. `tests/design-tokens.e2e.ts`에 라이트·다크 각각 assertion을 추가한다.
-- 토큰 이름은 shadcn kebab-case (`--color-*`, `--radius-*`, `--font-*`, `--shadow-*`)를 따른다.
-- 문서화되지 않은 색상 값을 발명하지 않는다 — `docs/Design.md` 또는 Ori 확인 없이는 정지한다.
-- 커밋 메시지는 Conventional Commits + 한국어. `docs/agents/*`, `docs/skills/*` 파일은 영문 커밋 메시지 예외.
-- `--color-scrim` 값은 Ori가 `#131313`(라이트·다크 동일, 반전 없음)로 확정했다 — 이 값을 그대로 사용한다.
-- 이 이슈 범위 밖: MD3 미정의 토큰 9개(후속 이슈), 도달 불가 영문 문구 3곳(Open Settings/Try Again/Go to Saved Places, 그대로 둠), JSX 텍스트 노드 lint 규칙(후속 이슈), `/settings` 구현(#77, 완료됨), 죽은 컴포넌트 제거(#82), i18n 도입.
+- UI copy in source files must be Korean (`AGENTS.md`).
+- Colors must always go through semantic tokens. No hardcoded hex; use only Tailwind utilities like `bg-primary`/`text-foreground` or `var(--token-name)` (`docs/skills/design-tokens.md`).
+- New tokens are defined only in `tokens.css`. If the `@theme {}` (light) and `.dark {}` (dark) values differ, update both. Add a light-mode and dark-mode assertion each to `tests/design-tokens.e2e.ts`.
+- Token names follow shadcn kebab-case (`--color-*`, `--radius-*`, `--font-*`, `--shadow-*`).
+- Do not invent undocumented color values — stop without `docs/Design.md` backing or Ori's confirmation.
+- Commit messages use Conventional Commits + Korean. `docs/agents/*` and `docs/skills/*` files are exempt and use English commit messages.
+- Ori confirmed the `--color-scrim` value as `#131313` (same in light and dark, no inversion) — use this value as-is.
+- Out of scope for this issue: the 9 undefined MD3 tokens (follow-up issue), the 3 unreachable English strings (Open Settings/Try Again/Go to Saved Places — left as-is), the JSX-text-node lint rule (follow-up issue), the `/settings` implementation (#77, already done), dead-component removal (#82), and i18n adoption.
 
 ---
 
-### Task 1: home-config-error.tsx — 문구 및 유리 카드 토큰 교체
+### Task 1: home-config-error.tsx — Copy and Glass-Card Token Replacement
 
 **Files:**
 
-- Modify: `frontend/pages/home/ui/home-config-error.tsx` (원본 기준 1-2번 import, 13번 유리 카드 div, 25번 제목, 29-30번 본문)
+- Modify: `frontend/pages/home/ui/home-config-error.tsx` (original lines: 1-2 imports, 13 glass-card div, 25 heading, 29-30 body)
 - Test: `tests/home-page.test.tsx:93,104`
 
 **Interfaces:**
 
-- Consumes: `GlassContainer` from `frontend/shared/ui/glass-container.tsx` — `{ children: React.ReactNode; className?: string }`, 이미 존재하는 공유 컴포넌트, 새로 만들지 않는다.
-- Produces: `home-page.test.tsx`의 `config-error` 테스트가 참조하는 새 헤딩 텍스트 `'설정 업데이트가 필요합니다'` — Task 8의 전체 검증에서 재확인한다.
+- Consumes: `GlassContainer` from `frontend/shared/ui/glass-container.tsx` — `{ children: React.ReactNode; className?: string }`, an existing shared component; do not create a new one.
+- Produces: the new heading text `'설정 업데이트가 필요합니다'` that the `config-error` test in `home-page.test.tsx` references — re-verified during Task 8's full validation.
 
-- [ ] **Step 1: 실패하는 테스트로 갱신**
+- [ ] **Step 1: Update to a failing test**
 
-`tests/home-page.test.tsx:93-106`을 다음으로 교체한다:
+Replace `tests/home-page.test.tsx:93-106` with the following:
 
 ```tsx
 test('config-error → 설정 업데이트가 필요합니다 제목을 표시한다', () => {
@@ -54,16 +54,16 @@ test('config-error → 설정 업데이트가 필요합니다 제목을 표시�
 });
 ```
 
-- [ ] **Step 2: 테스트 실행해 실패 확인**
+- [ ] **Step 2: Run the test and confirm it fails**
 
 Run: `pnpm exec vitest run tests/home-page.test.tsx -t "설정 업데이트가 필요합니다"`
-Expected: FAIL — 현재 컴포넌트는 여전히 `'Settings Update Needed'`를 렌더링한다.
+Expected: FAIL — the component still renders `'Settings Update Needed'`.
 
-- [ ] **Step 3: 컴포넌트 수정**
+- [ ] **Step 3: Modify the component**
 
-`frontend/shared/ui/glass-container.tsx`에 이미 정확히 이 패턴(`bg-surface-container-highest/60 backdrop-blur-[20px] dark:bg-surface-bright/40`)을 구현한 공유 `GlassContainer` 컴포넌트가 있다. 같은 클래스 문자열을 중복 작성하지 않고 이 컴포넌트를 재사용한다.
+`frontend/shared/ui/glass-container.tsx` already has a shared `GlassContainer` component implementing exactly this pattern (`bg-surface-container-highest/60 backdrop-blur-[20px] dark:bg-surface-bright/40`). Reuse this component instead of duplicating the same class string.
 
-`frontend/pages/home/ui/home-config-error.tsx:1-2`의 import에 추가한다:
+Add to the imports at `frontend/pages/home/ui/home-config-error.tsx:1-2`:
 
 ```tsx
 // 설정 오류 화면입니다. API 키 또는 제공자 모드가 잘못 설정된 경우 표시됩니다.
@@ -71,32 +71,32 @@ import type { ConfigError } from '~/shared/lib/env-config';
 import { GlassContainer } from '~/shared/ui/glass-container';
 ```
 
-`frontend/pages/home/ui/home-config-error.tsx:13`을 교체한다:
+Replace `frontend/pages/home/ui/home-config-error.tsx:13`:
 
 ```tsx
       <GlassContainer className="w-full max-w-md rounded-xl p-8 shadow-2xl flex flex-col items-center text-center">
 ```
 
-이 div와 짝을 이루는 닫는 태그(`<main>` 바로 앞의 `</div>`, 원본 65번 줄)도 `</GlassContainer>`로 교체한다.
+Also replace this div's matching closing tag (the `</div>` right before `<main>`, original line 65) with `</GlassContainer>`.
 
-원본 25번 줄(`Settings Update Needed`)을 찾아서 교체한다:
+Find and replace original line 25 (`Settings Update Needed`):
 
 ```tsx
           설정 업데이트가 필요합니다
 ```
 
-원본 29-30번 줄(`Your travel concierge needs a quick adjustment. It looks like an API key or location`/`setting is missing.`)을 찾아서 교체한다:
+Find and replace original lines 29-30 (`Your travel concierge needs a quick adjustment. It looks like an API key or location`/`setting is missing.`):
 
 ```tsx
           API 키 또는 위치 설정이 누락된 것 같습니다. 설정을 확인해 주세요.
 ```
 
-- [ ] **Step 4: 테스트 실행해 통과 확인**
+- [ ] **Step 4: Run the test and confirm it passes**
 
 Run: `pnpm exec vitest run tests/home-page.test.tsx`
-Expected: PASS (전체 파일)
+Expected: PASS (whole file)
 
-- [ ] **Step 5: 커밋**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add frontend/pages/home/ui/home-config-error.tsx tests/home-page.test.tsx
@@ -116,7 +116,7 @@ EOF
 
 ---
 
-### Task 2: home-connection-error.tsx — 문구 교체
+### Task 2: home-connection-error.tsx — Copy Replacement
 
 **Files:**
 
@@ -125,12 +125,12 @@ EOF
 
 **Interfaces:**
 
-- Consumes: 없음
-- Produces: `home-page.test.tsx`의 `recoverable-error` 테스트가 참조하는 새 버튼 텍스트 `'다시 시도'`.
+- Consumes: none
+- Produces: the new button text `'다시 시도'` that the `recoverable-error` test in `home-page.test.tsx` references.
 
-- [ ] **Step 1: 실패하는 테스트로 갱신**
+- [ ] **Step 1: Update to a failing test**
 
-`tests/home-page.test.tsx:108-117`을 다음으로 교체한다:
+Replace `tests/home-page.test.tsx:108-117` with the following:
 
 ```tsx
 test('recoverable-error → 다시 시도 버튼을 표시한다', () => {
@@ -143,43 +143,43 @@ test('recoverable-error → 다시 시도 버튼을 표시한다', () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행해 실패 확인**
+- [ ] **Step 2: Run the test and confirm it fails**
 
 Run: `pnpm exec vitest run tests/home-page.test.tsx -t "다시 시도 버튼을 표시한다"`
-Expected: FAIL — 현재 컴포넌트는 여전히 `'Retry Connection'`을 렌더링한다.
+Expected: FAIL — the component still renders `'Retry Connection'`.
 
-- [ ] **Step 3: 컴포넌트 수정**
+- [ ] **Step 3: Modify the component**
 
-`frontend/pages/home/ui/home-connection-error.tsx:41`을 교체한다:
+Replace `frontend/pages/home/ui/home-connection-error.tsx:41`:
 
 ```tsx
           연결이 끊겼습니다
 ```
 
-`frontend/pages/home/ui/home-connection-error.tsx:44`를 교체한다:
+Replace `frontend/pages/home/ui/home-connection-error.tsx:44`:
 
 ```tsx
           날씨 정보를 불러오지 못했습니다. 신호 상태를 확인한 후 다시 시도해 주세요.
 ```
 
-`frontend/pages/home/ui/home-connection-error.tsx:54`를 교체한다:
+Replace `frontend/pages/home/ui/home-connection-error.tsx:54`:
 
 ```tsx
             다시 시도
 ```
 
-`frontend/pages/home/ui/home-connection-error.tsx:69`를 교체한다:
+Replace `frontend/pages/home/ui/home-connection-error.tsx:69`:
 
 ```tsx
           오류 코드: CONNECTION_FAILED
 ```
 
-- [ ] **Step 4: 테스트 실행해 통과 확인**
+- [ ] **Step 4: Run the test and confirm it passes**
 
 Run: `pnpm exec vitest run tests/home-page.test.tsx`
-Expected: PASS (전체 파일)
+Expected: PASS (whole file)
 
-- [ ] **Step 5: 커밋**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add frontend/pages/home/ui/home-connection-error.tsx tests/home-page.test.tsx
@@ -197,21 +197,21 @@ EOF
 
 ---
 
-### Task 3: search-page.tsx — eyebrow 라벨 교체
+### Task 3: search-page.tsx — Eyebrow Label Replacement
 
 **Files:**
 
 - Modify: `frontend/pages/search/ui/search-page.tsx:306`
-- Test: `tests/search-page.test.tsx` (새 테스트 추가)
+- Test: `tests/search-page.test.tsx` (new test added)
 
 **Interfaces:**
 
-- Consumes: 없음
-- Produces: 없음 (다른 태스크가 이 텍스트에 의존하지 않음)
+- Consumes: none
+- Produces: none (no other task depends on this text)
 
-- [ ] **Step 1: 실패하는 테스트 작성**
+- [ ] **Step 1: Write a failing test**
 
-`tests/search-page.test.tsx`의 `describe('search default state — recents and popular', ...)` 블록(550번 줄 근처) 안에 새 테스트를 추가한다:
+Add a new test inside the `describe('search default state — recents and popular', ...)` block (around line 550) in `tests/search-page.test.tsx`:
 
 ```tsx
 test('shows the 대한민국 지역 검색 eyebrow label', async () => {
@@ -221,25 +221,25 @@ test('shows the 대한민국 지역 검색 eyebrow label', async () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행해 실패 확인**
+- [ ] **Step 2: Run the test and confirm it fails**
 
 Run: `pnpm exec vitest run tests/search-page.test.tsx -t "대한민국 지역 검색"`
-Expected: FAIL — 현재 컴포넌트는 `'Korea catalog search'`를 렌더링한다.
+Expected: FAIL — the component renders `'Korea catalog search'`.
 
-- [ ] **Step 3: 컴포넌트 수정**
+- [ ] **Step 3: Modify the component**
 
-`frontend/pages/search/ui/search-page.tsx:306`을 교체한다:
+Replace `frontend/pages/search/ui/search-page.tsx:306`:
 
 ```tsx
                 대한민국 지역 검색
 ```
 
-- [ ] **Step 4: 테스트 실행해 통과 확인**
+- [ ] **Step 4: Run the test and confirm it passes**
 
 Run: `pnpm exec vitest run tests/search-page.test.tsx`
-Expected: PASS (전체 파일)
+Expected: PASS (whole file)
 
-- [ ] **Step 5: 커밋**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add frontend/pages/search/ui/search-page.tsx tests/search-page.test.tsx
@@ -256,7 +256,7 @@ EOF
 
 ---
 
-### Task 4: app/root.tsx — ErrorBoundary 토큰 교체
+### Task 4: app/root.tsx — ErrorBoundary Token Replacement
 
 **Files:**
 
@@ -264,14 +264,14 @@ EOF
 
 **Interfaces:**
 
-- Consumes: `--color-foreground`, `--color-muted-foreground`, `--color-border`, `--color-card`, `--color-card-foreground` (모두 `tokens.css`에 이미 존재)
-- Produces: 없음
+- Consumes: `--color-foreground`, `--color-muted-foreground`, `--color-border`, `--color-card`, `--color-card-foreground` (all already present in `tokens.css`)
+- Produces: none
 
-이 컴포넌트에는 대응하는 유닛 테스트가 없다(전역 React Router `ErrorBoundary`, 에러를 던져야 렌더링됨). Task 8의 수동 시각 검증에서 확인한다.
+This component has no corresponding unit test (it's the global React Router `ErrorBoundary`, which only renders when an error is thrown). Verify it during Task 8's manual visual check.
 
-- [ ] **Step 1: 현재 코드 확인**
+- [ ] **Step 1: Check the current code**
 
-`app/root.tsx:108-121`의 현재 상태:
+Current state of `app/root.tsx:108-121`:
 
 ```tsx
 return (
@@ -290,11 +290,11 @@ return (
 );
 ```
 
-이 `<main>`은 `global.css:45`의 `body { @apply bg-background text-foreground antialiased; }`를 통해 배경을 상속한다. 라이트 모드에서 `background`는 `#fcf9f8`(거의 흰색)이므로 현재의 `text-white`/`text-sky-300`/`text-slate-300`은 실제 저대비 결함이다.
+This `<main>` inherits its background via `body { @apply bg-background text-foreground antialiased; }` in `global.css:45`. In light mode, `background` is `#fcf9f8` (near-white), so the current `text-white`/`text-sky-300`/`text-slate-300` is a genuine low-contrast defect.
 
-- [ ] **Step 2: 토큰으로 교체**
+- [ ] **Step 2: Replace with tokens**
 
-`app/root.tsx:108-121`을 다음으로 교체한다:
+Replace `app/root.tsx:108-121` with the following:
 
 ```tsx
 return (
@@ -313,18 +313,18 @@ return (
 );
 ```
 
-- [ ] **Step 3: 타입체크와 린트 실행**
+- [ ] **Step 3: Run typecheck and lint**
 
 Run: `pnpm typecheck && pnpm lint`
-Expected: 오류 없음
+Expected: no errors
 
-- [ ] **Step 4: 수동 확인 (dev 서버)**
+- [ ] **Step 4: Manual check (dev server)**
 
 Run: `pnpm dev`
 
-브라우저에서 존재하지 않는 라우트(예: `/does-not-exist-xyz`)로 이동해 `ErrorBoundary`가 렌더링되는지 확인한다. 라이트·다크 모드 각각에서 텍스트가 배경과 대비되는지 스크린샷으로 남긴다.
+In the browser, navigate to a nonexistent route (e.g. `/does-not-exist-xyz`) to confirm the `ErrorBoundary` renders. Capture screenshots in both light and dark mode confirming the text contrasts with the background.
 
-- [ ] **Step 5: 커밋**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add app/root.tsx
@@ -344,22 +344,22 @@ EOF
 
 ---
 
-### Task 5: `--color-scrim` 토큰 신설
+### Task 5: Introduce the `--color-scrim` Token
 
 **Files:**
 
 - Modify: `frontend/app/styles/tokens.css:74,122`
 - Modify: `tests/design-tokens.e2e.ts:86-92,162-167`
-- Modify: `docs/skills/design-tokens.md` (Token reference 표)
+- Modify: `docs/skills/design-tokens.md` (Token reference table)
 
 **Interfaces:**
 
-- Consumes: 없음
-- Produces: Tailwind 유틸리티 `bg-scrim` (모든 opacity 접미사와 함께 사용 가능, 예: `bg-scrim/40`) — Task 6이 소비한다.
+- Consumes: none
+- Produces: the Tailwind utility `bg-scrim` (usable with any opacity suffix, e.g. `bg-scrim/40`) — consumed by Task 6.
 
-- [ ] **Step 1: 실패하는 Playwright 테스트 작성**
+- [ ] **Step 1: Write a failing Playwright test**
 
-`tests/design-tokens.e2e.ts:86-92`(라이트 모드 `'tertiary 및 glassmorphism 토큰이 정의된다'` 테스트)를 다음으로 교체한다:
+Replace `tests/design-tokens.e2e.ts:86-92` (the light-mode `'tertiary 및 glassmorphism 토큰이 정의된다'` test) with the following:
 
 ```tsx
 test('tertiary 및 glassmorphism 토큰이 정의된다', async ({ page }) => {
@@ -372,7 +372,7 @@ test('tertiary 및 glassmorphism 토큰이 정의된다', async ({ page }) => {
 });
 ```
 
-`tests/design-tokens.e2e.ts:162-167`(다크 모드 `'어두운 모드 tertiary 및 glassmorphism 토큰이 정의된다'` 테스트)를 다음으로 교체한다:
+Replace `tests/design-tokens.e2e.ts:162-167` (the dark-mode `'어두운 모드 tertiary 및 glassmorphism 토큰이 정의된다'` test) with the following:
 
 ```tsx
 test('어두운 모드 tertiary 및 glassmorphism 토큰이 정의된다', async ({
@@ -384,14 +384,14 @@ test('어두운 모드 tertiary 및 glassmorphism 토큰이 정의된다', async
 });
 ```
 
-- [ ] **Step 2: 테스트 실행해 실패 확인**
+- [ ] **Step 2: Run the test and confirm it fails**
 
 Run: `pnpm exec playwright test tests/design-tokens.e2e.ts --reporter=line`
-Expected: FAIL — `--color-scrim`이 아직 정의되지 않아 빈 문자열을 반환한다.
+Expected: FAIL — `--color-scrim` isn't defined yet, so it returns an empty string.
 
-- [ ] **Step 3: 토큰 정의 추가**
+- [ ] **Step 3: Add the token definition**
 
-`frontend/app/styles/tokens.css:72-75`(라이트 `@theme {}` 블록의 유리형태 절)을 다음으로 교체한다:
+Replace `frontend/app/styles/tokens.css:72-75` (the glassmorphism section of the light `@theme {}` block) with the following:
 
 ```css
   /* 유리형태 기반 색상 */
@@ -401,7 +401,7 @@ Expected: FAIL — `--color-scrim`이 아직 정의되지 않아 빈 문자열�
 }
 ```
 
-`frontend/app/styles/tokens.css:121-123`(다크 `.dark {}` 블록의 유리형태 절)을 다음으로 교체한다:
+Replace `frontend/app/styles/tokens.css:121-123` (the glassmorphism section of the dark `.dark {}` block) with the following:
 
 ```css
 /* 유리형태 기반 색상 */
@@ -409,20 +409,20 @@ Expected: FAIL — `--color-scrim`이 아직 정의되지 않아 빈 문자열�
 --color-scrim: #131313; /* 모달 배경 스크림 — 라이트 모드와 동일, 테마 반전 없음 */
 ```
 
-- [ ] **Step 4: 테스트 실행해 통과 확인**
+- [ ] **Step 4: Run the test and confirm it passes**
 
 Run: `pnpm exec playwright test tests/design-tokens.e2e.ts --reporter=line`
-Expected: PASS (전체 파일)
+Expected: PASS (whole file)
 
-- [ ] **Step 5: 스킬 문서 갱신**
+- [ ] **Step 5: Update the skill doc**
 
-`docs/skills/design-tokens.md`의 Token reference 표에서 `surface-bright` 행 바로 뒤에 새 행을 추가한다:
+Add a new row right after the `surface-bright` row in the Token reference table in `docs/skills/design-tokens.md`:
 
 ```markdown
 | `scrim` | `#131313` | (same) | Modal backdrop dimming — fixed, does not invert |
 ```
 
-- [ ] **Step 6: 커밋**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add frontend/app/styles/tokens.css tests/design-tokens.e2e.ts docs/skills/design-tokens.md
@@ -441,7 +441,7 @@ EOF
 
 ---
 
-### Task 6: 상세 카드 모달 스크림 토큰 적용
+### Task 6: Apply the Scrim Token to Detail-Card Modals
 
 **Files:**
 
@@ -450,42 +450,42 @@ EOF
 
 **Interfaces:**
 
-- Consumes: Task 5가 생성한 `bg-scrim` 유틸리티
-- Produces: 없음
+- Consumes: the `bg-scrim` utility produced by Task 5
+- Produces: none
 
-이 두 컴포넌트는 매일 정상 상세 화면에서 렌더링된다(오류 화면이 아님) — 이슈가 지적한 "매일 렌더링되는" 리스크다. 기존 `tests/detail-dashboard.test.tsx`는 모달 열림/닫힘을 `role="dialog"`로 테스트하지만 배경색 클래스는 단언하지 않으므로 기존 테스트는 그대로 통과해야 한다.
+Both components render on the normal detail screen every day (not an error screen) — the "renders daily" risk the issue calls out. The existing `tests/detail-dashboard.test.tsx` tests modal open/close via `role="dialog"` but doesn't assert on the background-color class, so the existing test should keep passing unchanged.
 
-- [ ] **Step 1: 기존 테스트가 통과함을 먼저 확인 (베이스라인)**
-
-Run: `pnpm exec vitest run tests/detail-dashboard.test.tsx`
-Expected: PASS (변경 전 베이스라인)
-
-- [ ] **Step 2: 컴포넌트 수정**
-
-`frontend/pages/location/ui/detail-aqi-card.tsx:73-76`을 교체한다:
-
-```tsx
-<div className="bg-scrim/40 absolute inset-0" onClick={() => setOpen(false)} />
-```
-
-`frontend/pages/location/ui/detail-uv-card.tsx:60-63`을 교체한다:
-
-```tsx
-<div className="bg-scrim/40 absolute inset-0" onClick={() => setOpen(false)} />
-```
-
-- [ ] **Step 3: 테스트 실행해 여전히 통과함을 확인**
+- [ ] **Step 1: Confirm the existing test passes first (baseline)**
 
 Run: `pnpm exec vitest run tests/detail-dashboard.test.tsx`
-Expected: PASS — 모달 열림/닫힘 동작은 변경되지 않았다.
+Expected: PASS (pre-change baseline)
 
-- [ ] **Step 4: 수동 확인 (dev 서버)**
+- [ ] **Step 2: Modify the components**
+
+Replace `frontend/pages/location/ui/detail-aqi-card.tsx:73-76`:
+
+```tsx
+<div className="absolute inset-0 bg-scrim/40" onClick={() => setOpen(false)} />
+```
+
+Replace `frontend/pages/location/ui/detail-uv-card.tsx:60-63`:
+
+```tsx
+<div className="absolute inset-0 bg-scrim/40" onClick={() => setOpen(false)} />
+```
+
+- [ ] **Step 3: Run the test and confirm it still passes**
+
+Run: `pnpm exec vitest run tests/detail-dashboard.test.tsx`
+Expected: PASS — modal open/close behavior is unchanged.
+
+- [ ] **Step 4: Manual check (dev server)**
 
 Run: `pnpm dev`
 
-detail 페이지에서 AQI·UV 카드의 "상세 보기"를 각각 열어 라이트·다크 모드에서 배경이 자연스럽게 어두워지는지 확인한다.
+On the detail page, open the AQI and UV cards' "상세 보기" each and confirm the backdrop dims naturally in both light and dark mode.
 
-- [ ] **Step 5: 커밋**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add frontend/pages/location/ui/detail-aqi-card.tsx frontend/pages/location/ui/detail-uv-card.tsx
@@ -503,13 +503,13 @@ EOF
 
 ---
 
-### Task 7: 후속 이슈 2건 등록
+### Task 7: File the 2 Follow-Up Issues
 
-**Files:** 없음 (GitHub 이슈만 생성)
+**Files:** none (GitHub issues only)
 
-**Interfaces:** 없음
+**Interfaces:** none
 
-- [ ] **Step 1: MD3 미정의 토큰 갭 이슈 등록**
+- [ ] **Step 1: File the MD3-undefined-tokens gap issue**
 
 Run:
 
@@ -551,9 +551,9 @@ EOF
 )"
 ```
 
-Done-check: 이슈 번호가 생성되고 출력에 표시된다.
+Done-check: an issue number is created and shown in the output.
 
-- [ ] **Step 2: JSX 텍스트 노드 lint 규칙 이슈 등록**
+- [ ] **Step 2: File the JSX-text-node lint-rule issue**
 
 Run:
 
@@ -597,11 +597,11 @@ EOF
 )"
 ```
 
-Done-check: 이슈 번호가 생성되고 출력에 표시된다.
+Done-check: an issue number is created and shown in the output.
 
-- [ ] **Step 3: 이슈 88 본문에 후속 이슈 교차 참조 코멘트 추가**
+- [ ] **Step 3: Add a cross-reference comment on issue 88 for the follow-up issues**
 
-Run (Step 1·2에서 받은 실제 이슈 번호로 `<N>`을 치환한다):
+Run (substitute `<N>` with the actual issue numbers from Steps 1-2):
 
 ```bash
 gh issue comment 88 --repo cgm-16/weatherpane --body "$(cat <<'EOF'
@@ -615,76 +615,76 @@ EOF
 )"
 ```
 
-Done-check: 코멘트가 이슈 88에 표시된다.
+Done-check: the comment appears on issue 88.
 
-이 태스크는 코드 변경이 없으므로 커밋하지 않는다.
+This task makes no code changes, so there's nothing to commit.
 
 ---
 
-### Task 8: 전체 검증 및 PR 준비
+### Task 8: Full Validation and PR Prep
 
-**Files:** 없음 (검증만)
+**Files:** none (validation only)
 
-**Interfaces:** 없음
+**Interfaces:** none
 
-- [ ] **Step 1: 정적 검사**
+- [ ] **Step 1: Static checks**
 
 Run: `pnpm lint && pnpm typecheck`
-Expected: 오류 없음
+Expected: no errors
 
-- [ ] **Step 2: 유닛 테스트**
+- [ ] **Step 2: Unit tests**
 
 Run: `pnpm exec vitest run`
-Expected: 전체 통과 (베이스라인 606개 + Task 3에서 추가한 1개)
+Expected: all pass (606 baseline + 1 added in Task 3)
 
-- [ ] **Step 3: Playwright 스모크**
+- [ ] **Step 3: Playwright smoke**
 
 Run: `pnpm exec playwright test tests/design-tokens.e2e.ts tests/home-page.e2e.ts tests/search-page.e2e.ts --reporter=line`
-Expected: 전체 통과
+Expected: all pass
 
-- [ ] **Step 4: 프로덕션 빌드**
+- [ ] **Step 4: Production build**
 
 Run: `pnpm build`
-Expected: 오류 없음
+Expected: no errors
 
-- [ ] **Step 5: 수동 시각 검증**
+- [ ] **Step 5: Manual visual verification**
 
 Run: `pnpm dev`
 
-다음을 라이트·다크 모드 각각에서 확인하고 스크린샷을 남긴다:
+Confirm the following in both light and dark mode, and capture screenshots:
 
-- config-error 상태 (환경변수를 임시로 비워 재현하거나 `HomeConfigError`를 Storybook/임시 라우트로 직접 렌더링)
-- recoverable-error 상태 (`HomeConnectionError`)
-- `/search` 페이지 eyebrow 라벨
-- detail 페이지 AQI·UV 카드 모달
-- 존재하지 않는 라우트로 이동해 전역 `ErrorBoundary`
+- the config-error state (reproduce by temporarily clearing an env var, or render `HomeConfigError` directly via Storybook/a temporary route)
+- the recoverable-error state (`HomeConnectionError`)
+- the `/search` page eyebrow label
+- the detail page's AQI/UV card modals
+- the global `ErrorBoundary`, by navigating to a nonexistent route
 
 - [ ] **Step 6: `git diff --check`**
 
 Run: `git diff --check main...HEAD`
-Expected: 공백 오류 없음
+Expected: no whitespace errors
 
-- [ ] **Step 7: PR 생성**
+- [ ] **Step 7: Create the PR**
 
-`.github/PULL_REQUEST_TEMPLATE.md`를 사용해 PR을 연다. 다음을 포함한다:
+Open the PR using `.github/PULL_REQUEST_TEMPLATE.md`. Include:
 
-- 이슈 88 링크 (`Closes #88`)
-- 범위 내/범위 외 (스펙 문서의 "비범위" 절 그대로 인용)
-- Task 7에서 등록한 후속 이슈 2건 링크
-- 스펙 정합성: `docs/superpowers/specs/2026-08-06-issue-88-ui-copy-token-cleanup-design.md` 링크
-- 실행한 테스트 목록 (Step 1~4의 정확한 명령)
-- 스크린샷 (Step 5)
-- 롤백 노트: 순수 되돌리기 가능, 데이터/스키마 영향 없음
+- a link to issue 88 (`Closes #88`)
+- in-scope/out-of-scope (quote the spec doc's "비범위" section verbatim)
+- links to the 2 follow-up issues filed in Task 7
+- spec alignment: link to `docs/superpowers/specs/2026-08-06-issue-88-ui-copy-token-cleanup-design.md`
+- the list of tests run (the exact commands from Steps 1-4)
+- screenshots (Step 5)
+- rollback notes: purely revertible, no data/schema impact
 
 ```bash
 gh pr create --repo cgm-16/weatherpane --base main \
   --title "fix(theme): 살아 있는 오류·빈 상태 화면 영문 문구 및 raw Tailwind 색상 정리"
 ```
 
-Done-check: PR이 생성되고 이슈 88을 링크한다.
+Done-check: the PR is created and links issue 88.
 
 ---
 
-## 태스크 순서 요약
+## Task Ordering Summary
 
-Task 1~4는 서로 독립적이며 병렬 실행 가능하다. Task 5는 Task 1~4와 독립적이다. **Task 6은 Task 5 완료 후에만 실행한다** (`bg-scrim` 유틸리티에 의존). Task 7은 Task 1~6 완료 후 발견 사항을 반영해 실행한다. Task 8은 항상 마지막이다.
+Tasks 1-4 are independent of each other and can run in parallel. Task 5 is independent of Tasks 1-4. **Task 6 runs only after Task 5 completes** (it depends on the `bg-scrim` utility). Task 7 runs after Tasks 1-6 complete, reflecting whatever was discovered along the way. Task 8 always runs last.
