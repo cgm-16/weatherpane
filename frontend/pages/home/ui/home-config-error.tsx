@@ -1,5 +1,6 @@
 // 설정 오류 화면입니다. API 키 또는 제공자 모드가 잘못 설정된 경우 표시됩니다.
 import type { ConfigError } from '~/shared/lib/env-config';
+import { GlassContainer } from '~/shared/ui/glass-container';
 
 interface HomeConfigErrorProps {
   error: ConfigError;
@@ -7,10 +8,17 @@ interface HomeConfigErrorProps {
   onRetry?: () => void;
 }
 
-export function HomeConfigError({ error, onOpenSettings, onRetry }: HomeConfigErrorProps) {
+export function HomeConfigError({
+  error,
+  onOpenSettings,
+  onRetry,
+}: HomeConfigErrorProps) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6 bg-background" role="main">
-      <div className="w-full max-w-md rounded-xl bg-white/50 p-8 backdrop-blur-[20px] shadow-2xl flex flex-col items-center text-center">
+    <main
+      className="flex min-h-screen flex-col items-center justify-center bg-background px-6"
+      role="main"
+    >
+      <GlassContainer className="flex w-full max-w-md flex-col items-center rounded-xl p-8 text-center shadow-2xl">
         {/* 아이콘 */}
         <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
           <span
@@ -21,23 +29,28 @@ export function HomeConfigError({ error, onOpenSettings, onRetry }: HomeConfigEr
           </span>
         </div>
 
-        <h2 className="font-headline mb-3 text-3xl font-extrabold tracking-tight text-on-surface">
-          Settings Update Needed
+        <h2 className="font-headline text-on-surface mb-3 text-3xl font-extrabold tracking-tight">
+          설정 업데이트가 필요합니다
         </h2>
-        <p className="font-body mb-8 px-4 leading-relaxed text-on-surface-variant">
-          Your travel concierge needs a quick adjustment. It looks like an API key or location
-          setting is missing.
+        <p className="text-on-surface-variant mb-8 px-4 font-body leading-relaxed">
+          API 키 또는 위치 설정이 누락된 것 같습니다. 설정을 확인해 주세요.
         </p>
 
         {/* 오류 상세 */}
         <div className="mb-8 w-full space-y-3">
           <div className="flex items-center gap-4 rounded-lg bg-surface-container-highest/50 p-4 backdrop-blur-md">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-container-lowest">
-              <span className="material-symbols-outlined text-on-surface-variant">key</span>
+            <div className="bg-surface-container-lowest flex h-10 w-10 items-center justify-center rounded-full">
+              <span className="material-symbols-outlined text-on-surface-variant">
+                key
+              </span>
             </div>
             <div className="flex-1 text-left">
-              <p className="font-headline text-sm font-bold text-on-surface">{error.field}</p>
-              <p className="font-body text-xs text-on-surface-variant">{error.message}</p>
+              <p className="font-headline text-on-surface text-sm font-bold">
+                {error.field}
+              </p>
+              <p className="text-on-surface-variant font-body text-xs">
+                {error.message}
+              </p>
             </div>
           </div>
         </div>
@@ -47,7 +60,7 @@ export function HomeConfigError({ error, onOpenSettings, onRetry }: HomeConfigEr
             <button
               type="button"
               onClick={onOpenSettings}
-              className="h-14 w-full rounded-sm bg-primary font-headline font-bold text-on-primary shadow-lg transition-all hover:bg-primary-container active:scale-95"
+              className="font-headline text-on-primary hover:bg-primary-container h-14 w-full rounded-sm bg-primary font-bold shadow-lg transition-all active:scale-95"
             >
               Open Settings
             </button>
@@ -56,13 +69,13 @@ export function HomeConfigError({ error, onOpenSettings, onRetry }: HomeConfigEr
             <button
               type="button"
               onClick={onRetry}
-              className="h-14 w-full rounded-sm bg-secondary-container font-headline font-bold text-on-secondary-fixed transition-all hover:bg-surface-container-highest active:scale-95"
+              className="bg-secondary-container font-headline text-on-secondary-fixed h-14 w-full rounded-sm font-bold transition-all hover:bg-surface-container-highest active:scale-95"
             >
               Try Again
             </button>
           )}
         </div>
-      </div>
+      </GlassContainer>
     </main>
   );
 }
