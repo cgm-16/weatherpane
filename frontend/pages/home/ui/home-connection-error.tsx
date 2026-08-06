@@ -5,14 +5,20 @@ interface HomeConnectionErrorProps {
   onGoToSavedPlaces?: () => void;
 }
 
-export function HomeConnectionError({ onRetry, onGoToSavedPlaces }: HomeConnectionErrorProps) {
+export function HomeConnectionError({
+  onRetry,
+  onGoToSavedPlaces,
+}: HomeConnectionErrorProps) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6 bg-background" role="main">
-      <div className="w-full max-w-md rounded-lg bg-surface-container-highest/50 p-8 backdrop-blur-[20px] flex flex-col items-center text-center">
+    <main
+      className="flex min-h-screen flex-col items-center justify-center bg-background px-6"
+      role="main"
+    >
+      <div className="flex w-full max-w-md flex-col items-center rounded-lg bg-surface-container-highest/50 p-8 text-center backdrop-blur-[20px]">
         {/* 오프라인 표시 */}
-        <div className="mb-10 flex items-center gap-2 rounded-full bg-surface-container-high/40 px-4 py-2 backdrop-blur-md">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-outline-variant" />
-          <span className="font-headline text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">
+        <div className="bg-surface-container-high/40 mb-10 flex items-center gap-2 rounded-full px-4 py-2 backdrop-blur-md">
+          <span className="bg-outline-variant h-2 w-2 animate-pulse rounded-full" />
+          <span className="font-headline text-on-surface-variant text-[11px] font-bold tracking-widest uppercase">
             오프라인 상태
           </span>
         </div>
@@ -27,7 +33,7 @@ export function HomeConnectionError({ onRetry, onGoToSavedPlaces }: HomeConnecti
               signal_disconnected
             </span>
           </div>
-          <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-lowest shadow-lg">
+          <div className="bg-surface-container-lowest absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full shadow-lg">
             <span
               className="material-symbols-outlined text-xl text-primary"
               style={{ fontVariationSettings: "'FILL' 1" }}
@@ -37,36 +43,39 @@ export function HomeConnectionError({ onRetry, onGoToSavedPlaces }: HomeConnecti
           </div>
         </div>
 
-        <h2 className="font-headline mb-4 text-3xl font-extrabold leading-tight text-on-surface">
-          Connection Interrupted
+        <h2 className="font-headline text-on-surface mb-4 text-3xl leading-tight font-extrabold">
+          연결이 끊겼습니다
         </h2>
-        <p className="font-body mb-10 px-2 text-base leading-relaxed text-on-surface-variant">
-          We&apos;re having trouble reaching the horizon. Please check your signal and try again.
+        <p className="text-on-surface-variant mb-10 px-2 font-body text-base leading-relaxed">
+          날씨 정보를 불러오지 못했습니다. 신호 상태를 확인한 후 다시 시도해
+          주세요.
         </p>
 
         <div className="w-full space-y-4">
           <button
             type="button"
             onClick={onRetry}
-            className="flex w-full items-center justify-center gap-2 rounded-sm bg-primary px-6 py-5 font-headline font-bold text-on-primary shadow-lg transition-all hover:bg-primary-container active:scale-95"
+            className="font-headline text-on-primary hover:bg-primary-container flex w-full items-center justify-center gap-2 rounded-sm bg-primary px-6 py-5 font-bold shadow-lg transition-all active:scale-95"
           >
             <span className="material-symbols-outlined text-xl">refresh</span>
-            Retry Connection
+            다시 시도
           </button>
           {onGoToSavedPlaces && (
             <button
               type="button"
               onClick={onGoToSavedPlaces}
-              className="flex w-full items-center justify-center gap-2 rounded-sm bg-secondary-container px-6 py-4 font-headline font-semibold text-on-secondary-fixed transition-all hover:bg-surface-container-highest active:scale-95"
+              className="bg-secondary-container font-headline text-on-secondary-fixed flex w-full items-center justify-center gap-2 rounded-sm px-6 py-4 font-semibold transition-all hover:bg-surface-container-highest active:scale-95"
             >
-              <span className="material-symbols-outlined text-xl">bookmarks</span>
+              <span className="material-symbols-outlined text-xl">
+                bookmarks
+              </span>
               Go to Saved Places
             </button>
           )}
         </div>
 
-        <p className="mt-8 font-label text-xs font-medium uppercase tracking-widest text-on-surface-variant/60">
-          Error Code: CONNECTION_FAILED
+        <p className="font-label text-on-surface-variant/60 mt-8 text-xs font-medium tracking-widest uppercase">
+          오류 코드: CONNECTION_FAILED
         </p>
       </div>
     </main>
