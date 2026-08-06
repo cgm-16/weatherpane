@@ -630,4 +630,10 @@ describe('search default state — recents and popular', () => {
     expect(parsed.data.source).toBe('recent');
     expect(parsed.data.location.catalogLocationId).toBe('5f5def784f91');
   });
+
+  test('shows the 대한민국 지역 검색 eyebrow label', async () => {
+    renderSearchRoute();
+
+    expect(await screen.findByText('대한민국 지역 검색')).toBeVisible();
+  });
 });
