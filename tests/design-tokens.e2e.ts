@@ -89,6 +89,7 @@ test.describe('디자인 토큰 — Haet-Ssal (밝은 모드)', () => {
       '#ffffff'
     );
     expect(await getCssVar(page, '--color-surface-bright')).toBe('#f0eded');
+    expect(await getCssVar(page, '--color-scrim')).toBe('#131313');
   });
 });
 
@@ -164,5 +165,6 @@ test.describe('디자인 토큰 — Dal-Bit Night (어두운 모드)', () => {
   }) => {
     expect(await getCssVar(page, '--color-tertiary')).toBe('#62dca3');
     expect(await getCssVar(page, '--color-surface-bright')).toBe('#393939');
+    expect(await getCssVar(page, '--color-scrim')).toBe('#131313');
   });
 });

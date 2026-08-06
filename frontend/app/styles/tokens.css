@@ -72,6 +72,7 @@
   /* 유리형태 기반 색상 */
   --color-surface-container-highest: #ffffff; /* 밝은 모드 glass base */
   --color-surface-bright: #f0eded; /* light fallback (unused) */
+  --color-scrim: #131313; /* 모달 배경 스크림 — 테마 반전 없이 고정, 다크 모드 background 값 재사용 */
 }
 
 /* ── Dal-Bit Night 어두운 모드 오버라이드 ──────────────────────── */
@@ -120,6 +121,7 @@
 
   /* 유리형태 기반 색상 */
   --color-surface-bright: #393939; /* surface_bright */
+  --color-scrim: #131313; /* 모달 배경 스크림 — 라이트 모드와 동일, 테마 반전 없음 */
 
   /* Dal-Bit Night: 본문도 Plus Jakarta Sans로 통일 */
   --font-body: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
