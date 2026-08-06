@@ -90,7 +90,7 @@ describe('HomePage 상태별 렌더링', () => {
     expect(screen.getByText(/불러오는 중/)).toBeInTheDocument();
   });
 
-  test('config-error → Settings Update Needed 제목을 표시한다', () => {
+  test('config-error → 설정 업데이트가 필요합니다 제목을 표시한다', () => {
     vi.mocked(useHomeBootstrap).mockReturnValue({
       kind: 'config-error',
       error: {
@@ -101,7 +101,7 @@ describe('HomePage 상태별 렌더링', () => {
     });
     renderPage();
     expect(
-      screen.getByRole('heading', { name: 'Settings Update Needed' })
+      screen.getByRole('heading', { name: '설정 업데이트가 필요합니다' })
     ).toBeInTheDocument();
   });
 
