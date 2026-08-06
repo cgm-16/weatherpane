@@ -105,14 +105,14 @@ describe('HomePage 상태별 렌더링', () => {
     ).toBeInTheDocument();
   });
 
-  test('recoverable-error → Retry Connection 버튼을 표시한다', () => {
+  test('recoverable-error → 다시 시도 버튼을 표시한다', () => {
     vi.mocked(useHomeBootstrap).mockReturnValue({
       kind: 'recoverable-error',
       location: loc,
     });
     renderPage();
     expect(
-      screen.getByRole('button', { name: /Retry Connection/ })
+      screen.getByRole('button', { name: /다시 시도/ })
     ).toBeInTheDocument();
   });
 
