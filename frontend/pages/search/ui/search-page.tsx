@@ -303,7 +303,7 @@ export function SearchPage() {
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)] lg:items-end">
             <div className="space-y-3">
               <p className="text-sm font-medium tracking-[0.24em] text-muted-foreground uppercase">
-                Korea catalog search
+                대한민국 지역 검색
               </p>
               <div className="space-y-2">
                 <h1
