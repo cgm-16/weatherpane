@@ -107,13 +107,13 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center gap-4 px-6 py-16">
-      <p className="text-sm font-medium tracking-[0.3em] text-sky-300 uppercase">
+      <p className="text-sm font-medium tracking-[0.3em] text-muted-foreground uppercase">
         Weatherpane
       </p>
-      <h1 className="text-3xl font-semibold text-white">{message}</h1>
-      <p className="text-base text-slate-300">{details}</p>
+      <h1 className="text-3xl font-semibold text-foreground">{message}</h1>
+      <p className="text-base text-muted-foreground">{details}</p>
       {stack && (
-        <pre className="w-full overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/80 p-4 text-sm text-slate-200">
+        <pre className="w-full overflow-x-auto rounded-2xl border border-border bg-card p-4 text-sm text-card-foreground">
           <code>{stack}</code>
         </pre>
       )}
