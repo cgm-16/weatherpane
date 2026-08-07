@@ -4,6 +4,9 @@
 // ("Server-only module referenced by client").
 // 저장소 전체에서 OPENWEATHER_API_KEY를 읽는 유일한 지점이다.
 
+// 업스트림(OpenWeather) 응답이 느리거나 멈췄을 때 무한 대기를 막는 타임아웃.
+const UPSTREAM_TIMEOUT_MS = 5_000;
+
 export async function proxyOpenWeatherRequest(
   upstreamUrl: URL,
   errorMessage: string
@@ -25,34 +28,40 @@ export async function proxyOpenWeatherRequest(
   const requestUrl = new URL(upstreamUrl);
   requestUrl.searchParams.set('appid', apiKey);
 
-  let response: Response;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
   try {
-    response = await fetch(requestUrl.toString());
+    const response = await fetch(requestUrl.toString(), {
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        // 업스트림 429 = OpenWeather 쿼터/요청 제한 소진 신호. Vercel Logs에서 관측 가능.
+        console.warn(
+          '[openweather-proxy] upstream returned 429 — quota/rate limit reached'
+        );
+      }
+      return Response.json(
+        {
+          code: 'INVALID_PROVIDER_RESPONSE',
+          message: `${errorMessage}: ${response.status}`,
+        },
+        { status: response.status }
+      );
+    }
+
+    // response.json()도 같은 timeout/finally 범위 안에 두어야 본문 스트림이 멈춰도
+    // 무한 대기하지 않는다.
+    const data: unknown = await response.json();
+    return Response.json(data);
   } catch {
+    // 타임아웃(abort)·네트워크 오류·JSON 파싱 실패를 모두 동일 경로로 매핑한다.
     return Response.json(
       { code: 'INVALID_PROVIDER_RESPONSE', message: errorMessage },
       { status: 502 }
     );
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  if (!response.ok) {
-    return Response.json(
-      {
-        code: 'INVALID_PROVIDER_RESPONSE',
-        message: `${errorMessage}: ${response.status}`,
-      },
-      { status: response.status }
-    );
-  }
-
-  let data: unknown;
-  try {
-    data = await response.json();
-  } catch {
-    return Response.json(
-      { code: 'INVALID_PROVIDER_RESPONSE', message: errorMessage },
-      { status: 502 }
-    );
-  }
-  return Response.json(data);
 }
