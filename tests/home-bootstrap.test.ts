@@ -199,6 +199,7 @@ describe('useHomeBootstrap', () => {
         },
       },
       today: { minC: 10, maxC: 22 },
+      daily: [],
       hourly: [],
       source: { provider: 'mock' },
     };
@@ -240,6 +241,7 @@ describe('useHomeBootstrap', () => {
         },
       },
       today: { minC: 10, maxC: 22 },
+      daily: [],
       hourly: [],
       source: { provider: 'mock' },
     };
@@ -285,6 +287,7 @@ describe('useHomeBootstrap', () => {
         },
       },
       today: { minC: 10, maxC: 22 },
+      daily: [],
       hourly: [],
       source: { provider: 'mock' },
     };
@@ -424,6 +427,7 @@ describe('useHomeBootstrap', () => {
           },
         },
         today: { minC: 10, maxC: 22 },
+        daily: [],
         hourly: [],
         source: { provider: 'mock' },
       } as CoreWeather)
@@ -457,6 +461,7 @@ describe('useHomeBootstrap', () => {
           },
         },
         today: { minC: 10, maxC: 22 },
+        daily: [],
         hourly: [],
         source: { provider: 'mock' },
       } as CoreWeather)

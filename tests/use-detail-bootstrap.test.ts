@@ -146,6 +146,7 @@ const weather: CoreWeather = {
     },
   },
   today: { minC: 10, maxC: 22 },
+  daily: [],
   hourly: [],
   source: { provider: 'mock' },
 };

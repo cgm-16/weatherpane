@@ -101,6 +101,7 @@ const freshWeather: CoreWeather = {
     },
   },
   today: { minC: 18, maxC: 28 },
+  daily: [],
   hourly: [],
   source: { provider: 'kma' },
 };
