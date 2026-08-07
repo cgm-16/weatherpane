@@ -52,7 +52,7 @@ type ColdLoadStatus = 'idle' | 'resolving' | 'failed';
 export function useDetailBootstrap(
   resolvedLocationId: string
 ): DetailBootstrapState {
-  const { activeLocation, setActiveLocation } = useActiveLocation();
+  const { activeLocation, isHydrated, setActiveLocation } = useActiveLocation();
   const { geocode } = useWeatherProvider();
   const [coldLoadStatus, setColdLoadStatus] = useState<ColdLoadStatus>('idle');
 
@@ -67,7 +67,10 @@ export function useDetailBootstrap(
       : null;
 
   // activeLocation이 없을 때 카탈로그에서 위치를 자동으로 해결합니다 (북마크 / 딥링크 지원).
-  const needsColdLoad = !isUnsupported && activeLocation === null;
+  // isHydrated 없이는 activeLocation === null이 "위치 없음"과 "storage 동기화 전"을
+  // 구분하지 못해, 이미 저장된 위치가 있는 새로고침에서도 불필요한 카탈로그 재조회 및
+  // geocode 재호출이 발생합니다. isHydrated로 그 두 상태를 구분합니다.
+  const needsColdLoad = !isUnsupported && isHydrated && activeLocation === null;
 
   useEffect(() => {
     if (!needsColdLoad || coldLoadStatus !== 'idle') return;

@@ -64,11 +64,13 @@ const activeResolved = {
 
 const noCtx = {
   activeLocation: null,
+  isHydrated: true,
   setActiveLocation: vi.fn(),
   clearActiveLocation: vi.fn(),
 };
 const resolvedCtx = {
   activeLocation: activeResolved,
+  isHydrated: true,
   setActiveLocation: vi.fn(),
   clearActiveLocation: vi.fn(),
 };

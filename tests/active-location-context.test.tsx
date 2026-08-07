@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { describe, expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import React, { createElement } from 'react';
+import React from 'react';
 import { renderToString } from 'react-dom/server';
 import {
   ActiveLocationProvider,
@@ -43,13 +43,6 @@ function Consumer() {
       <button onClick={() => clearActiveLocation()}>clear</button>
     </div>
   );
-}
-
-// renderToString 테스트 전용 컴포넌트. 모듈 최상위에 정의해야 한다
-// (eslint: component-hook-factories).
-function ActiveLocationProbe() {
-  const { activeLocation: loc } = useActiveLocation();
-  return createElement('span', null, loc ? loc.location.name : 'none');
 }
 
 describe('ActiveLocationContext', () => {
@@ -108,9 +101,10 @@ describe('ActiveLocationContext', () => {
     createActiveLocationRepository({ storage }).set(activeLocation);
     const html = renderToString(
       <ActiveLocationProvider storage={storage}>
-        <ActiveLocationProbe />
+        <Consumer />
       </ActiveLocationProvider>
     );
     expect(html).toContain('none');
+    expect(html).not.toContain('서울');
   });
 });
