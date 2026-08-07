@@ -124,6 +124,7 @@ function setupFavorites(favs: FavoriteLocation[] = [seoulFav, busanFav]) {
     updateNickname: mockUpdateNickname,
     reorderFavorites: mockReorderFavorites,
     atMaxFavorites: false,
+    isHydrated: true,
   });
 }
 

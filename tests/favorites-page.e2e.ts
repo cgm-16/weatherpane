@@ -57,14 +57,6 @@ test.describe('Favorites page', () => {
   });
 
   test.describe('저장된 즐겨찾기가 있을 때', () => {
-    // #92: 즐겨찾기 목록을 클라이언트에서만 localStorage로부터 읽는 기존 하이드레이션 버그.
-    // localStorage를 미리 심어 즐겨찾기를 렌더링하는 테스트에서만 재현된다.
-    // pattern: 편집 버튼의 핸들러 이름 handleEnterEdit가 서버·클라이언트 간 diff에
-    // 남는 #92 고유 서명이다.
-    test.use({
-      knownHydrationBug: { issue: '#92', pattern: 'handleEnterEdit' },
-    });
-
     test('renders a saved location after seeding localStorage', async ({
       page,
     }) => {
@@ -111,12 +103,6 @@ test.describe('Favorites page', () => {
 });
 
 test.describe('Favorites page — 편집/정렬 모드', () => {
-  // #92: 즐겨찾기 목록을 클라이언트에서만 localStorage로부터 읽는 기존 하이드레이션 버그.
-  // 이 describe 블록의 모든 테스트가 localStorage에 즐겨찾기를 미리 심어 재현한다.
-  // pattern: 편집 버튼의 핸들러 이름 handleEnterEdit가 서버·클라이언트 간 diff에
-  // 남는 #92 고유 서명이다.
-  test.use({ knownHydrationBug: { issue: '#92', pattern: 'handleEnterEdit' } });
-
   test('편집 button appears when favorites exist', async ({ page }) => {
     await page.addInitScript(
       ({ key, value }) => localStorage.setItem(key, value),

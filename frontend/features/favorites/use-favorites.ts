@@ -20,10 +20,22 @@ export interface UndoEntry {
 // 현재 호출 지점(홈, 상세, 즐겨찾기)은 각각 다른 라우트에 마운트되므로 동시 충돌이 없습니다.
 // 동시 마운트가 필요해지면 컨텍스트 또는 외부 상태로 교체해야 합니다.
 export function useFavorites() {
-  const [favorites, setFavorites] = useState<FavoriteLocation[]>(() =>
-    createFavoritesRepository().getAll()
-  );
+  // 초기값은 SSR과 클라이언트가 일치하도록 빈 배열로 고정하고,
+  // 마운트 후 useEffect에서 storage의 실제 값을 동기화한다.
+  const [favorites, setFavorites] = useState<FavoriteLocation[]>([]);
   const [undoEntry, setUndoEntry] = useState<UndoEntry | null>(null);
+  // storage 동기화 useEffect가 한 번 실행되었는지 여부.
+  // favorites === []는 "즐겨찾기 없음"과 "아직 동기화 전"을 구분하지 못하므로,
+  // 동기화 전에 add/remove가 발생해 storage를 빈 배열 기반으로 덮어쓰지 않도록
+  // 소비자가 이 값으로 변경 액션을 막아야 한다.
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line @eslint-react/set-state-in-effect -- 마운트 시 storage 값을 한 번 동기화하는 것이 의도이므로 setState 호출은 정상이다
+    setFavorites(createFavoritesRepository().getAll());
+    // eslint-disable-next-line @eslint-react/set-state-in-effect -- 위와 동일한 이유로 마운트 시 1회 호출은 정상이다
+    setIsHydrated(true);
+  }, []);
 
   // 5초 후 undo 항목 만료
   useEffect(() => {
@@ -101,6 +113,7 @@ export function useFavorites() {
 
   return {
     favorites,
+    isHydrated,
     isFavorite,
     addFavorite,
     removeFavorite,
