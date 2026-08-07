@@ -112,8 +112,21 @@ describe('buildWeatherTextMappingInput', () => {
 
 describe('normalizeOpenWeatherCoreWeatherResponse — daily', () => {
   test('daily 배열을 최대 8일까지 정규화한다', () => {
+    // 픽스처가 정확히 8개면 slice(0, 8)를 지워도 이 테스트가 통과하므로,
+    // 9번째 항목을 추가해 상한이 실제로 적용되는지 검증한다.
+    const payloadWithNineDailyEntries = {
+      ...mockOpenWeatherCoreWeatherFixture,
+      daily: [
+        ...mockOpenWeatherCoreWeatherFixture.daily,
+        {
+          ...mockOpenWeatherCoreWeatherFixture.daily[0],
+          dt: mockOpenWeatherCoreWeatherFixture.daily[0].dt + 8 * 24 * 60 * 60,
+        },
+      ],
+    };
+
     const weather = normalizeOpenWeatherCoreWeatherResponse(
-      mockOpenWeatherCoreWeatherFixture,
+      payloadWithNineDailyEntries,
       resolvedLocation
     );
 
