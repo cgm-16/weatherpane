@@ -4,6 +4,7 @@ import { proxyOpenWeatherRequest } from '../frontend/shared/api/openweather-prox
 
 describe('proxyOpenWeatherRequest', () => {
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
@@ -120,5 +121,49 @@ describe('proxyOpenWeatherRequest', () => {
     );
 
     expect(callerUrl.searchParams.has('appid')).toBe(false);
+  });
+
+  test('업스트림 응답이 타임아웃되면 502 INVALID_PROVIDER_RESPONSE를 반환한다', async () => {
+    vi.useFakeTimers();
+    vi.stubEnv('OPENWEATHER_API_KEY', 'test-key');
+    // signal.abort 시 reject하는 fetch 목 — 실제 대기 없이 타임아웃을 시뮬레이션한다.
+    vi.spyOn(globalThis, 'fetch').mockImplementationOnce(
+      (_url, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          (init as RequestInit)?.signal?.addEventListener('abort', () => {
+            reject(
+              new DOMException('The operation was aborted.', 'AbortError')
+            );
+          });
+        })
+    );
+
+    const promise = proxyOpenWeatherRequest(
+      new URL('https://api.openweathermap.org/data/3.0/onecall'),
+      '날씨 API 네트워크 오류가 발생했습니다'
+    );
+    await vi.advanceTimersByTimeAsync(5_000);
+    const response = await promise;
+
+    expect(response.status).toBe(502);
+    const body = await response.json();
+    expect(body.code).toBe('INVALID_PROVIDER_RESPONSE');
+  });
+
+  test('업스트림이 429를 반환하면 경고 로그를 남기고 상태를 그대로 전달한다', async () => {
+    vi.stubEnv('OPENWEATHER_API_KEY', 'test-key');
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('Too Many Requests', { status: 429 })
+    );
+
+    const response = await proxyOpenWeatherRequest(
+      new URL('https://api.openweathermap.org/data/3.0/onecall'),
+      '날씨 API 네트워크 오류가 발생했습니다'
+    );
+
+    expect(response.status).toBe(429);
+    expect((await response.json()).code).toBe('INVALID_PROVIDER_RESPONSE');
+    expect(warnSpy).toHaveBeenCalled();
   });
 });
