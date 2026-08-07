@@ -16,18 +16,23 @@ function conditionIcon(entry: CoreWeatherDailyEntry): string {
   return 'thermostat';
 }
 
-// 첫 번째 항목(index 0)은 날짜 비교 없이 위치 기준으로 "오늘"로 표시한다 —
-// HourlyStrip이 index 0을 날짜 계산 없이 "지금"으로 다루는 방식과 동일하다.
-function formatDay(
-  entry: CoreWeatherDailyEntry,
-  index: number,
-  timeZone: string
-): string {
-  if (index === 0) return '오늘';
+// timeZone 기준 캘린더 날짜를 YYYY-MM-DD로 반환한다 — en-CA 로케일이 이 형식을 그대로 제공한다.
+function toDateKey(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone }).format(date);
+}
+
+// entry.date가 timeZone 기준 오늘과 같을 때만 "오늘"로 표시한다. 위치(index 0)만
+// 보고 판단하면, 24시간까지 유효한 스냅샷이 자정을 넘겼을 때 어제 날짜를 "오늘"로
+// 잘못 표시할 수 있다.
+function formatDay(entry: CoreWeatherDailyEntry, timeZone: string): string {
+  const entryDate = new Date(entry.date);
+  if (toDateKey(entryDate, timeZone) === toDateKey(new Date(), timeZone)) {
+    return '오늘';
+  }
   return new Intl.DateTimeFormat('ko-KR', {
     weekday: 'short',
     timeZone,
-  }).format(new Date(entry.date));
+  }).format(entryDate);
 }
 
 interface DailyStripProps {
@@ -51,16 +56,20 @@ export function DailyStrip({
       role="list"
       aria-label="일별 날씨 예보"
     >
-      {entries.map((entry, index) => (
+      {entries.map((entry) => (
         <li
           key={entry.date}
           role="listitem"
           className="flex min-w-[60px] flex-shrink-0 flex-col items-center gap-1 rounded-[--radius-md] bg-card px-3 py-3"
         >
           <span className="font-body text-xs text-muted-foreground">
-            {formatDay(entry, index, timeZone)}
+            {formatDay(entry, timeZone)}
           </span>
-          <span className="material-symbols-outlined text-[20px] text-foreground">
+          <span
+            role="img"
+            aria-label={entry.condition.text}
+            className="material-symbols-outlined text-[20px] text-foreground"
+          >
             {conditionIcon(entry)}
           </span>
           <span className="font-body text-sm font-semibold text-foreground">
