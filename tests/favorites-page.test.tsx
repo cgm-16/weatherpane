@@ -509,6 +509,7 @@ describe('FavoritesPage', () => {
       addFavorite: vi.fn(),
       removeFavorite: vi.fn(),
       atMaxFavorites: false,
+      isHydrated: true,
       updateNickname: vi.fn(),
       reorderFavorites: vi.fn(),
     });
@@ -541,6 +542,7 @@ describe('FavoritesPage', () => {
       addFavorite: vi.fn(),
       removeFavorite: vi.fn(),
       atMaxFavorites: false,
+      isHydrated: true,
       updateNickname: vi.fn(),
       reorderFavorites: vi.fn(),
     });
@@ -557,6 +559,7 @@ describe('FavoritesPage', () => {
       addFavorite: vi.fn(),
       removeFavorite: vi.fn(),
       atMaxFavorites: false,
+      isHydrated: true,
       updateNickname: vi.fn(),
       reorderFavorites: vi.fn(),
     });
@@ -575,6 +578,7 @@ describe('FavoritesPage', () => {
       addFavorite: vi.fn(),
       removeFavorite: vi.fn(),
       atMaxFavorites: false,
+      isHydrated: true,
       updateNickname: vi.fn(),
       reorderFavorites: vi.fn(),
     });
@@ -594,6 +598,7 @@ describe('FavoritesPage', () => {
       addFavorite: vi.fn(),
       removeFavorite: vi.fn(),
       atMaxFavorites: false,
+      isHydrated: true,
       updateNickname: vi.fn(),
       reorderFavorites: vi.fn(),
     });
@@ -614,6 +619,7 @@ describe('FavoritesPage', () => {
       addFavorite: vi.fn(),
       removeFavorite: vi.fn(),
       atMaxFavorites: false,
+      isHydrated: true,
       updateNickname: vi.fn(),
       reorderFavorites: vi.fn(),
     });
