@@ -173,11 +173,28 @@ vercel firewall publish --yes
 
 ## 롤백
 
-- 규칙 비활성화: `vercel firewall rules disable "Rate limit OpenWeather proxy"`
-- 또는 강제를 풀고 관측만: `--action log`(= `--rate-limit-action log`)로 되돌린다.
-- **지속(duration) 액션은 롤아웃 중 사용하지 않는다.** 롤아웃 단계에서는 log 또는
-  창 단위 rate_limit만 쓰고, 차단을 일정 시간 유지하는 duration 액션은 오탐 시
-  피해가 커지므로 배제한다.
+`--action`과 `--rate-limit-action`은 **서로 다른 플래그**이며 효과가 다르다. 혼동하지
+않는다.
+
+- `--action`은 **규칙 자체의 액션**이다(스테이지 1 명령에서 `--action rate_limit`).
+  이를 `--action log`로 바꾸면 규칙이 rate-limit 카운터가 **아예 없는** 순수 로그
+  규칙으로 바뀐다 — 스로틀링이 사라진다.
+- `--rate-limit-action`은 **창 단위 한도를 초과했을 때의 동작**이다.
+  `--rate-limit-action log`는 카운터는 그대로 돌리되 차단 대신 로그만 남긴다(관측 전용).
+
+따라서 롤백 경로는 두 가지이며, 목적에 맞게 구분해서 쓴다.
+
+1. **규칙 완전 제거:**
+   `vercel firewall rules disable "Rate limit OpenWeather proxy"` — 이후 Ori가
+   `vercel firewall publish`를 실행한다.
+2. **관측 전용(카운터 유지, 차단만 중지):** 규칙을 `--rate-limit-action log`로
+   편집한다. 예:
+   `vercel firewall rules edit "Rate limit OpenWeather proxy" --rate-limit-action log --yes`
+   — 이후 Ori가 `vercel firewall publish`를 실행한다.
+
+**지속(duration) 액션은 롤아웃 중 사용하지 않는다.** 롤아웃 단계에서는 log 또는
+창 단위 rate_limit만 쓰고, 차단을 일정 시간 유지하는 duration 액션은 오탐 시
+피해가 커지므로 배제한다.
 
 ## 알려진 한계
 
