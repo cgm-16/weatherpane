@@ -3,6 +3,7 @@ import { describe, expect, test, vi, afterEach } from 'vitest';
 import type { ResolvedLocation } from '../frontend/entities/location/model/types';
 import { mockWeatherProvider } from '../frontend/shared/api/mock-weather-provider';
 import { realWeatherProvider } from '../frontend/shared/api/real-weather-provider';
+import { roundCoordinate } from '../frontend/shared/lib/round-coordinate';
 
 const resolvedLocation: ResolvedLocation = {
   kind: 'resolved',
@@ -136,6 +137,8 @@ describe('realWeatherProvider', () => {
   describe('getCoreWeather', () => {
     afterEach(() => {
       vi.restoreAllMocks();
+      // 타임아웃 테스트가 실패로 중단돼도 가짜 타이머가 다른 테스트로 누수되지 않도록 복원한다.
+      vi.useRealTimers();
     });
 
     test('프록시가 PROVIDER_NOT_IMPLEMENTED를 반환하면 동일한 코드로 오류를 발생시킨다', async () => {
@@ -234,12 +237,36 @@ describe('realWeatherProvider', () => {
       );
       expect(calledUrl.pathname).toBe('/v1/weather/core');
       expect(calledUrl.searchParams.get('lat')).toBe(
-        String(resolvedLocation.latitude)
+        String(roundCoordinate(resolvedLocation.latitude))
       );
       expect(calledUrl.searchParams.get('lon')).toBe(
-        String(resolvedLocation.longitude)
+        String(roundCoordinate(resolvedLocation.longitude))
       );
       expect(calledUrl.searchParams.has('appid')).toBe(false);
+    });
+
+    test('프록시 응답이 타임아웃되면 INVALID_PROVIDER_RESPONSE 오류를 발생시킨다', async () => {
+      vi.useFakeTimers();
+      vi.spyOn(globalThis, 'fetch').mockImplementationOnce(
+        (_url, init) =>
+          new Promise<Response>((_resolve, reject) => {
+            (init as RequestInit)?.signal?.addEventListener('abort', () => {
+              reject(
+                new DOMException('The operation was aborted.', 'AbortError')
+              );
+            });
+          })
+      );
+
+      const promise = realWeatherProvider.getCoreWeather(resolvedLocation);
+      const expectation = expect(promise).rejects.toMatchObject({
+        name: 'WeatherProviderError',
+        code: 'INVALID_PROVIDER_RESPONSE',
+        provider: 'openweather',
+      });
+      await vi.advanceTimersByTimeAsync(8_000);
+      await expectation;
+      vi.useRealTimers();
     });
   });
 
@@ -325,10 +352,10 @@ describe('realWeatherProvider', () => {
       );
       expect(calledUrl.pathname).toBe('/v1/weather/aqi');
       expect(calledUrl.searchParams.get('lat')).toBe(
-        String(resolvedLocation.latitude)
+        String(roundCoordinate(resolvedLocation.latitude))
       );
       expect(calledUrl.searchParams.get('lon')).toBe(
-        String(resolvedLocation.longitude)
+        String(roundCoordinate(resolvedLocation.longitude))
       );
       expect(calledUrl.searchParams.has('appid')).toBe(false);
     });
