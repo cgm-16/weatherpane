@@ -42,7 +42,7 @@
    - `git fetch origin main`
    - `git pull --ff-only origin main`
    - `git check-ignore -v .worktrees`
-   - `git worktree add .worktrees/<branch-slug> -b <type/issue-area-slug>`
+   - `git worktree add .worktrees/<branch-slug> -b <type/issue-area-slug> origin/main`
    - in the new worktree: `git status --short --branch`
      Done-check: the worktree is on the correct branch, starts clean, and any fast-forward or permission problem has been surfaced before edits.
 
