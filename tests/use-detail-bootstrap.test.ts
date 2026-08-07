@@ -84,11 +84,21 @@ const resolvedCtx = {
     source: 'search' as const,
     changedAt: '2026-04-12T10:00:00Z',
   },
+  isHydrated: true,
   setActiveLocation: vi.fn(),
   clearActiveLocation: vi.fn(),
 };
+// storage 동기화가 이미 끝난 상태에서 activeLocation이 없는 경우 (콜드 로드 대상).
 const noCtx = {
   activeLocation: null,
+  isHydrated: true,
+  setActiveLocation: vi.fn(),
+  clearActiveLocation: vi.fn(),
+};
+// storage 동기화가 아직 끝나지 않은 초기 렌더 상태 (콜드 로드를 시작하면 안 됨).
+const notHydratedCtx = {
+  activeLocation: null,
+  isHydrated: false,
   setActiveLocation: vi.fn(),
   clearActiveLocation: vi.fn(),
 };
@@ -396,6 +406,7 @@ describe('useDetailBootstrap', () => {
             source: loc.source,
             changedAt: loc.changedAt,
           },
+          isHydrated: true,
           setActiveLocation,
           clearActiveLocation: vi.fn(),
         });
@@ -470,6 +481,71 @@ describe('useDetailBootstrap', () => {
 
       const { result } = renderHook(() => useDetailBootstrap('loc_test'));
       await waitFor(() => expect(result.current.kind).toBe('not-found'));
+    });
+
+    test('isHydrated: false → activeLocation이 null이어도 콜드 로드가 시작되지 않는다 (#93 회귀 방지)', async () => {
+      // isHydrated가 false인 동안에는 activeLocation === null이 "위치 없음"인지
+      // "storage 동기화 전"인지 구분할 수 없으므로, 이미 저장된 위치가 있는 새로고침에서도
+      // 콜드 로드(카탈로그 재조회 + geocode 재호출)가 잘못 실행되면 안 된다.
+      // 카탈로그 히트 + 지오코딩 성공을 세팅해, "저장된 위치와 일치하는 카탈로그 항목이
+      // 실제로 존재하는 새로고침" 상황에서도 setActiveLocation이 잘못 호출되지 않음을
+      // (즉 저장된 값이 재지오코딩된 값으로 덮어써지지 않음을) 검증한다.
+      const resolvedLoc = { ...location };
+      vi.mocked(getCatalogEntryById).mockReturnValue({
+        catalogLocationId: 'KR-Seoul',
+        canonicalPath: '서울특별시',
+        depth: 1,
+        siDo: '서울특별시',
+        leafLabel: '서울',
+        tokens: ['서울특별시'],
+        display: { primaryLabel: '서울', secondaryLabel: null },
+        archetypeKey: null,
+        overrideKey: null,
+      });
+      vi.mocked(createCatalogLocationResolver).mockReturnValue({
+        resolveCatalogLocation: vi.fn().mockResolvedValue({
+          kind: 'resolved',
+          routeId: 'loc_test',
+          location: resolvedLoc,
+        }),
+      });
+      vi.mocked(useActiveLocation).mockReturnValue(notHydratedCtx);
+      vi.mocked(useCoreWeather).mockReturnValue(pendingQuery());
+      vi.mocked(useAqi).mockReturnValue(pendingQuery());
+
+      const { result } = renderHook(() => useDetailBootstrap('loc_test'));
+
+      expect(result.current.kind).toBe('loading');
+      expect(getCatalogEntryById).not.toHaveBeenCalled();
+      expect(createCatalogLocationResolver).not.toHaveBeenCalled();
+      expect(notHydratedCtx.setActiveLocation).not.toHaveBeenCalled();
+
+      // 비동기 콜드 로드 이펙트가 실행될 여지를 준 뒤에도 여전히 호출되지 않아야 한다.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(getCatalogEntryById).not.toHaveBeenCalled();
+      expect(notHydratedCtx.setActiveLocation).not.toHaveBeenCalled();
+    });
+
+    test('isHydrated가 true로 바뀌면 그제서야 콜드 로드가 시작된다 (딥링크 시나리오는 hydration 이후에도 정상 동작)', async () => {
+      // 진짜 "위치 없음" 딥링크/북마크 케이스는 hydration이 끝난 뒤에는 여전히
+      // 콜드 로드가 정상적으로 시작되어야 한다 — needsColdLoad의 의존성 배열이
+      // isHydrated 플립을 놓치지 않는지 확인한다.
+      let ctx = notHydratedCtx;
+      vi.mocked(useActiveLocation).mockImplementation(() => ctx);
+      vi.mocked(useCoreWeather).mockReturnValue(pendingQuery());
+      vi.mocked(useAqi).mockReturnValue(pendingQuery());
+
+      const { result, rerender } = renderHook(() =>
+        useDetailBootstrap('loc_test')
+      );
+
+      expect(result.current.kind).toBe('loading');
+      expect(getCatalogEntryById).not.toHaveBeenCalled();
+
+      ctx = noCtx;
+      rerender();
+
+      await waitFor(() => expect(getCatalogEntryById).toHaveBeenCalled());
     });
   });
 });

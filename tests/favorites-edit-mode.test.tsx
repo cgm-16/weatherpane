@@ -136,6 +136,7 @@ function setupWeather() {
   } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
   vi.mocked(useActiveLocation).mockReturnValue({
     activeLocation: null,
+    isHydrated: true,
     setActiveLocation: vi.fn(),
     clearActiveLocation: vi.fn(),
   });
