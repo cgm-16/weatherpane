@@ -351,6 +351,25 @@ describe('DetailDashboard 즐겨찾기', () => {
     expect(addFavorite).toHaveBeenCalledWith(loc);
   });
 
+  test('하이드레이션 전(isHydrated=false)에는 즐겨찾기 버튼이 비활성화된다', () => {
+    vi.mocked(useFavorites).mockReturnValue({
+      favorites: [],
+      isFavorite: () => false,
+      addFavorite: vi.fn(() => 'added' as const),
+      removeFavorite: vi.fn(() => 'removed' as const),
+      undoEntry: null,
+      undoRemove: vi.fn(),
+      atMaxFavorites: false,
+      isHydrated: false,
+      updateNickname: vi.fn(),
+      reorderFavorites: vi.fn(),
+    });
+    renderDashboard();
+    expect(
+      screen.getByRole('button', { name: /즐겨찾기 추가/ })
+    ).toBeDisabled();
+  });
+
   test('즐겨찾기 해제 버튼 클릭 시 removeFavorite이 호출된다', async () => {
     const user = userEvent.setup();
     const removeFavorite = vi.fn(() => 'removed' as const);
