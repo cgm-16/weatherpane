@@ -37,14 +37,13 @@
    - fill every required section; write `N/A` with a reason when needed
      Done-check: one GitHub issue number exists, and any local task id or spec id is explicitly mapped to it.
 
-2. Intent: sync the base branch and create an isolated worktree.
+2. Intent: fetch the base branch ref and create an isolated worktree.
    Action:
    - `git fetch origin main`
-   - `git pull --ff-only origin main`
    - `git check-ignore -v .worktrees`
    - `git worktree add .worktrees/<branch-slug> -b <type/issue-area-slug> origin/main`
    - in the new worktree: `git status --short --branch`
-     Done-check: the worktree is on the correct branch, starts clean, and any fast-forward or permission problem has been surfaced before edits.
+     Done-check: the worktree is on the correct branch, starts clean, and any fetch or permission problem has been surfaced before edits.
 
 3. Intent: establish a clean baseline before implementation.
    Action:
@@ -102,7 +101,7 @@ Expected evidence:
 
 ## Stop and ask Ori
 
-- `git pull --ff-only origin main` fails after an elevated retry
+- `git fetch origin main` fails after an elevated retry
 - the branch cannot map cleanly to a single issue
 - the baseline is broken and it is unclear whether the failure belongs to the task
 - the PR template cannot be filled without inventing scope or test evidence
