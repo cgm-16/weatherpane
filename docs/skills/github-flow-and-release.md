@@ -51,7 +51,7 @@
    Action:
    - build the branch name as `type/issue-area-slug`
    - verify `.worktrees/` is ignored with `git check-ignore -v .worktrees`
-   - create the worktree with `git worktree add .worktrees/branch-slug -b branch-name`
+   - create the worktree with `git worktree add .worktrees/branch-slug -b branch-name origin/main`
      Done-check: the new worktree is on the correct branch and `git status --short --branch` is clean there.
 
 4. Intent: keep commits reviewable and scoped.
