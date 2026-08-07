@@ -40,6 +40,8 @@ test('유효한 상세 페이지에서 날씨 대시보드가 표시된다', asy
   await expect(page.getByText('서울')).toBeVisible();
   // 새로고침 버튼 확인
   await expect(page.getByRole('button', { name: /새로고침/ })).toBeVisible();
+  // 일별 예보 섹션 확인 (오늘 포함 최대 8일)
+  await expect(page.getByRole('region', { name: /일별 예보/ })).toBeVisible();
   // 홈으로 돌아가기 링크 확인
   await expect(
     page.getByRole('link', { name: /홈으로 돌아가기/ })

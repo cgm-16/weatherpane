@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { useFavorites, FavoriteUndoToast } from '~/features/favorites';
 import { HourlyStrip } from '~/shared/ui/hourly-strip';
+import { DailyStrip } from '~/shared/ui/daily-strip';
 import { SketchBackground } from '~/entities/asset';
 import { DetailAqiCard } from './detail-aqi-card';
 import { DetailUvCard } from './detail-uv-card';
@@ -149,6 +150,17 @@ export function DetailDashboard({
             hourly={weather.hourly}
             timeZone={location.timezone}
             count={12}
+            temperatureUnit={temperatureUnit}
+          />
+        </section>
+      )}
+
+      {/* 일별 예보 — 오늘 포함 최대 8일, resolved 위치만 timezone을 가짐 */}
+      {canFavorite && weather.daily.length > 0 && (
+        <section className="px-4 pt-4" aria-label="일별 예보">
+          <DailyStrip
+            daily={weather.daily}
+            timeZone={location.timezone}
             temperatureUnit={temperatureUnit}
           />
         </section>

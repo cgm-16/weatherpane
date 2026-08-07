@@ -150,6 +150,7 @@ const dashboardWeather: CoreWeather = {
     condition: dashboardCondition,
   },
   today: { minC: 10, maxC: 22 },
+  daily: [],
   hourly: [],
   source: { provider: 'mock' },
 };
@@ -293,6 +294,31 @@ describe('DetailDashboard 콘텐츠 렌더링', () => {
     expect(
       screen.getByRole('region', { name: /시간별 예보/ })
     ).toBeInTheDocument();
+  });
+
+  test('daily 데이터가 있으면 일별 예보 섹션이 표시된다', () => {
+    const dailyWeather: CoreWeather = {
+      ...dashboardWeather,
+      daily: [
+        {
+          date: '2025-01-01T00:00:00.000Z',
+          minC: 9,
+          maxC: 19,
+          condition: dashboardCondition,
+        },
+      ],
+    };
+    renderDashboard({ weather: dailyWeather });
+    expect(
+      screen.getByRole('region', { name: /일별 예보/ })
+    ).toBeInTheDocument();
+  });
+
+  test('daily 데이터가 없으면 일별 예보 섹션이 표시되지 않는다', () => {
+    renderDashboard();
+    expect(
+      screen.queryByRole('region', { name: /일별 예보/ })
+    ).not.toBeInTheDocument();
   });
 });
 
