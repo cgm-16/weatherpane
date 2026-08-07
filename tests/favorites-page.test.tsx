@@ -179,6 +179,7 @@ describe('FavoriteCard', () => {
   function setupActiveLocation() {
     vi.mocked(useActiveLocation).mockReturnValue({
       activeLocation: null,
+      isHydrated: true,
       setActiveLocation: mockSetActiveLocation,
       clearActiveLocation: vi.fn(),
     });
@@ -475,6 +476,7 @@ describe('FavoritesPage', () => {
     vi.mocked(useNavigate).mockReturnValue(mockNavigateFn);
     vi.mocked(useActiveLocation).mockReturnValue({
       activeLocation: null,
+      isHydrated: true,
       setActiveLocation: mockSetActiveLocationPage,
       clearActiveLocation: vi.fn(),
     });

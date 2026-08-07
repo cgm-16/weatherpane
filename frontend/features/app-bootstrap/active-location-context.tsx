@@ -9,6 +9,10 @@ import type { StorageLike } from '~/shared/lib/storage/storage-types';
 
 interface ActiveLocationContextValue {
   activeLocation: ActiveLocation | null;
+  // storage 동기화 useEffect가 한 번 실행되었는지 여부.
+  // activeLocation === null은 "위치 없음"과 "아직 동기화 전"을 구분하지 못하므로,
+  // 그 둘을 구분해야 하는 소비자(예: 콜드 로드 트리거)를 위해 노출합니다.
+  isHydrated: boolean;
   setActiveLocation: (loc: ActiveLocation) => void;
   clearActiveLocation: () => void;
 }
@@ -30,12 +34,16 @@ export function ActiveLocationProvider({
   // eslint-disable-next-line @eslint-react/use-state -- 내부 setter는 storage 동기화 래퍼(setActiveLocation)와 명칭 충돌 방지를 위해 별도 명명
   const [activeLocation, setActiveLocationState] =
     useState<ActiveLocation | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     const repo = createActiveLocationRepository(storage ? { storage } : {});
     const stored = repo.get();
     // eslint-disable-next-line @eslint-react/set-state-in-effect -- 마운트 시 storage 값을 한 번 동기화하는 것이 의도이므로 setState 호출은 정상이다
     if (stored) setActiveLocationState(stored);
+    // 저장된 값이 없어도 "storage를 한 번 확인했다"는 사실 자체를 알려야 하므로 무조건 호출합니다.
+    // eslint-disable-next-line @eslint-react/set-state-in-effect -- 위와 동일한 이유로 마운트 시 1회 호출은 정상이다
+    setIsHydrated(true);
   }, [storage]);
 
   function setActiveLocation(loc: ActiveLocation) {
@@ -50,7 +58,12 @@ export function ActiveLocationProvider({
 
   return (
     <ActiveLocationContext
-      value={{ activeLocation, setActiveLocation, clearActiveLocation }}
+      value={{
+        activeLocation,
+        isHydrated,
+        setActiveLocation,
+        clearActiveLocation,
+      }}
     >
       {children}
     </ActiveLocationContext>

@@ -49,6 +49,7 @@ describe('useOnlineRecovery', () => {
   it('온라인 상태로 시작하면 refetch를 트리거하지 않는다', () => {
     vi.mocked(useActiveLocation).mockReturnValue({
       activeLocation: resolvedLocation,
+      isHydrated: true,
       setActiveLocation: vi.fn(),
       clearActiveLocation: vi.fn(),
     });
@@ -60,6 +61,7 @@ describe('useOnlineRecovery', () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     vi.mocked(useActiveLocation).mockReturnValue({
       activeLocation: resolvedLocation,
+      isHydrated: true,
       setActiveLocation: vi.fn(),
       clearActiveLocation: vi.fn(),
     });
@@ -77,6 +79,7 @@ describe('useOnlineRecovery', () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     vi.mocked(useActiveLocation).mockReturnValue({
       activeLocation: null,
+      isHydrated: true,
       setActiveLocation: vi.fn(),
       clearActiveLocation: vi.fn(),
     });
