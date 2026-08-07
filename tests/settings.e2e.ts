@@ -139,10 +139,7 @@ test.describe('온도 단위 — 홈과 상세', () => {
   });
 });
 
-// #92: 저장된 즐겨찾기는 기존에 서버/클라이언트 초기 트리가 달라지는 경로다.
 test.describe('온도 단위 — 즐겨찾기', () => {
-  test.use({ knownHydrationBug: { issue: '#92', pattern: 'handleEnterEdit' } });
-
   test('화씨 선택은 새로고침 뒤 즐겨찾기 카드에 적용된다', async ({ page }) => {
     await page.goto('/settings');
     await page.getByRole('radio', { name: '화씨' }).check();

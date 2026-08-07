@@ -25,6 +25,7 @@ vi.mock('../frontend/features/favorites/use-favorites', () => ({
     undoEntry: null,
     undoRemove: vi.fn(),
     atMaxFavorites: false,
+    isHydrated: true,
     updateNickname: vi.fn(),
     reorderFavorites: vi.fn(),
   })),
@@ -341,6 +342,7 @@ describe('DetailDashboard 즐겨찾기', () => {
       undoEntry: null,
       undoRemove: vi.fn(),
       atMaxFavorites: false,
+      isHydrated: true,
       updateNickname: vi.fn(),
       reorderFavorites: vi.fn(),
     });
@@ -360,6 +362,7 @@ describe('DetailDashboard 즐겨찾기', () => {
       undoEntry: null,
       undoRemove: vi.fn(),
       atMaxFavorites: false,
+      isHydrated: true,
       updateNickname: vi.fn(),
       reorderFavorites: vi.fn(),
     });
@@ -387,6 +390,7 @@ describe('DetailDashboard 즐겨찾기', () => {
       },
       undoRemove: vi.fn(),
       atMaxFavorites: false,
+      isHydrated: true,
       updateNickname: vi.fn(),
       reorderFavorites: vi.fn(),
     });

@@ -75,6 +75,7 @@ export function HomeDashboard({
     undoEntry,
     undoRemove,
     atMaxFavorites,
+    isHydrated,
   } = useFavorites();
   const canFavorite = location.kind === 'resolved';
   const favorited = canFavorite && isFavorite(location.locationId);
@@ -110,7 +111,9 @@ export function HomeDashboard({
           <button
             type="button"
             aria-label={favorited ? '즐겨찾기 해제' : '즐겨찾기 추가'}
-            disabled={!canFavorite || (!favorited && atMaxFavorites)}
+            disabled={
+              !isHydrated || !canFavorite || (!favorited && atMaxFavorites)
+            }
             onClick={() => {
               if (!canFavorite) return;
               persistRecent(location);
