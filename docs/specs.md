@@ -25,7 +25,7 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 - **Offline behavior**: 스냅샷 기반 렌더, stale/오프라인 표시, 실패 복구 UX.
 - **Assets / Sketch pipeline**: 상태(맑음/비/눈 등)와 주야에 따른 스케치 키-에셋 매핑 및 캐시.
 
-> **구현 상태:** Home/Search/Favorites/Recents/Settings는 구현됨(Settings는 이슈 #77). Weather Detail은 현재/시간별 예보와 보조 지표까지 부분 구현되었고 다일 일별 예보는 미구현이다. Offline behavior는 API 실패 후 스냅샷 fallback + last-updated 배지 수준까지 구현됨 — 초기 pending 중 스냅샷 즉시 렌더와 서비스워커 기반 PWA 캐싱은 미구현(`docs/legacy/service-worker-caching-design.md` 참고).
+> **구현 상태:** Home/Search/Favorites/Recents/Settings는 구현됨(Settings는 이슈 #77). Weather Detail은 현재/시간별/일별 예보와 보조 지표까지 구현됨(일별 예보는 이슈 #87). Offline behavior는 API 실패 후 스냅샷 fallback + last-updated 배지 수준까지 구현됨 — 초기 pending 중 스냅샷 즉시 렌더와 서비스워커 기반 PWA 캐싱은 미구현(`docs/legacy/service-worker-caching-design.md` 참고).
 
 ### MVP 우선순위(권장)
 
@@ -33,7 +33,7 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 | -------- | ---------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
 | P0       | Home/Active Location   | 즉시 렌더 + 스냅샷 fallback + stale 표시               | 부분 구현(API 실패 후 스냅샷 fallback + stale 표시는 구현, 초기 pending 중 스냅샷 즉시 렌더는 미구현)  | 오프라인 핵심                                   |
 | P0       | Search                 | 위치 선택 → Active Location 전환 + Recents 기록        | 구현됨                                                                                                 | 로컬 대한민국 카탈로그 기반                     |
-| P0       | Weather Detail         | 최소한 “현재/시간별/일별” 표시 + 오류/스켈레톤         | 부분 구현(현재/시간별 + 오류/스켈레톤은 구현, 다일 일별 예보 모델/UI는 미구현)                         | 데이터 계약 필요                                |
+| P0       | Weather Detail         | 최소한 “현재/시간별/일별” 표시 + 오류/스켈레톤         | 구현됨(현재/시간별/일별 + 오류/스켈레톤; 일별 예보는 이슈 #87)                                         | 데이터 계약 필요                                |
 | P0       | Favorites              | **확정 UX** 준수(편집/정렬, 위·아래, 스켈레톤/오류 등) | 구현됨                                                                                                 | 본 문서에서 고정                                |
 | P1       | Settings               | 테마/단위/동작 줄이기 + 선택적 로컬 데이터 초기화      | 구현됨(이슈 #77; `frontend/features/settings/`)                                                        | 확인 뒤 Weatherpane 소유 데이터만 초기화        |
 | P1       | Service Worker         | 앱 셸 precache + 런타임 캐시                           | 미구현 — 차기 범위(`docs/legacy/service-worker-caching-design.md`)                                     | PWA 캐싱 권장                                   |
@@ -115,7 +115,7 @@ Geolocation은 사용자 동의가 필요하며, 브라우저는 제공 전에 �
 | 온라인 갱신 실패 | 인메모리 쿼리 데이터 있음 + API 실패 | 기존 상세 UI + 새로고침 실패 안내 |
 | 초기 실패        | API 실패 + 유효한 영속 스냅샷 없음   | 풀페이지 오류 + 재시도            |
 
-> **구현 상태: 부분 구현.** 현재/시간별 예보와 오류/스켈레톤 상태는 구현되어 있지만, 다일 일별 예보 모델/UI와 일별 스켈레톤은 미구현이다. 영속 fallback도 별도 상세 스냅샷이 아니라 현재 날씨 요약 스냅샷을 사용한다.
+> **구현 상태: 구현됨.** 현재/시간별/일별 예보와 오류 상태가 모두 구현되어 있다(일별 예보는 이슈 #87). 섹션별(현재/시간별/일별) 스켈레톤은 어디에도 없으며, 로딩 중에는 페이지 레벨 `'loading'` 상태(`frontend/pages/location/ui/location-page.tsx`)가 전체 화면을 게이트한다 — 위 표의 "스켈레톤" 행은 이 페이지 레벨 로딩 상태를 가리킨다. 영속 fallback도 별도 상세 스냅샷이 아니라 현재 날씨 요약 스냅샷을 사용한다.
 
 #### Favorites (모듈/섹션)
 
@@ -723,7 +723,7 @@ PR/이슈 템플릿, CODEOWNERS, 보호 브랜치는 entity["company","Git
 
 - [ ] UI
   - [x] Home/Search/Favorites/Recents/Settings의 스켈레톤/오류/stale 상태 구현 — 구현됨(Settings는 이슈 #77)
-  - [ ] Detail 상태 완성 — 현재/시간별 표시, 로딩/오류, 현재 날씨 요약 stale fallback은 구현됨. 다일 일별 예보 모델/UI와 일별 스켈레톤은 미구현
+  - [x] Detail 상태 완성 — 현재/시간별/일별 표시, 로딩/오류, 현재 날씨 요약 stale fallback — 구현됨(일별 예보는 이슈 #87)
   - [x] Favorites “편집/정렬” 모드 토글, 위/아래 버튼, 닉네임 20자 하드캡, 완료 auto-blur 커밋 — 구현됨
 - [x] 데이터
   - [x] 버전드 Web Storage 키/payload `version` 관리 — 구현됨(`frontend/shared/lib/storage/`)
