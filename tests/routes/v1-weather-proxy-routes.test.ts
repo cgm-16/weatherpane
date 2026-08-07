@@ -74,6 +74,18 @@ describe('v1/weather/core loader', () => {
     expect(calledUrl.searchParams.get('lat')).toBe('37.57');
     expect(calledUrl.searchParams.get('lon')).toBe('126.98');
   });
+
+  test('업스트림 오류 응답(예: 500)은 no-store로 응답한다', async () => {
+    vi.stubEnv('OPENWEATHER_API_KEY', 'test-key');
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('upstream error', { status: 500 })
+    );
+    const response = await coreLoader({
+      request: makeRequest('/v1/weather/core?lat=37.5&lon=127'),
+    });
+    expect(response.status).toBe(500);
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
+  });
 });
 
 describe('v1/weather/aqi loader', () => {
