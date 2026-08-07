@@ -3,8 +3,12 @@ import '@testing-library/jest-dom/vitest';
 import { describe, expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import React from 'react';
-import { ActiveLocationProvider, useActiveLocation } from '../frontend/features/app-bootstrap/active-location-context';
+import React, { createElement } from 'react';
+import { renderToString } from 'react-dom/server';
+import {
+  ActiveLocationProvider,
+  useActiveLocation,
+} from '../frontend/features/app-bootstrap/active-location-context';
 import { createActiveLocationRepository } from '../frontend/shared/lib/storage/repositories/location-repositories';
 import { createMemoryStorage } from './storage/test-storage';
 
@@ -27,7 +31,11 @@ const activeLocation = {
 };
 
 function Consumer() {
-  const { activeLocation: loc, setActiveLocation, clearActiveLocation } = useActiveLocation();
+  const {
+    activeLocation: loc,
+    setActiveLocation,
+    clearActiveLocation,
+  } = useActiveLocation();
   return (
     <div>
       <span data-testid="loc">{loc ? loc.location.name : 'none'}</span>
@@ -35,6 +43,13 @@ function Consumer() {
       <button onClick={() => clearActiveLocation()}>clear</button>
     </div>
   );
+}
+
+// renderToString 테스트 전용 컴포넌트. 모듈 최상위에 정의해야 한다
+// (eslint: component-hook-factories).
+function ActiveLocationProbe() {
+  const { activeLocation: loc } = useActiveLocation();
+  return createElement('span', null, loc ? loc.location.name : 'none');
 }
 
 describe('ActiveLocationContext', () => {
@@ -69,7 +84,9 @@ describe('ActiveLocationContext', () => {
     );
     await user.click(screen.getByText('set'));
     expect(screen.getByTestId('loc').textContent).toBe('서울');
-    expect(createActiveLocationRepository({ storage }).get()).toEqual(activeLocation);
+    expect(createActiveLocationRepository({ storage }).get()).toEqual(
+      activeLocation
+    );
   });
 
   test('clearActiveLocation은 상태와 storage를 모두 지운다', async () => {
@@ -84,5 +101,16 @@ describe('ActiveLocationContext', () => {
     await user.click(screen.getByText('clear'));
     expect(screen.getByTestId('loc').textContent).toBe('none');
     expect(createActiveLocationRepository({ storage }).get()).toBeNull();
+  });
+
+  test('renderToString은 storage에 저장된 값이 있어도 항상 서버 안전 초기값(none)을 렌더링한다', () => {
+    const storage = createMemoryStorage();
+    createActiveLocationRepository({ storage }).set(activeLocation);
+    const html = renderToString(
+      <ActiveLocationProvider storage={storage}>
+        <ActiveLocationProbe />
+      </ActiveLocationProvider>
+    );
+    expect(html).toContain('none');
   });
 });
