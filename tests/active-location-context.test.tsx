@@ -107,4 +107,22 @@ describe('ActiveLocationContext', () => {
     expect(html).toContain('none');
     expect(html).not.toContain('서울');
   });
+
+  test('storage prop이 빈 storage로 바뀌면 activeLocation을 null로 다시 동기화한다', () => {
+    const populated = createMemoryStorage();
+    createActiveLocationRepository({ storage: populated }).set(activeLocation);
+    const empty = createMemoryStorage();
+    const { rerender } = render(
+      <ActiveLocationProvider storage={populated}>
+        <Consumer />
+      </ActiveLocationProvider>
+    );
+    expect(screen.getByTestId('loc').textContent).toBe('서울');
+    rerender(
+      <ActiveLocationProvider storage={empty}>
+        <Consumer />
+      </ActiveLocationProvider>
+    );
+    expect(screen.getByTestId('loc').textContent).toBe('none');
+  });
 });

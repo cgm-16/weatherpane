@@ -39,8 +39,9 @@ export function ActiveLocationProvider({
   useEffect(() => {
     const repo = createActiveLocationRepository(storage ? { storage } : {});
     const stored = repo.get();
+    // stored가 null이어도 그대로 반영해야 storage가 빈 상태로 바뀌었을 때 이전 값이 남지 않는다.
     // eslint-disable-next-line @eslint-react/set-state-in-effect -- 마운트 시 storage 값을 한 번 동기화하는 것이 의도이므로 setState 호출은 정상이다
-    if (stored) setActiveLocationState(stored);
+    setActiveLocationState(stored);
     // 저장된 값이 없어도 "storage를 한 번 확인했다"는 사실 자체를 알려야 하므로 무조건 호출합니다.
     // eslint-disable-next-line @eslint-react/set-state-in-effect -- 위와 동일한 이유로 마운트 시 1회 호출은 정상이다
     setIsHydrated(true);
