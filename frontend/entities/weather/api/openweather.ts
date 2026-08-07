@@ -44,6 +44,10 @@ export interface OpenWeatherCoreWeatherResponse {
       min: number;
       max: number;
     };
+    clouds: number;
+    weather: OpenWeatherCondition[];
+    rain?: number;
+    snow?: number;
   }>;
   hourly: Array<{
     dt: number;
@@ -92,15 +96,22 @@ export const mockOpenWeatherCoreWeatherFixture: OpenWeatherCoreWeatherResponse =
         },
       ],
     },
-    daily: [
-      {
-        dt: hourlyStart,
-        temp: {
-          min: 12.1,
-          max: 21.4,
-        },
+    daily: Array.from({ length: 8 }, (_, index) => ({
+      dt: hourlyStart + index * 24 * 60 * 60,
+      temp: {
+        min: 12.1 + index * 0.5,
+        max: 21.4 + index * 0.5,
       },
-    ],
+      clouds: index < 6 ? 8 : 42,
+      weather: [
+        {
+          id: index < 6 ? 800 : 803,
+          main: index < 6 ? 'Clear' : 'Clouds',
+          description: index < 6 ? '맑음' : '구름 많음',
+          icon: index < 6 ? '01d' : '03d',
+        },
+      ],
+    })),
     hourly: Array.from({ length: 12 }, (_, index) => ({
       dt: hourlyStart + index * 60 * 60,
       temp: 17.2 + index * 0.4,
@@ -157,6 +168,12 @@ function isOptionalPrecipitationAmount(
     (typeof value['1h'] === 'undefined' ||
       (isNumber(value['1h']) && value['1h'] >= 0))
   );
+}
+
+function isOptionalDailyPrecipitationAmount(
+  value: unknown
+): value is number | undefined {
+  return typeof value === 'undefined' || (isNumber(value) && value >= 0);
 }
 
 function toIsoDateTime(unixSeconds: number): string {
@@ -218,6 +235,14 @@ function getPrecipitationAmount(
   return value.rain?.['1h'] ?? value.snow?.['1h'] ?? 0;
 }
 
+// daily 엔트리의 rain/snow는 OpenWeather One Call 3.0에서 { '1h': number } 객체가 아니라
+// 평범한 숫자(mm)다 — current/hourly와 다른 형태이므로 별도 헬퍼로 읽는다.
+function getDailyPrecipitationAmount(
+  value: OpenWeatherCoreWeatherResponse['daily'][number]
+): number {
+  return value.rain ?? value.snow ?? 0;
+}
+
 function isOpenWeatherCondition(value: unknown): value is OpenWeatherCondition {
   return (
     isRecord(value) &&
@@ -245,6 +270,24 @@ function isOpenWeatherHourlyEntry(
   );
 }
 
+function isOpenWeatherDailyEntry(
+  value: unknown
+): value is OpenWeatherCoreWeatherResponse['daily'][number] {
+  return (
+    isRecord(value) &&
+    isNumber(value.dt) &&
+    isRecord(value.temp) &&
+    isNumber(value.temp.min) &&
+    isNumber(value.temp.max) &&
+    isPercent(value.clouds) &&
+    isOptionalDailyPrecipitationAmount(value.rain) &&
+    isOptionalDailyPrecipitationAmount(value.snow) &&
+    Array.isArray(value.weather) &&
+    value.weather.length > 0 &&
+    isOpenWeatherCondition(value.weather[0])
+  );
+}
+
 function isOpenWeatherCoreWeatherResponse(
   value: unknown
 ): value is OpenWeatherCoreWeatherResponse {
@@ -253,7 +296,9 @@ function isOpenWeatherCoreWeatherResponse(
     !Array.isArray(value.hourly) ||
     value.hourly.length < 12 ||
     !value.hourly.slice(0, 12).every(isOpenWeatherHourlyEntry) ||
-    !Array.isArray(value.daily)
+    !Array.isArray(value.daily) ||
+    value.daily.length < 1 ||
+    !value.daily.slice(0, 8).every(isOpenWeatherDailyEntry)
   ) {
     return false;
   }
@@ -279,15 +324,7 @@ function isOpenWeatherCoreWeatherResponse(
     return false;
   }
 
-  const firstDaily = value.daily[0];
-
-  return (
-    isString(value.fetchedAt) &&
-    isRecord(firstDaily) &&
-    isRecord(firstDaily.temp) &&
-    isNumber(firstDaily.temp.min) &&
-    isNumber(firstDaily.temp.max)
-  );
+  return isString(value.fetchedAt);
 }
 
 function getConditionText(conditionCode: string): string {
@@ -400,6 +437,16 @@ export function normalizeOpenWeatherCoreWeatherResponse(
         minC: payload.daily[0].temp.min,
         maxC: payload.daily[0].temp.max,
       },
+      daily: payload.daily.slice(0, 8).map((entry) => ({
+        date: toIsoDateTime(entry.dt),
+        minC: entry.temp.min,
+        maxC: entry.temp.max,
+        condition: createWeatherCondition(
+          entry.weather[0],
+          entry.clouds,
+          getDailyPrecipitationAmount(entry)
+        ),
+      })),
       hourly: payload.hourly.slice(0, 12).map((entry) => ({
         at: toIsoDateTime(entry.dt),
         temperatureC: entry.temp,
