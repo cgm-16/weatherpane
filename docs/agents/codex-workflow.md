@@ -39,9 +39,8 @@ Intent: satisfy the repository workflow before editing tracked files.
 
 Exact actions:
 
-- Sync the base branch:
+- Fetch the base branch ref:
   - `git fetch origin main`
-  - `git pull --ff-only origin main`
 - Open or confirm the backing issue using the matching GitHub template or an equivalent body with all required sections filled.
 - Create the branch using `type/issue-area-slug`.
 - Use a git worktree by default:
@@ -132,7 +131,7 @@ Done-check:
 Stop instead of guessing when:
 
 - the spec and current code disagree in a way that changes product behavior
-- the base branch cannot fast-forward cleanly
+- the base branch cannot be fetched cleanly
 - worktree setup, issue creation, or push/PR flow is blocked in a way that changes the workflow
 - the first attempted fix fails and the root cause is still unclear
 

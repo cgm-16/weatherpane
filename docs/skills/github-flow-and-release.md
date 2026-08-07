@@ -34,11 +34,10 @@
 
 ## Execution checklist
 
-1. Intent: sync the base branch before feature work.
+1. Intent: fetch the base branch ref before feature work.
    Action:
    - `git fetch origin main`
-   - `git pull --ff-only origin main`
-     Done-check: local `main` matches `origin/main`, or the fast-forward failure is surfaced immediately.
+     Done-check: `origin/main` is refreshed without changing the current branch, or the fetch failure is surfaced immediately.
 
 2. Intent: create the backing issue before editing tracked files.
    Action:
@@ -89,7 +88,7 @@
 
 ## Stop and ask Ori
 
-- `git pull --ff-only origin main` fails
+- `git fetch origin main` fails
 - the issue or PR template cannot represent the required scope cleanly
 - worktree setup is blocked and a fallback would change the workflow
 - release work needs a backport decision that is not already specified
