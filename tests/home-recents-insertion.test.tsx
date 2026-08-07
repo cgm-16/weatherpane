@@ -60,6 +60,7 @@ const mockWeather: CoreWeather = {
   observedAt: new Date().toISOString(),
   current: { temperatureC: 20, condition, humidityPct: 50 },
   today: { maxC: 25, minC: 15 },
+  daily: [],
   hourly: [],
   source: { provider: 'mock' },
 };

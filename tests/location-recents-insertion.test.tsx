@@ -62,6 +62,7 @@ describe('LocationPage — recents insertion on entry', () => {
           humidityPct: 50,
         },
         today: { maxC: 20, minC: 10 },
+        daily: [],
         hourly: [],
       },
       aqi: { summary: { aqi: 1, category: 'good' }, pollutants: {} },

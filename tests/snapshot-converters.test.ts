@@ -15,10 +15,54 @@ const mockWeather: CoreWeather = {
       text: '맑음',
       isDay: true,
       visualBucket: 'clear',
-      textMapping: { conditionCode: 'CLEAR', isDay: true, precipitationKind: 'none', cloudCoverPct: 5, intensity: 'none' },
+      textMapping: {
+        conditionCode: 'CLEAR',
+        isDay: true,
+        precipitationKind: 'none',
+        cloudCoverPct: 5,
+        intensity: 'none',
+      },
     },
   },
   today: { minC: 10, maxC: 22 },
+  daily: [
+    {
+      date: '2026-04-12T00:00:00Z',
+      minC: 10,
+      maxC: 22,
+      condition: {
+        code: 'CLEAR',
+        text: '맑음',
+        isDay: true,
+        visualBucket: 'clear',
+        textMapping: {
+          conditionCode: 'CLEAR',
+          isDay: true,
+          precipitationKind: 'none',
+          cloudCoverPct: 5,
+          intensity: 'none',
+        },
+      },
+    },
+    {
+      date: '2026-04-13T00:00:00Z',
+      minC: 9,
+      maxC: 20,
+      condition: {
+        code: 'RAIN',
+        text: '비',
+        isDay: true,
+        visualBucket: 'rainy',
+        textMapping: {
+          conditionCode: 'RAIN',
+          isDay: true,
+          precipitationKind: 'rain',
+          cloudCoverPct: 90,
+          intensity: 'moderate',
+        },
+      },
+    },
+  ],
   hourly: [],
   source: { provider: 'mock-openweather' },
 };
@@ -53,7 +97,28 @@ describe('coreWeatherToSnapshot', () => {
     expect(s.todayMaxC).toBe(22);
   });
   test('source를 그대로 유지한다', () => {
-    expect(coreWeatherToSnapshot(mockWeather).source).toEqual({ provider: 'mock-openweather' });
+    expect(coreWeatherToSnapshot(mockWeather).source).toEqual({
+      provider: 'mock-openweather',
+    });
+  });
+  test('daily 엔트리의 condition을 conditionCode/conditionText로 평탄화한다', () => {
+    const s = coreWeatherToSnapshot(mockWeather);
+    expect(s.daily).toEqual([
+      {
+        date: '2026-04-12T00:00:00Z',
+        minC: 10,
+        maxC: 22,
+        conditionCode: 'CLEAR',
+        conditionText: '맑음',
+      },
+      {
+        date: '2026-04-13T00:00:00Z',
+        minC: 9,
+        maxC: 20,
+        conditionCode: 'RAIN',
+        conditionText: '비',
+      },
+    ]);
   });
 });
 
@@ -71,6 +136,8 @@ describe('aqiToSnapshot', () => {
     expect(aqiToSnapshot(mockAqi).category).toBe('fair');
   });
   test('source를 그대로 유지한다', () => {
-    expect(aqiToSnapshot(mockAqi).source).toEqual({ provider: 'mock-openweather' });
+    expect(aqiToSnapshot(mockAqi).source).toEqual({
+      provider: 'mock-openweather',
+    });
   });
 });

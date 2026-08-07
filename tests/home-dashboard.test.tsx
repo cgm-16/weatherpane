@@ -64,6 +64,7 @@ const weather: CoreWeather = {
     condition,
   },
   today: { minC: 10, maxC: 22 },
+  daily: [],
   hourly: [],
   source: { provider: 'mock' },
 };

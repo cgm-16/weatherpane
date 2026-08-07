@@ -1,3 +1,11 @@
+export interface PersistedDailySnapshotEntry {
+  date: string;
+  minC: number;
+  maxC: number;
+  conditionCode: string;
+  conditionText: string;
+}
+
 export interface PersistedWeatherSnapshot {
   locationId: string;
   fetchedAt: string;
@@ -7,6 +15,7 @@ export interface PersistedWeatherSnapshot {
   conditionText: string;
   todayMinC: number;
   todayMaxC: number;
+  daily?: PersistedDailySnapshotEntry[];
   source: {
     provider: string;
     modelVersion?: string;
@@ -25,6 +34,19 @@ function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
+function isPersistedDailySnapshotEntry(
+  value: unknown
+): value is PersistedDailySnapshotEntry {
+  return (
+    isRecord(value) &&
+    isString(value.date) &&
+    isNumber(value.minC) &&
+    isNumber(value.maxC) &&
+    isString(value.conditionCode) &&
+    isString(value.conditionText)
+  );
+}
+
 export function isPersistedWeatherSnapshot(
   value: unknown
 ): value is PersistedWeatherSnapshot {
@@ -41,6 +63,9 @@ export function isPersistedWeatherSnapshot(
     isString(value.conditionText) &&
     isNumber(value.todayMinC) &&
     isNumber(value.todayMaxC) &&
+    (typeof value.daily === 'undefined' ||
+      (Array.isArray(value.daily) &&
+        value.daily.every(isPersistedDailySnapshotEntry))) &&
     isString(value.source.provider) &&
     (typeof value.source.modelVersion === 'undefined' ||
       isString(value.source.modelVersion))

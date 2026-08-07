@@ -23,6 +23,19 @@ const weatherSnapshot: PersistedWeatherSnapshot = {
   todayMinC: 12.1,
 };
 
+const weatherSnapshotWithDaily: PersistedWeatherSnapshot = {
+  ...weatherSnapshot,
+  daily: [
+    {
+      date: '2026-04-11T00:00:00+09:00',
+      minC: 12.1,
+      maxC: 21.4,
+      conditionCode: 'CLOUDY',
+      conditionText: '흐림',
+    },
+  ],
+};
+
 const aqiSnapshot: PersistedAqiSnapshot = {
   aqi: 41,
   category: 'good',
@@ -45,6 +58,36 @@ describe('snapshot repositories', () => {
 
     repository.remove(weatherSnapshot.locationId);
     expect(repository.get(weatherSnapshot.locationId)).toBeNull();
+  });
+
+  test('weather snapshot repository stores and retrieves daily entries', () => {
+    const repository = createWeatherSnapshotRepository({
+      storage: createMemoryStorage(),
+    });
+
+    repository.set(
+      weatherSnapshotWithDaily.locationId,
+      weatherSnapshotWithDaily
+    );
+    expect(repository.get(weatherSnapshotWithDaily.locationId)).toEqual(
+      weatherSnapshotWithDaily
+    );
+  });
+
+  test('weather snapshot repository accepts previously-persisted snapshots without a daily field', () => {
+    const storage = createMemoryStorage();
+    const repository = createWeatherSnapshotRepository({ storage });
+
+    // daily 필드 도입 이전에 저장된 스냅샷을 흉내낸다 — 선택 필드이므로 리셋 없이 정상 반환되어야 한다.
+    storage.setItem(
+      storageKeys.weatherSnapshots,
+      JSON.stringify({
+        data: { [weatherSnapshot.locationId]: weatherSnapshot },
+        version: 1,
+      })
+    );
+
+    expect(repository.get(weatherSnapshot.locationId)).toEqual(weatherSnapshot);
   });
 
   test('aqi snapshot repository stores and removes snapshots by location id', () => {
