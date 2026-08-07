@@ -352,6 +352,7 @@ describe('LocationPage 상태별 렌더링', () => {
         observedAt: new Date().toISOString(),
         current: { temperatureC: 18, condition: locationPageCondition },
         today: { minC: 10, maxC: 22 },
+        daily: [],
         hourly: [],
         source: { provider: 'mock' },
       },

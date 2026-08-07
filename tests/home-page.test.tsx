@@ -171,6 +171,7 @@ describe('HomePage 상태별 렌더링', () => {
           },
         },
         today: { minC: 10, maxC: 22 },
+        daily: [],
         hourly: [],
         source: { provider: 'mock' },
       },

@@ -2,7 +2,9 @@
 import type { CoreWeather } from './core-weather';
 import type { PersistedWeatherSnapshot } from './persisted-weather-snapshot';
 
-export function coreWeatherToSnapshot(weather: CoreWeather): PersistedWeatherSnapshot {
+export function coreWeatherToSnapshot(
+  weather: CoreWeather
+): PersistedWeatherSnapshot {
   return {
     locationId: weather.locationId,
     fetchedAt: weather.fetchedAt,
@@ -12,6 +14,13 @@ export function coreWeatherToSnapshot(weather: CoreWeather): PersistedWeatherSna
     conditionText: weather.current.condition.text,
     todayMinC: weather.today.minC,
     todayMaxC: weather.today.maxC,
+    daily: weather.daily.map((entry) => ({
+      date: entry.date,
+      minC: entry.minC,
+      maxC: entry.maxC,
+      conditionCode: entry.condition.code,
+      conditionText: entry.condition.text,
+    })),
     source: weather.source,
   };
 }

@@ -38,6 +38,13 @@ export interface CoreWeatherHourlyEntry {
   condition: WeatherCondition;
 }
 
+export interface CoreWeatherDailyEntry {
+  date: string;
+  minC: number;
+  maxC: number;
+  condition: WeatherCondition;
+}
+
 export interface CoreWeather {
   locationId: string;
   fetchedAt: string;
@@ -47,6 +54,7 @@ export interface CoreWeather {
     minC: number;
     maxC: number;
   };
+  daily: CoreWeatherDailyEntry[];
   hourly: CoreWeatherHourlyEntry[];
   source: {
     provider: string;
