@@ -26,7 +26,7 @@ export async function loader({ request }: { request: Request }) {
   const upstreamUrl = new URL(
     'https://api.openweathermap.org/data/2.5/air_pollution'
   );
-  // 좌표 정밀도를 2자리로 제한해 인접 좌표를 같은 CDN 캐시 키/업스트림 호출로 모은다.
+  // 업스트림에 보내는 좌표 정밀도를 2자리로 제한한다. CDN 캐시 키는 들어온 요청 URL 기준이라 서버측 반올림으로는 합쳐지지 않는다(키 정규화는 클라이언트측 반올림 담당).
   upstreamUrl.searchParams.set('lat', String(roundCoordinate(Number(lat))));
   upstreamUrl.searchParams.set('lon', String(roundCoordinate(Number(lon))));
 
