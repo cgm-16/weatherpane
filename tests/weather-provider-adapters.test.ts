@@ -94,7 +94,14 @@ const rawOwmCoreWeather = {
       { id: 800, main: 'Clear', description: 'clear sky', icon: '01d' },
     ],
   },
-  daily: [{ dt: 1744332600, temp: { min: 12.1, max: 21.4 } }],
+  daily: Array.from({ length: 8 }, (_, i) => ({
+    dt: 1744332600 + i * 86400,
+    temp: { min: 12.1, max: 21.4 },
+    clouds: 8,
+    weather: [
+      { id: 800, main: 'Clear', description: 'clear sky', icon: '01d' },
+    ],
+  })),
   hourly: Array.from({ length: 12 }, (_, i) => ({
     dt: 1744332600 + i * 3600,
     temp: 17.2,
@@ -209,6 +216,8 @@ describe('realWeatherProvider', () => {
       expect(weather.current.condition.code).toBe('CLEAR');
       expect(weather.today).toEqual({ minC: 12.1, maxC: 21.4 });
       expect(weather.hourly).toHaveLength(12);
+      expect(weather.daily).toHaveLength(8);
+      expect(weather.daily[0]).toMatchObject({ minC: 12.1, maxC: 21.4 });
       expect(weather.source.provider).toBe('openweather');
     });
 

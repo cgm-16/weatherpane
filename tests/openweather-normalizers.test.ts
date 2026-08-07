@@ -110,6 +110,46 @@ describe('buildWeatherTextMappingInput', () => {
   });
 });
 
+describe('normalizeOpenWeatherCoreWeatherResponse — daily', () => {
+  test('daily 배열을 최대 8일까지 정규화한다', () => {
+    const weather = normalizeOpenWeatherCoreWeatherResponse(
+      mockOpenWeatherCoreWeatherFixture,
+      resolvedLocation
+    );
+
+    expect(weather.daily).toHaveLength(8);
+    expect(weather.daily[0]).toMatchObject({
+      minC: 12.1,
+      maxC: 21.4,
+      condition: {
+        code: 'CLEAR',
+      },
+    });
+  });
+
+  test("daily 강수량을 {'1h'} 객체가 아닌 평범한 숫자로 읽는다", () => {
+    const rainyDailyPayload = {
+      ...mockOpenWeatherCoreWeatherFixture,
+      daily: [
+        {
+          dt: mockOpenWeatherCoreWeatherFixture.daily[0].dt,
+          temp: { min: 10, max: 20 },
+          clouds: 90,
+          weather: [{ id: 501, main: 'Rain', description: '비', icon: '10d' }],
+          rain: 3.16,
+        },
+      ],
+    };
+
+    const weather = normalizeOpenWeatherCoreWeatherResponse(
+      rainyDailyPayload,
+      resolvedLocation
+    );
+
+    expect(weather.daily[0].condition.textMapping.intensity).toBe('heavy');
+  });
+});
+
 describe('payload normalization failures', () => {
   test('잘못된 핵심 날씨 payload를 명시적 타입 오류로 정규화한다', () => {
     expect(() =>
@@ -188,6 +228,28 @@ describe('payload normalization failures', () => {
       ...mockOpenWeatherCoreWeatherFixture,
       hourly: mockOpenWeatherCoreWeatherFixture.hourly.map((entry, index) =>
         index === 7 ? { ...entry, temp: null } : entry
+      ),
+    };
+
+    expect(() =>
+      normalizeOpenWeatherCoreWeatherResponse(invalidPayload, resolvedLocation)
+    ).toThrowError(WeatherProviderError);
+
+    try {
+      normalizeOpenWeatherCoreWeatherResponse(invalidPayload, resolvedLocation);
+    } catch (error) {
+      expect(error).toMatchObject({
+        code: 'INVALID_PROVIDER_RESPONSE',
+        provider: 'mock-openweather',
+      });
+    }
+  });
+
+  test('처음 8개 범위 안의 잘못된 daily 엔트리를 거부한다', () => {
+    const invalidPayload = {
+      ...mockOpenWeatherCoreWeatherFixture,
+      daily: mockOpenWeatherCoreWeatherFixture.daily.map((entry, index) =>
+        index === 5 ? { ...entry, temp: null } : entry
       ),
     };
 
