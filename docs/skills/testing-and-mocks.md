@@ -31,6 +31,7 @@
   - Keep the cleanup ceiling at eight seconds.
 - Unit and component tests use Vitest and RTL.
 - End-to-end smoke tests use Playwright.
+- Service-worker changes must update `tests/service-worker.test.ts` for cache-version migration-before-cleanup and request-routing contracts, and run `pnpm test:e2e:pwa` for the production-build offline app-shell smoke.
 - Every `tests/*.e2e.ts` file must import `test`/`expect` from `tests/fixtures.ts`, never directly from `@playwright/test`. The shared fixture fails any test where the page emits a hydration-related console error/warning or `pageerror` (matched by `/hydrat/i`), so SSR/client mismatches fail CI instead of only appearing in dev server stdout. This is mechanically enforced by an ESLint `no-restricted-imports` rule scoped to `tests/**/*.e2e.ts`; `tests/fixtures.ts` itself is the one legitimate place to import `test`/`expect` from `@playwright/test`.
 - The guard can be waived for a pre-existing, already-tracked hydration bug via `test.use({ knownHydrationBug: { issue: '#<issue>', pattern: '<regex-source>' } })`, scoped to the narrowest `test`/`test.describe` block that actually reproduces the bug (never to a whole file or describe block that also holds unaffected passing tests). `pattern` is a regex source string (not a `RegExp` literal, to avoid worker serialization issues) matched against the _full_ hydration message — including the component-tree diff, not just the first line — so it must capture a substring unique to that bug's diff (a distinguishing data attribute, handler name, or on-screen text). The fixture builds `new RegExp(pattern)` internally. When any hydration issue is detected during the run, every one of them must match `pattern`: if they all do, the waiver logs `[knownHydrationBug #<issue>] ...` and passes; if even one does not, the test fails naming the unmatched message, because an unmatched issue means a new hydration regression landed inside the waived block rather than the already-tracked bug. Hydration mismatches are environment-dependent (a bug that reproduces locally may not reproduce in CI, and vice versa), so the waiver still does not fail the test when no issue is detected at all during a given run — that would turn a nondeterministic condition into a hard failure. Instead that "nothing detected" case is self-documenting but not self-enforcing: it logs a `[STALE_HYDRATION_WAIVER]`-prefixed warning and passes. Treat that warning as a prompt to manually verify the issue is fixed before deleting the waiver, not as proof it is. Do not add a waiver for a bug you are introducing — fix it instead.
 - Before proposing completion, run lint, typecheck, unit or integration checks for touched behavior, and Playwright smoke when the flow changed.
@@ -65,7 +66,7 @@
    Action:
    - run the available repository checks from the implementation worktree
    - use `pnpm typecheck`
-   - run the targeted Vitest and Playwright commands that match the touched behavior
+   - run the targeted Vitest and Playwright commands that match the touched behavior; for service-worker changes, run `pnpm exec vitest run tests/service-worker.test.ts` and `pnpm test:e2e:pwa`
    - when the production entrypoint or build workflow changes, run the bounded build/start smoke from `.github/workflows/ci.yml`
    - if `lint` or another expected script does not exist, report that exact gap instead of claiming it passed
      Done-check: every claimed check has fresh command output behind it.
@@ -81,6 +82,7 @@
 - `pnpm typecheck`
 - `pnpm exec vitest run path/to/changed.test.ts` for touched logic or component behavior
 - `pnpm exec playwright test path/to/changed-flow.spec.ts` when a user flow changed
+- `pnpm exec vitest run tests/service-worker.test.ts` and `pnpm test:e2e:pwa` when service-worker routing or cache-version behavior changes
 - `VITE_WEATHER_PROVIDER_MODE=mock pnpm build` followed by the `.github/workflows/ci.yml` smoke with `HOST=127.0.0.1 PORT=<unused-port> pnpm start`, at most 20 one-second-connect/two-second-total readiness curls, five one-second `TERM` process-group polls, `KILL` plus one-second confirmation, `wait` only after negative process-group proof, a repeated negative proof, and cleanup curl status 7 within the eight-second cleanup ceiling when the production entrypoint or build workflow changes
 - screenshots or traces for UI changes
 
@@ -98,6 +100,7 @@ Required smoke coverage when these flows are touched:
 - It runs only via `pnpm test:e2e:pwa`, which uses `playwright.pwa.config.ts` to build and serve the production bundle — the service worker is emitted only in the production build, so the dev server has none.
 - It is excluded from the main `pnpm test:e2e` (dev-server) run via `testIgnore: ['**/*.pwa.e2e.ts']`.
 - It is not yet wired into CI; a follow-up issue tracks adding it (the production build adds run time).
+- It is the production PWA responsibility: verify that a service-worker-controlled online reload populates the app shell and that an offline reload then boots the cached shell.
 
 ## Stop and ask Ori
 

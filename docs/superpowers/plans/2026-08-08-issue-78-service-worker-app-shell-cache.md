@@ -4,7 +4,7 @@
 
 **Goal:** Introduce a runtime-caching Service Worker so an offline page _refresh_ boots the app shell + static assets, without caching any weather API data.
 
-**Architecture:** A hand-written classic `public/sw.js` (served verbatim at `/sw.js`, root scope) does runtime caching only — cache-first for hashed `/assets/*` and `*.webp` sketches, network-first-with-same-URL-fallback for navigations, and passthrough for `/v1/*`. It is registered from the existing `AppEffects` client-effects component in production only. Conservative activation (no `skipWaiting`) + versioned caches. React Router's lazy `/__manifest` fetch is removed via `routeDiscovery: { mode: 'initial' }`.
+**Architecture:** A hand-written classic `public/sw.js` (served verbatim at `/sw.js`, root scope) does runtime caching only — cache-first for hashed same-origin `/assets/*`, network-first-with-same-URL-fallback for stable same-origin WebP sketches and navigations, and browser passthrough for cross-origin override WebP and `/v1/*`. It is registered from the existing `AppEffects` client-effects component in production only. Conservative activation (no `skipWaiting`) migrates versioned cache entries before cleanup. React Router's lazy `/__manifest` fetch is removed via `routeDiscovery: { mode: 'initial' }`.
 
 **Tech Stack:** React Router 7.14 (SSR, `@vercel/react-router`), Vite 8, TypeScript, Vitest, Playwright, service worker Cache API.
 
@@ -18,6 +18,7 @@
 - Pre-commit hook runs `pnpm typecheck && pnpm lint && lint-staged && pnpm test` (full vitest) — a fresh worktree MUST `pnpm install` before the first commit.
 - FSD boundaries: reusable SW registration logic lives in `frontend/shared/`.
 - Link PR to issue #78; describe scope/non-scope, spec alignment, tests run, risks/rollback (AGENTS.md PR rules).
+- This plan remains scoped to issue #78; issue #127 boundaries are out of scope.
 
 ---
 
@@ -243,12 +244,20 @@ Classic script, runtime caching only. Verified end-to-end by the Task 5 smoke; E
 
 - Create: `public/sw.js`
 - Modify: `eslint.config.ts` (override for `public/sw.js`)
+- Test: `tests/service-worker.test.ts`
 
 **Interfaces:**
 
-- Produces: `/sw.js` serving caches `weatherpane-app-shell-v1` (navigations) and `weatherpane-assets-v1` (`/assets/*`, `*.webp`); `/v1/*` untouched.
+- Produces: `/sw.js` serving `weatherpane-app-shell-v1` (navigations) and `weatherpane-assets-v1` (hashed same-origin `/assets/*`, stable same-origin `*.webp`); cross-origin override WebP and `/v1/*` are untouched.
 
-- [ ] **Step 1: Write the service worker**
+- [ ] **Step 1: Write the failing service-worker contract tests**
+
+Create `tests/service-worker.test.ts` with an in-memory Cache API and VM-loaded worker. Cover activation migration before cleanup (including rejection before cleanup or `clients.claim()` on a failed copy), cached hashed `/assets/*` cache-first behavior, and same-origin WebP network-first cache refresh.
+
+Run: `pnpm exec vitest run tests/service-worker.test.ts`
+Expected: FAIL before `public/sw.js` implements cache migration and the final request routing.
+
+- [ ] **Step 2: Write the service worker**
 
 ```js
 // public/sw.js
@@ -268,12 +277,46 @@ const EXPECTED_CACHES = [APP_SHELL_CACHE, ASSET_CACHE];
 // 청크와 섞어 내보내는 사고를 피한다.
 self.addEventListener('install', () => {});
 
-// 활성화: 이 버전 집합에 없는 오래된 weatherpane- 캐시를 정리하고, 열려 있는 클라이언트의
-// 제어권을 가져온다.
+// 같은 종류의 이전 캐시는 높은 버전부터 읽어 현재 캐시에 없는 항목만 옮긴다. 새 워커가
+// 활성화되기 전에 이전 버전의 런타임 캐시를 비워 오프라인 폴백을 잃지 않게 한다.
+function previousCacheNames(names, currentCache) {
+  const prefix = currentCache.replace(/\d+$/, '');
+  return names
+    .map((name) => {
+      const match = name.match(new RegExp(`^${prefix}(\\d+)$`));
+      return match && name !== currentCache
+        ? { name, version: Number(match[1]) }
+        : null;
+    })
+    .filter(Boolean)
+    .sort((left, right) => right.version - left.version)
+    .map(({ name }) => name);
+}
+
+async function migrateCacheEntries(sourceName, targetName) {
+  const source = await caches.open(sourceName);
+  const target = await caches.open(targetName);
+  const requests = await source.keys();
+
+  for (const request of requests) {
+    if (await target.match(request)) continue;
+    const response = await source.match(request);
+    if (response) await target.put(request, response.clone());
+  }
+}
+
+// 활성화: 이전 앱 셸/에셋 캐시의 항목을 현재 캐시에 무손실로 옮긴 뒤 오래된
+// weatherpane- 캐시를 정리하고, 열려 있는 클라이언트의 제어권을 가져온다.
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       const names = await caches.keys();
+      for (const name of previousCacheNames(names, APP_SHELL_CACHE)) {
+        await migrateCacheEntries(name, APP_SHELL_CACHE);
+      }
+      for (const name of previousCacheNames(names, ASSET_CACHE)) {
+        await migrateCacheEntries(name, ASSET_CACHE);
+      }
       await Promise.all(
         names
           .filter(
@@ -288,15 +331,21 @@ self.addEventListener('activate', (event) => {
 });
 
 // 캐시 우선: 캐시에 있으면 그대로, 없으면 네트워크로 받아 캐시에 넣는다. 내용이 안정적인
-// 정적 에셋(해시된 /assets/*, 스케치 *.webp)에 쓴다.
-async function cacheFirst(cacheName, request) {
+// 정적 에셋(해시된 /assets/*)에 쓴다.
+async function cacheFirst(event, cacheName, request) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
   if (cached) return cached;
   const response = await fetch(request);
-  // 정상 응답 또는 교차 출처 opaque 응답만 캐시한다.
-  if (response && (response.ok || response.type === 'opaque')) {
-    cache.put(request, response.clone());
+  // 동일 출처 200 응답만 캐시한다(206 등은 cache.put이 던지므로 제외). 교차 출처
+  // (opaque) 응답 — 예: 향후 원격 매니페스트 override URL — 은 매번 새로 받고 오프라인
+  // 캐시에 넣지 않는다. opaque 응답은 status가 0이라 교차 출처 404를 성공과 구분할 수
+  // 없어, 영구 캐시에 넣으면 안 되기 때문이다.
+  // waitUntil로 워커 수명을 늘려 응답 반환 후에도 쓰기가 끝나도록 보장한다.
+  if (response && response.status === 200) {
+    // 캐시 쓰기는 best-effort다. QuotaExceededError 등으로 실패해도 삼켜서
+    // unhandled rejection이 새지 않게 한다(응답은 이미 반환됨).
+    event.waitUntil(cache.put(request, response.clone()).catch(() => {}));
   }
   return response;
 }
@@ -304,12 +353,16 @@ async function cacheFirst(cacheName, request) {
 // 네트워크 우선: 네트워크가 되면 최신 응답으로 캐시를 갱신해 반환하고, 실패하면 같은
 // URL의 캐시된 응답으로 폴백한다. 내비게이션(HTML 문서)에 써서, 오프라인에서 "이전에
 // 열었던 페이지 새로고침" 시 앱 셸이 뜨게 한다.
-async function networkFirst(cacheName, request) {
+async function networkFirst(event, cacheName, request) {
   const cache = await caches.open(cacheName);
   try {
     const response = await fetch(request);
-    if (response && response.ok) {
-      cache.put(request, response.clone());
+    // 200 응답만 캐시한다(206 등은 cache.put이 던지므로 제외). waitUntil로 워커
+    // 수명을 늘려 응답 반환 후에도 쓰기가 끝나도록 보장한다.
+    if (response && response.status === 200) {
+      // 캐시 쓰기는 best-effort다. QuotaExceededError 등으로 실패해도 삼켜서
+      // unhandled rejection이 새지 않게 한다(응답은 이미 반환됨).
+      event.waitUntil(cache.put(request, response.clone()).catch(() => {}));
     }
     return response;
   } catch (error) {
@@ -330,30 +383,34 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 스케치 등 webp 에셋: 원격 매니페스트 override(교차 출처) 포함 캐시 우선.
-  if (url.pathname.endsWith('.webp')) {
-    event.respondWith(cacheFirst(ASSET_CACHE, request));
-    return;
-  }
-
   // 동일 출처 정적 에셋(해시된 JS/CSS/폰트).
   if (
     url.origin === self.location.origin &&
     url.pathname.startsWith('/assets/')
   ) {
-    event.respondWith(cacheFirst(ASSET_CACHE, request));
+    event.respondWith(cacheFirst(event, ASSET_CACHE, request));
+    return;
+  }
+
+  // 동일 출처 스케치 등 webp 에셋: 네트워크 우선. 고정 URL도 새 번들을 배포할 때 최신
+  // 그림으로 갱신하고, 오프라인에서는 이전 캐시로 폴백한다. 교차 출처 webp(예: 향후 원격
+  // 매니페스트 override)는 이 분기를 타지 않고 브라우저 기본 fetch로 넘어가 ASSET_CACHE에
+  // 들어가지 않는다 — 오프라인 에셋 캐시는 위 /assets/ 분기와 동일하게 동일 출처만
+  // 대상으로 한다.
+  if (url.origin === self.location.origin && url.pathname.endsWith('.webp')) {
+    event.respondWith(networkFirst(event, ASSET_CACHE, request));
     return;
   }
 
   // 내비게이션(HTML 문서): 네트워크 우선 + 같은 URL 캐시 폴백.
   if (request.mode === 'navigate') {
-    event.respondWith(networkFirst(APP_SHELL_CACHE, request));
+    event.respondWith(networkFirst(event, APP_SHELL_CACHE, request));
     return;
   }
 });
 ```
 
-- [ ] **Step 2: Add an ESLint override so `public/sw.js` lints clean**
+- [ ] **Step 3: Add an ESLint override so `public/sw.js` lints clean**
 
 `public/` is not gitignored, so `eslint.config.ts` lints `sw.js`; it needs service-worker globals (`self`, `caches`, `clients`, `fetch`) and script source type. Append this config object to the array in `eslint.config.ts`:
 
@@ -368,15 +425,15 @@ self.addEventListener('fetch', (event) => {
 },
 ```
 
-- [ ] **Step 3: Lint, format, expect clean**
+- [ ] **Step 4: Run the worker contracts, lint, and format check**
 
-Run: `pnpm lint && pnpm exec prettier --check public/sw.js`
+Run: `pnpm exec vitest run tests/service-worker.test.ts && pnpm lint && pnpm exec prettier --check public/sw.js`
 Expected: no errors. (If prettier reports formatting, run `pnpm exec prettier --write public/sw.js`.)
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add public/sw.js eslint.config.ts
+git add public/sw.js eslint.config.ts tests/service-worker.test.ts
 git commit -m "feat(pwa): #78 앱 셸·에셋 런타임 캐시 서비스 워커 추가"
 ```
 
@@ -571,6 +628,7 @@ git commit -m "docs(pwa): #78 서비스 워커 구현 반영 및 저널 기록"
 ## Final verification (before PR)
 
 - [ ] `pnpm lint && pnpm typecheck && pnpm exec vitest run` — all green.
+- [ ] `pnpm exec vitest run tests/service-worker.test.ts` — cache migration and request-routing contract green.
 - [ ] `VITE_WEATHER_PROVIDER_MODE=mock pnpm build` — `build/client/sw.js` present, `/assets/*` hashed chunks present.
 - [ ] `pnpm test:e2e` — main suite green (routeDiscovery regression).
 - [ ] `pnpm test:e2e:pwa` — offline app-shell smoke green.
