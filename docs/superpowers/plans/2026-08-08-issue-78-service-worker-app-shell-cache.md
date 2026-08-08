@@ -1,4 +1,4 @@
-# Service Worker 앱 셸·에셋 캐시 Implementation Plan
+# Service Worker App Shell & Asset Cache Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -587,8 +587,4 @@ gh issue create \
   --title "feat(favorites): 오프라인 카드에 영속 날씨 스냅샷 fallback 도입" \
   --label "type:feature,area:favorites" \
   --body "이슈 #78로 오프라인 새로고침 시 앱 셸이 부팅되면서, 즐겨찾기 카드가 오프라인에서 도달 가능해졌다. 현재 favorite-card.tsx는 세션 내 useCoreWeather만 사용해(영속 스냅샷 없음) 오프라인에서 CardError를 표시한다. Home/Detail과 동일하게 24h 영속 날씨 스냅샷 fallback을 주어, 오프라인 즐겨찾기가 stale 카드로 정직하게 저하되도록 한다. 참고: docs/legacy/service-worker-caching-design.md, #78."
-```
-
-```
-
 ```
