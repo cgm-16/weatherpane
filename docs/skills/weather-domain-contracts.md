@@ -27,7 +27,7 @@
 - Weather snapshot fallback cutoff: 24 hours — snapshots older than 24h must not be shown as current data
 - AQI snapshot fallback cutoff: 12 hours
 - Authoritative cutoff helpers: `frontend/features/app-bootstrap/snapshot-cutoff.ts` — `isWeatherSnapshotFresh` and `isAqiSnapshotFresh` are the single source of truth for these cutoffs; do not hardcode the values elsewhere
-- Proxy routes (`/v1/weather/*`, `/v1/geocode`) enforce fetch timeouts (server 5s, client 8s) mapped to `INVALID_PROVIDER_RESPONSE` and CDN cache headers aligned to staleTime (core 600s, aqi 1800s, geocode 86400s; errors `no-store`). `/v1/weather/core` and `/v1/weather/aqi` additionally round `lat`/`lon` to 2 decimals (and reject non-finite / out-of-range coordinates with 400 `no-store` before calling upstream); `/v1/geocode` takes `q` and has no coordinate-rounding step. Rate limiting is a Vercel WAF rule — see `docs/openweather-proxy-protection.md` (the control-plane rule's source of truth).
+- Proxy routes (`/v1/weather/*`, `/v1/geocode`) enforce fetch timeouts (server 5s, client 8s) mapped to `INVALID_PROVIDER_RESPONSE` and CDN cache headers aligned to staleTime (core 600s, aqi 1800s, geocode 86400s; errors `no-store`). `/v1/weather/core` and `/v1/weather/aqi` additionally round `lat`/`lon` to 2 decimals (and reject blank, non-finite, or out-of-range coordinates with 400 `no-store` before calling upstream); `/v1/geocode` takes `q` and has no coordinate-rounding step. Rate limiting is a Vercel WAF rule — see `docs/openweather-proxy-protection.md` (the control-plane rule's source of truth).
 
 ## Execution checklist
 
