@@ -2,6 +2,8 @@ import { vercelPreset } from '@vercel/react-router/vite';
 import type { Config } from '@react-router/dev/config';
 
 export default {
+  // Config options...
+  // Server-side render by default, to enable SPA mode set this to `false`
   ssr: true,
   // 지연 라우트 탐색(/__manifest fetch)을 끄고 전체 라우트 매니페스트를 초기 HTML에
   // 인라인한다. 라우트가 소수라 페이로드 비용은 무시할 수준이며, 오프라인 셸이
