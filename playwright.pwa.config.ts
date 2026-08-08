@@ -8,10 +8,13 @@ export default defineConfig({
   testDir: './tests',
   testMatch: ['**/*.pwa.e2e.ts'],
   fullyParallel: false,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
   workers: 1,
+  reporter: 'html',
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
