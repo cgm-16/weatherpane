@@ -646,11 +646,11 @@ last-updated 표시 규칙 예:
 
 서비스 워커(`public/sw.js`)는 앱 셸과 정적 에셋의 런타임 캐시로 구현되어 있다(이슈 #78). 프로덕션 빌드에서만, 그리고 브라우저가 지원할 때만 `AppEffects`에서 등록한다.
 
-- **캐시 버킷(버전드):** `weatherpane-app-shell-v1`(내비게이션 문서), `weatherpane-assets-v1`(`/assets/*` 해시된 JS/CSS/폰트 + 동일 출처 `*.webp` 스케치). 교차 출처 매니페스트 override URL도 `.webp` 캐시 우선 경로를 타지만, opaque라 저장하지 않고 매번 새로 받는다.
-- **전략:** 정적 에셋/`.webp`는 **캐시 우선(cache-first)**, 내비게이션은 **네트워크 우선 + 같은 URL 캐시 폴백(network-first with cache fallback)**.
+- **캐시 버킷(버전드):** `weatherpane-app-shell-v1`(내비게이션 문서), `weatherpane-assets-v1`(`/assets/*` 해시된 JS/CSS/폰트 + 동일 출처 `*.webp` 스케치). 교차 출처 매니페스트 override WebP는 SW가 가로채지 않아 브라우저 기본 fetch로 통과하며 캐시 버킷에 넣지 않는다.
+- **전략:** 해시된 정적 에셋(`/assets/*`)은 **캐시 우선(cache-first)**, 동일 출처 WebP 스케치는 **네트워크 우선 + 같은 URL 캐시 폴백(network-first with cache fallback)**, 내비게이션도 **네트워크 우선 + 같은 URL 캐시 폴백**이다.
 - **오프라인 커버리지 경계:** 오프라인 새로고침은 사용자가 이전에 SW 제어 하에 전체 내비게이션으로 로드한 적 있는 URL(실무상 `/`)에 대해서만 앱 셸을 부팅한다. 클라이언트 사이드 내비게이션이라 프리페치되지 않은 다른 라우트는 셸 캐시에 없어 오프라인 새로고침 시 여전히 브라우저 오프라인 오류 페이지로 떨어진다. 전용 오프라인 폴백 라우트는 후속 이슈로 미룬다.
 - **날씨 API는 캐시하지 않는다:** `/v1/*`는 SW가 절대 가로채지 않는다. 원 설계의 `cache-http`(날씨 GET 응답 캐시)는 의도적으로 미구현이며, 영속 스냅샷 저장소가 “보여줘도 되는 날씨 데이터”의 유일한 판단 주체로 남는다.
-- **보수적 활성화:** `skipWaiting`을 호출하지 않고, `activate`에서 이 버전 집합에 없는 오래된 `weatherpane-*` 캐시를 정리한 뒤 `clients.claim()`으로 제어권을 가져온다. 캐시 이름은 버전드다.
+- **보수적 활성화:** `skipWaiting`을 호출하지 않고, `activate`에서 같은 종류의 이전 버전 캐시 항목을 현재 캐시에 옮긴 뒤 이 버전 집합에 없는 오래된 `weatherpane-*` 캐시를 정리하고 `clients.claim()`으로 제어권을 가져온다. 캐시 이름은 버전드다.
 - `routeDiscovery: { mode: 'initial' }`(`react-router.config.ts`)로 RR7의 지연 `/__manifest` fetch를 제거해 오프라인 셸이 캐시된 매니페스트에 의존하지 않게 했다.
 - `/sw.js`에는 `vercel.json`으로 `Cache-Control: public, max-age=0, must-revalidate`를 지정해 워커 스크립트 자체는 항상 재검증되도록 한다.
 
@@ -744,26 +744,27 @@ PR/이슈 템플릿, CODEOWNERS, 보호 브랜치는 entity["company","Git
   - [ ] Favorites 동기화: ETag/If-Match, 412 리베이스 흐름 — 미구현 — 차기 범위(`docs/legacy/favorites-server-sync-design.md` 참고)
   - [x] RefreshQueue 단위 패스 실행 + “같은 패스 재시도 금지” — 구현됨(개념 일치, concurrency=2 배치 refetch로 구현; `frontend/features/favorites/use-refresh-queue.ts`)
 - [x] 오프라인
-  - [x] 서비스워커 설치/업데이트/캐시 버전 관리 — 구현됨(이슈 #78; `public/sw.js` — 앱 셸/정적 에셋 런타임 캐시, 버전드 캐시 이름, `activate`에서 오래된 캐시 정리)
+  - [x] 서비스워커 설치/업데이트/캐시 버전 관리 — 구현됨(이슈 #78; `public/sw.js` — 앱 셸/정적 에셋 런타임 캐시, 버전드 캐시 이름, `activate`에서 이전 캐시 이관 뒤 오래된 캐시 정리)
   - [x] API 실패 시 스냅샷 fallback, 오프라인 배지 표시 — 구현됨
 - [x] 접근성
   - [x] 키보드 조작/포커스 링/스크린리더 라벨 점검(2.1.1/2.4.7/2.5.7) — 구현됨
 
 ### 테스트 계획과 대표 케이스
 
-| 레벨        | 케이스                       | 기대                                      | 구현 상태                                                                                                                                                                                                       |
-| ----------- | ---------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit        | staleness 판정(경계값)       | 10분/60분 등 경계 정확                    | 구현됨(즐겨찾기 카드 배지 경계 — `frontend/pages/favorites/ui/favorite-card.tsx`의 `CORE_WEATHER_STALE_TIME`/`VERY_STALE_MS`; 시스템 전역 staleTime 경계는 10분/30분, 위 “스테일 및 last-updated 규칙” 절 참고) |
-| Unit        | Favorites 닉네임 20자 하드캡 | 21자 입력 불가                            | 구현됨                                                                                                                                                                                                          |
-| Unit        | ‘완료’ auto-blur 커밋        | 커밋 후 모드 종료                         | 구현됨                                                                                                                                                                                                          |
-| Integration | 스냅샷 없음 + 초기 실패      | 인라인 오류 + 다시 시도, 비네비           | 구현됨                                                                                                                                                                                                          |
-| Integration | 스냅샷 있음 + 갱신 실패      | 스냅샷 유지 + stale 표시                  | 구현됨                                                                                                                                                                                                          |
-| Integration | RefreshQueue 정책            | 같은 패스에서 실패 항목 재큐잉 없음       | 구현됨(concurrency=2 배치 refetch로 구현)                                                                                                                                                                       |
-| Integration | Favorites 412 충돌           | 재조회 → 리베이스 → 재시도 성공           | 미구현 — 차기 범위(서버 동기화 없음; `docs/legacy/favorites-server-sync-design.md` 참고)                                                                                                                        |
-| E2E         | Search → Select → Detail     | ActiveLocation 전환 + Recents 기록        | 구현됨                                                                                                                                                                                                          |
-| E2E         | Favorites 편집/정렬          | 위/아래/드래그 동작 + 저장                | 구현됨                                                                                                                                                                                                          |
-| E2E         | 오프라인 모드                | 스냅샷 렌더 + 오프라인 배지               | 구현됨(스냅샷 fallback + online/offline 이벤트, 그리고 이슈 #78의 서비스 워커 오프라인 앱 셸 스모크 — `tests/service-worker-offline.pwa.e2e.ts`)                                                                |
-| A11y        | 키보드 전 기능 조작          | Tab/Enter만으로 가능 citeturn2search2  | 구현됨                                                                                                                                                                                                          |
-| A11y        | 드래그 대안 제공             | 위/아래로 재정렬 가능 citeturn0search0 | 구현됨                                                                                                                                                                                                          |
+| 레벨        | 케이스                       | 기대                                                              | 구현 상태                                                                                                                                                                                                       |
+| ----------- | ---------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit        | staleness 판정(경계값)       | 10분/60분 등 경계 정확                                            | 구현됨(즐겨찾기 카드 배지 경계 — `frontend/pages/favorites/ui/favorite-card.tsx`의 `CORE_WEATHER_STALE_TIME`/`VERY_STALE_MS`; 시스템 전역 staleTime 경계는 10분/30분, 위 “스테일 및 last-updated 규칙” 절 참고) |
+| Unit        | Favorites 닉네임 20자 하드캡 | 21자 입력 불가                                                    | 구현됨                                                                                                                                                                                                          |
+| Unit        | ‘완료’ auto-blur 커밋        | 커밋 후 모드 종료                                                 | 구현됨                                                                                                                                                                                                          |
+| Unit        | 서비스 워커 캐시 계약        | 이전 캐시 이관, 해시 에셋 캐시 우선, 동일 출처 WebP 네트워크 우선 | 구현됨(`tests/service-worker.test.ts`)                                                                                                                                                                          |
+| Integration | 스냅샷 없음 + 초기 실패      | 인라인 오류 + 다시 시도, 비네비                                   | 구현됨                                                                                                                                                                                                          |
+| Integration | 스냅샷 있음 + 갱신 실패      | 스냅샷 유지 + stale 표시                                          | 구현됨                                                                                                                                                                                                          |
+| Integration | RefreshQueue 정책            | 같은 패스에서 실패 항목 재큐잉 없음                               | 구현됨(concurrency=2 배치 refetch로 구현)                                                                                                                                                                       |
+| Integration | Favorites 412 충돌           | 재조회 → 리베이스 → 재시도 성공                                   | 미구현 — 차기 범위(서버 동기화 없음; `docs/legacy/favorites-server-sync-design.md` 참고)                                                                                                                        |
+| E2E         | Search → Select → Detail     | ActiveLocation 전환 + Recents 기록                                | 구현됨                                                                                                                                                                                                          |
+| E2E         | Favorites 편집/정렬          | 위/아래/드래그 동작 + 저장                                        | 구현됨                                                                                                                                                                                                          |
+| E2E         | 오프라인 모드                | 스냅샷 렌더 + 오프라인 배지                                       | 구현됨(스냅샷 fallback + online/offline 이벤트, 그리고 이슈 #78의 서비스 워커 오프라인 앱 셸 스모크 — `tests/service-worker-offline.pwa.e2e.ts`)                                                                |
+| A11y        | 키보드 전 기능 조작          | Tab/Enter만으로 가능 citeturn2search2                          | 구현됨                                                                                                                                                                                                          |
+| A11y        | 드래그 대안 제공             | 위/아래로 재정렬 가능 citeturn0search0                         | 구현됨                                                                                                                                                                                                          |
 
 이 명세는 “확정 항목(Favorites)”과 “가정/권장 항목(그 외)”을 분리했으며, 실제 구현 착수 시 **가정 항목**은 첫 스프린트에서 빠르게 확정(또는 축소)하는 것을 권장한다.

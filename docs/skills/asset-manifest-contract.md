@@ -22,6 +22,7 @@
 - The remote override manifest, if fetched, applies only on the next app load — never mid-session
 - Remote asset fetch failure must fall back to the deterministic local asset immediately
 - No mid-session manifest hot swap; the resolved manifest is fixed for the session lifetime
+- When the service worker is in scope, hashed same-origin `/assets/*` use cache-first; stable same-origin WebP sketches use network-first with a cached fallback; cross-origin override WebP is browser passthrough and is not stored in the service-worker cache
 - Master asset ratio: 3:2; master size: 2400×1600; format: WebP; max target size: 400 KB
 - Safe zone: left 40%; top 15% and bottom 20% are low-detail safety margins; subject is right-weighted
 - `scripts/stitch/sketch-batch.json` is the single source of truth for which keys need art; its `keys` array must stay in exact lockstep with the baseline manifest key set (enforced by the drift test)
@@ -48,13 +49,20 @@
    - confirm that if the remote fetch fails, the baseline manifest is used in full
      Done-check: a remote fetch failure results in a fully functional session using baseline assets.
 
-4. Intent: verify asset dimensions and format before adding new files.
+4. Intent: preserve service-worker cache boundaries when an override URL changes.
+   Action:
+   - confirm hashed same-origin `/assets/*` remain cache-first
+   - confirm stable same-origin WebP sketches use network-first with the same-URL cached fallback
+   - confirm a cross-origin override WebP is not intercepted or cached by the service worker
+     Done-check: asset URL origin determines the documented runtime strategy without caching an opaque override response.
+
+5. Intent: verify asset dimensions and format before adding new files.
    Action:
    - confirm the asset is WebP, 2400×1600, under 400 KB
    - confirm the subject is right-weighted with left-40% safe zone and top/bottom safety margins respected
      Done-check: the asset passes the format and composition contract before being added to the manifest.
 
-5. Intent: regenerate or add an asset via Stitch.
+6. Intent: regenerate or add an asset via Stitch.
    Action: follow the full generation loop in **## Stitch batch workflow** below.
    Done-check: `pnpm exec vitest run tests/asset/manifest.test.ts` passes (drift guard + file existence).
 
