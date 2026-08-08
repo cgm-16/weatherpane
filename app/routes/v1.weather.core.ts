@@ -24,10 +24,13 @@ export async function loader({ request }: { request: Request }) {
     );
   }
 
-  // 비수치·범위 밖 좌표는 업스트림 호출 이전에 거부한다(쿼터를 낭비하지 않는다).
+  // 공백·비수치·범위 밖 좌표는 업스트림 호출 이전에 거부한다(쿼터를 낭비하지 않는다).
+  // 공백뿐인 값은 Number()가 0으로 강제 변환하므로 유한성 검사 이전에 걸러낸다.
   const latNum = Number(lat);
   const lonNum = Number(lon);
   if (
+    !lat.trim() ||
+    !lon.trim() ||
     !Number.isFinite(latNum) ||
     !Number.isFinite(lonNum) ||
     latNum < -90 ||
