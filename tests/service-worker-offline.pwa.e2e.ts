@@ -31,4 +31,71 @@ test.describe('서비스 워커 오프라인 앱 셸', () => {
 
     await context.setOffline(false);
   });
+
+  test('고정 URL 스케치는 온라인 재검증 뒤 오프라인에 최신 캐시를 쓴다', async ({
+    page,
+    context,
+  }) => {
+    const sketchPath = '/sketches/hub/seoul/clear-day.webp';
+
+    await page.goto('/');
+    await page.waitForFunction(
+      () => !!navigator.serviceWorker?.controller,
+      null,
+      {
+        timeout: 15_000,
+      }
+    );
+
+    await page.evaluate(async (path) => {
+      const cache = await caches.open('weatherpane-assets-v1');
+      await cache.put(
+        path,
+        new Response('오래된 스케치', {
+          headers: { 'content-type': 'text/plain' },
+        })
+      );
+    }, sketchPath);
+
+    const onlineResponse = await page.evaluate(async (path) => {
+      const response = await fetch(path);
+      return {
+        contentType: response.headers.get('content-type'),
+        byteLength: (await response.arrayBuffer()).byteLength,
+      };
+    }, sketchPath);
+
+    expect(onlineResponse.contentType).toContain('image/webp');
+    expect(onlineResponse.byteLength).toBeGreaterThan(0);
+    await expect
+      .poll(() =>
+        page.evaluate(async (path) => {
+          const cached = await (
+            await caches.open('weatherpane-assets-v1')
+          ).match(path);
+          return cached
+            ? {
+                contentType: cached.headers.get('content-type'),
+                byteLength: (await cached.arrayBuffer()).byteLength,
+              }
+            : null;
+        }, sketchPath)
+      )
+      .toEqual(onlineResponse);
+
+    await context.setOffline(true);
+    try {
+      const offlineResponse = await page.evaluate(async (path) => {
+        const response = await fetch(path);
+        return {
+          contentType: response.headers.get('content-type'),
+          byteLength: (await response.arrayBuffer()).byteLength,
+        };
+      }, sketchPath);
+
+      expect(offlineResponse).toEqual(onlineResponse);
+    } finally {
+      await context.setOffline(false);
+    }
+  });
 });

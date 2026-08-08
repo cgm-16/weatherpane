@@ -5,12 +5,14 @@ import { describe, expect, test, vi } from 'vitest';
 
 type CachedResponse = {
   body: string;
+  status: number;
   clone: () => CachedResponse;
 };
 
 function createResponse(body: string): CachedResponse {
   return {
     body,
+    status: 200,
     clone: () => createResponse(body),
   };
 }
@@ -79,7 +81,7 @@ class MemoryCacheStorage {
   }
 }
 
-function loadServiceWorker(caches: MemoryCacheStorage) {
+function loadServiceWorker(caches: MemoryCacheStorage, networkFetch = vi.fn()) {
   const listeners = new Map<string, (event: unknown) => void>();
   const claim = vi.fn().mockResolvedValue(undefined);
   const serviceWorker = {
@@ -94,6 +96,7 @@ function loadServiceWorker(caches: MemoryCacheStorage) {
   vm.runInNewContext(source, {
     self: serviceWorker,
     caches,
+    fetch: networkFetch,
     URL,
   });
 
@@ -109,6 +112,24 @@ function loadServiceWorker(caches: MemoryCacheStorage) {
       if (!activation)
         throw new Error('activate 핸들러가 등록되지 않았습니다.');
       await activation;
+    },
+    async fetch(request: { url: string; method: string; mode?: string }) {
+      let response: Promise<CachedResponse> | undefined;
+      const backgroundTasks: Promise<unknown>[] = [];
+      listeners.get('fetch')?.({
+        request,
+        respondWith(promise: Promise<CachedResponse>) {
+          response = promise;
+        },
+        waitUntil(promise: Promise<unknown>) {
+          backgroundTasks.push(promise);
+        },
+      });
+      if (!response)
+        throw new Error('fetch 핸들러가 응답을 등록하지 않았습니다.');
+      const resolved = await response;
+      await Promise.all(backgroundTasks);
+      return resolved;
     },
   };
 }
@@ -198,5 +219,41 @@ describe('서비스 워커 캐시 버전 전환', () => {
     expect(caches.caches.has('weatherpane-app-shell-v0')).toBe(true);
     expect(caches.caches.has('weatherpane-assets-v0')).toBe(true);
     expect(serviceWorker.claim).not.toHaveBeenCalled();
+  });
+});
+
+describe('서비스 워커 스케치 재검증', () => {
+  test('해시된 assets WebP는 캐시 우선으로 반환한다', async () => {
+    const assetUrl = 'https://weatherpane.test/assets/logo-a1b2c3.webp';
+    const request = { url: assetUrl, method: 'GET' };
+    const caches = new MemoryCacheStorage();
+    caches.add('weatherpane-assets-v1', { [assetUrl]: '캐시된 에셋' });
+    const networkFetch = vi
+      .fn()
+      .mockRejectedValue(new Error('네트워크를 호출하면 안 됩니다.'));
+    const serviceWorker = loadServiceWorker(caches, networkFetch);
+
+    const response = await serviceWorker.fetch(request);
+
+    expect(response.body).toBe('캐시된 에셋');
+    expect(networkFetch).not.toHaveBeenCalled();
+  });
+
+  test('캐시된 동일 출처 WebP를 네트워크 응답으로 갱신한다', async () => {
+    const sketchUrl =
+      'https://weatherpane.test/sketches/hub/seoul/clear-day.webp';
+    const request = { url: sketchUrl, method: 'GET' };
+    const caches = new MemoryCacheStorage();
+    caches.add('weatherpane-assets-v1', { [sketchUrl]: '오래된 스케치' });
+    const networkFetch = vi.fn().mockResolvedValue(createResponse('새 스케치'));
+    const serviceWorker = loadServiceWorker(caches, networkFetch);
+
+    const response = await serviceWorker.fetch(request);
+
+    expect(response.body).toBe('새 스케치');
+    expect(networkFetch).toHaveBeenCalledWith(request);
+    expect(
+      await responseBody(await caches.open('weatherpane-assets-v1'), sketchUrl)
+    ).toBe('새 스케치');
   });
 });
