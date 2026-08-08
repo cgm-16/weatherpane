@@ -59,7 +59,7 @@
 로더의 응답 경계에서 `Cache-Control` 헤더를 붙인다. 이 헬퍼는 **`response.ok`로
 분기**한다. 성공(2xx) 응답에는
 
-```
+```text
 Cache-Control: public, max-age=0, s-maxage=<n>, stale-while-revalidate=<n>
 ```
 
@@ -116,7 +116,7 @@ Vercel CDN만 수행한다(`s-maxage`). 결과적으로 인접 사용자·재요
 
 `proxyOpenWeatherRequest`는 OpenWeather가 429를 반환하면 `console.warn`으로
 
-```
+```text
 [openweather-proxy] upstream returned 429 — quota/rate limit reached
 ```
 
@@ -137,9 +137,13 @@ vercel link
 vercel firewall overview
 ```
 
-`vercel firewall overview`로 커스텀 규칙/WAF 엔타이틀먼트를 확인한다. 플랜에서
-커스텀 규칙을 쓸 수 없으면, 코드 PR의 캐시 + 타임아웃 보호는 단독으로 유효하며
-요청 제한 메커니즘은 다시 검토한다.
+`vercel firewall overview`로 방화벽 관리 권한과 rate-limit 설정 한도를 확인한다.
+커스텀 규칙과 IP 기준 `rate_limit`은 모든 플랜에서 사용 가능하다(지속 `--duration`·
+`token_bucket` 알고리즘·`header:` 카운팅 키·`ja3`는 Enterprise 전용이나 이 규칙에는
+불필요하다). 따라서 실제 게이트는 커스텀 규칙 사용 가능 여부가 아니라 방화벽을 변경할
+권한과 rate-limit 파라미터 한도(창 10–3600초, 요청 1–10,000,000)다. 권한이 없으면 이
+단계를 Ori에게 넘긴다. 방화벽을 쓸 수 없는 예외 상황이라면 코드 PR의 캐시 + 타임아웃
+보호가 단독으로 유효하며 요청 제한 메커니즘은 다시 검토한다.
 
 ### 스테이지 1 — log 모드로 등록
 
