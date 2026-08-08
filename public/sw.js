@@ -41,10 +41,15 @@ async function cacheFirst(event, cacheName, request) {
   const cached = await cache.match(request);
   if (cached) return cached;
   const response = await fetch(request);
-  // 200 또는 교차 출처 opaque 응답만 캐시한다(206 등은 cache.put이 던지므로 제외).
+  // 동일 출처 200 응답만 캐시한다(206 등은 cache.put이 던지므로 제외). 교차 출처
+  // (opaque) 응답 — 예: 향후 원격 매니페스트 override URL — 은 매번 새로 받고 오프라인
+  // 캐시에 넣지 않는다. opaque 응답은 status가 0이라 교차 출처 404를 성공과 구분할 수
+  // 없어, 영구 캐시에 넣으면 안 되기 때문이다.
   // waitUntil로 워커 수명을 늘려 응답 반환 후에도 쓰기가 끝나도록 보장한다.
-  if (response && (response.status === 200 || response.type === 'opaque')) {
-    event.waitUntil(cache.put(request, response.clone()));
+  if (response && response.status === 200) {
+    // 캐시 쓰기는 best-effort다. QuotaExceededError 등으로 실패해도 삼켜서
+    // unhandled rejection이 새지 않게 한다(응답은 이미 반환됨).
+    event.waitUntil(cache.put(request, response.clone()).catch(() => {}));
   }
   return response;
 }
@@ -59,7 +64,9 @@ async function networkFirst(event, cacheName, request) {
     // 200 응답만 캐시한다(206 등은 cache.put이 던지므로 제외). waitUntil로 워커
     // 수명을 늘려 응답 반환 후에도 쓰기가 끝나도록 보장한다.
     if (response && response.status === 200) {
-      event.waitUntil(cache.put(request, response.clone()));
+      // 캐시 쓰기는 best-effort다. QuotaExceededError 등으로 실패해도 삼켜서
+      // unhandled rejection이 새지 않게 한다(응답은 이미 반환됨).
+      event.waitUntil(cache.put(request, response.clone()).catch(() => {}));
     }
     return response;
   } catch (error) {
@@ -80,7 +87,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 스케치 등 webp 에셋: 원격 매니페스트 override(교차 출처) 포함 캐시 우선.
+  // 스케치 등 webp 에셋: 캐시 우선. 원격 매니페스트 override(교차 출처)도 이 경로를
+  // 타지만 opaque라 캐시하지 않고 매번 새로 받는다.
   if (url.pathname.endsWith('.webp')) {
     event.respondWith(cacheFirst(event, ASSET_CACHE, request));
     return;
