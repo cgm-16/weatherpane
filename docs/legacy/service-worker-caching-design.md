@@ -1,7 +1,7 @@
 ---
 archived_on: 2026-07-30
 archive_reason: 서비스 워커가 구현된 적이 없다. Home/Detail 오프라인 UX는 영속 스냅샷 fallback과 online/offline 이벤트 수준까지만 구현되어 있고, Favorites 날씨 데이터는 세션 내 인메모리 캐시만 사용한다. 앱 셸 precache/런타임 캐시 같은 PWA 수준 지원은 없다 (docs/weatherpane-retrospective.md 참고).
-replaced_by: 미구현 — 차기 범위. 실제 구현되면 새 이슈와 함께 docs/specs.md에 반영한다.
+replaced_by: 이슈 #78 — 앱 셸/정적 에셋 런타임 캐시 서비스 워커(public/sw.js)로 이 설계의 부분집합이 구현됨. 현재 상태는 docs/specs.md의 "서비스워커 캐싱 전략" 절 참고. 원 설계의 cache-http(날씨 GET 응답 캐시)는 의도적으로 미구현으로 남아 있다 — /v1/*는 SW가 캐시하지 않으며 영속 스냅샷 저장소가 날씨 데이터의 유일한 판단 주체다.
 ---
 
 # 서비스워커 캐싱 전략 설계 (아카이브)
