@@ -6,7 +6,7 @@ Weatherpane는 **대한민국 지역을 중심으로** 사용자에게 “현재
 
 본 문서는 사용자와의 이전 대화에서 확정된 **Favorites UX 결정**(카드 스켈레톤/인라인 오류/재시도/비네비게이션/편집 모드/위·아래 버튼/닉네임 20자 하드캡 등)을 **“변경 금지(확정)”**로 고정하고, 그 외 화면/기능은 “MVP 가정(Assumptions)”과 “권장 설계(Recommendations)”를 명확히 구분해 개발자가 즉시 구현 가능한 수준의 **아키텍처·데이터 모델·API 계약·오프라인 전략·테스트 계획**을 통합한다. API 오류 포맷은 표준화된 Problem Details(RFC 9457)를 기본으로 하여 클라이언트/테스트/관측을 단순화한다. citeturn0search2
 
-> **구현 상태: 정정.** 위 두 문단이 언급하는 **설정(Settings)** 화면은 구현됨(이슈 #77; `frontend/features/settings/`). **서비스워커** 기반 오프라인 프록시와 **RFC 9457** 오류 포맷은 미구현 — 차기 범위다(서비스워커 원 설계는 `docs/legacy/service-worker-caching-design.md` 참고). 실제 오류 포맷은 `/v1/*` 프록시가 반환하는 단순한 `{ code, message }` 구조다(`app/routes/v1.weather.core.ts`). 아래 각 절에서 항목별 구현 여부를 다시 표기한다.
+> **구현 상태: 정정.** 위 두 문단이 언급하는 **설정(Settings)** 화면은 구현됨(이슈 #77; `frontend/features/settings/`). **서비스워커**는 앱 셸/정적 에셋 런타임 캐시로 구현됨(이슈 #78; `public/sw.js` — 아래 “서비스워커 캐싱 전략” 절 참고). 다만 원 설계가 그리던 “날씨 API를 가로채는 오프라인 프록시” 역할은 의도적으로 구현하지 않는다 — `/v1/*`는 SW가 캐시하지 않으며 영속 스냅샷 저장소가 여전히 “보여줘도 되는 날씨 데이터”의 유일한 판단 주체다. **RFC 9457** 오류 포맷은 미구현 — 차기 범위다. 실제 오류 포맷은 `/v1/*` 프록시가 반환하는 단순한 `{ code, message }` 구조다(`app/routes/v1.weather.core.ts`). 아래 각 절에서 항목별 구현 여부를 다시 표기한다.
 
 ---
 
@@ -25,20 +25,20 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 - **Offline behavior**: 스냅샷 기반 렌더, stale/오프라인 표시, 실패 복구 UX.
 - **Assets / Sketch pipeline**: 상태(맑음/비/눈 등)와 주야에 따른 스케치 키-에셋 매핑 및 캐시.
 
-> **구현 상태:** Home/Search/Favorites/Recents/Settings는 구현됨(Settings는 이슈 #77). Weather Detail은 현재/시간별/일별 예보와 보조 지표까지 구현됨(일별 예보는 이슈 #87). Offline behavior는 API 실패 후 스냅샷 fallback + last-updated 배지 수준까지 구현됨 — 초기 pending 중 스냅샷 즉시 렌더와 서비스워커 기반 PWA 캐싱은 미구현(`docs/legacy/service-worker-caching-design.md` 참고).
+> **구현 상태:** Home/Search/Favorites/Recents/Settings는 구현됨(Settings는 이슈 #77). Weather Detail은 현재/시간별/일별 예보와 보조 지표까지 구현됨(일별 예보는 이슈 #87). Offline behavior는 API 실패 후 스냅샷 fallback + last-updated 배지 수준까지 구현됨 — 초기 pending 중 스냅샷 즉시 렌더는 미구현. 서비스워커 기반 앱 셸/정적 에셋 런타임 캐시는 구현됨(이슈 #78; `public/sw.js`) — 단, 날씨 API 캐시·PWA 매니페스트·백그라운드 동기화는 범위 밖이다.
 
 ### MVP 우선순위(권장)
 
-| 우선순위 | 기능                   | MVP 목표                                               | 구현 상태                                                                                              | 비고                                            |
-| -------- | ---------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
-| P0       | Home/Active Location   | 즉시 렌더 + 스냅샷 fallback + stale 표시               | 부분 구현(API 실패 후 스냅샷 fallback + stale 표시는 구현, 초기 pending 중 스냅샷 즉시 렌더는 미구현)  | 오프라인 핵심                                   |
-| P0       | Search                 | 위치 선택 → Active Location 전환 + Recents 기록        | 구현됨                                                                                                 | 로컬 대한민국 카탈로그 기반                     |
-| P0       | Weather Detail         | 최소한 “현재/시간별/일별” 표시 + 오류/스켈레톤         | 구현됨(현재/시간별/일별 + 오류/스켈레톤; 일별 예보는 이슈 #87)                                         | 데이터 계약 필요                                |
-| P0       | Favorites              | **확정 UX** 준수(편집/정렬, 위·아래, 스켈레톤/오류 등) | 구현됨                                                                                                 | 본 문서에서 고정                                |
-| P1       | Settings               | 테마/단위/동작 줄이기 + 선택적 로컬 데이터 초기화      | 구현됨(이슈 #77; `frontend/features/settings/`)                                                        | 확인 뒤 Weatherpane 소유 데이터만 초기화        |
-| P1       | Service Worker         | 앱 셸 precache + 런타임 캐시                           | 미구현 — 차기 범위(`docs/legacy/service-worker-caching-design.md`)                                     | PWA 캐싱 권장                                   |
-| P2       | 원격 스케치 매니페스트 | 다음 세션에 적용되는 원격 오버라이드                   | 부분 구현(`/v1/assets/manifest`는 오버라이드 로직은 구현되어 있으나 현재 `{}` 반환 — 활성 데이터 없음) | 운영 편의                                       |
-| P2       | 고급 오프라인 동기화   | Periodic Background Sync 등                            | 미구현 — 차기 범위                                                                                     | 브라우저 지원 고려 citeturn5search2turn5search6 |
+| 우선순위 | 기능                   | MVP 목표                                               | 구현 상태                                                                                                        | 비고                                            |
+| -------- | ---------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| P0       | Home/Active Location   | 즉시 렌더 + 스냅샷 fallback + stale 표시               | 부분 구현(API 실패 후 스냅샷 fallback + stale 표시는 구현, 초기 pending 중 스냅샷 즉시 렌더는 미구현)            | 오프라인 핵심                                   |
+| P0       | Search                 | 위치 선택 → Active Location 전환 + Recents 기록        | 구현됨                                                                                                           | 로컬 대한민국 카탈로그 기반                     |
+| P0       | Weather Detail         | 최소한 “현재/시간별/일별” 표시 + 오류/스켈레톤         | 구현됨(현재/시간별/일별 + 오류/스켈레톤; 일별 예보는 이슈 #87)                                                   | 데이터 계약 필요                                |
+| P0       | Favorites              | **확정 UX** 준수(편집/정렬, 위·아래, 스켈레톤/오류 등) | 구현됨                                                                                                           | 본 문서에서 고정                                |
+| P1       | Settings               | 테마/단위/동작 줄이기 + 선택적 로컬 데이터 초기화      | 구현됨(이슈 #77; `frontend/features/settings/`)                                                                  | 확인 뒤 Weatherpane 소유 데이터만 초기화        |
+| P1       | Service Worker         | 앱 셸/정적 에셋 런타임 캐시                            | 구현됨(이슈 #78; `public/sw.js` — 앱 셸·에셋 런타임 캐시. cache-http·PWA 매니페스트·백그라운드 동기화는 범위 밖) | 사전 캐시 없이 런타임 캐시                      |
+| P2       | 원격 스케치 매니페스트 | 다음 세션에 적용되는 원격 오버라이드                   | 부분 구현(`/v1/assets/manifest`는 오버라이드 로직은 구현되어 있으나 현재 `{}` 반환 — 활성 데이터 없음)           | 운영 편의                                       |
+| P2       | 고급 오프라인 동기화   | Periodic Background Sync 등                            | 미구현 — 차기 범위                                                                                               | 브라우저 지원 고려 citeturn5search2turn5search6 |
 
 ### 명시적 전제(Assumptions)
 
@@ -50,7 +50,7 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 - **날씨 공급자**: (A) 자체 백엔드 집계(권장) 또는 (B) 클라이언트 직접 서드파티 호출(권장하지 않음: 키 노출/쿼터).
 - **플랫폼**: 웹(PWA) 우선. 서비스 워커/Geolocation은 HTTPS 보안 컨텍스트 전제. citeturn1search3turn6search0
 
-> **구현 상태(전제 → 실제):** 백엔드 기술/호스팅은 더 이상 불명이 아니다 — 별도의 자체 도메인 백엔드가 아니라 앱 자체 서버 라우트가 OpenWeather API를 프록시하는 구조로 확정되었다(아래 “날씨 공급자” 정정과 동일한 사실). 이 전제가 말하는 “REST 기준 계약”은 이 프록시가 아니라 별도로 구상했던 자체 도메인 REST 계약을 가리키며, “엔드포인트 목록(권장)” 절의 표와 마찬가지로 대부분 미구현 — 차기 범위로 남아 있다. 검색 데이터 소스는 (A) 로컬 카탈로그로 확정 구현됨(`AGENTS.md`: “Search is Korea-catalog-driven and instant”). 날씨 공급자는 (A)·(B) 어느 쪽도 아니라, **서버가 OpenWeather API 키를 숨기고 위치별 요청을 그대로 프록시**하는 방식으로 구현됨(자체 도메인 집계 백엔드 아님; `/v1/weather/core`, `/v1/weather/aqi`, `/v1/geocode` — `app/routes/v1.weather.core.ts`). 인증 방식(Bearer token/OAuth2)은 미구현 — 차기 범위(계정 기능 자체가 없음). 서비스 워커 전제는 미구현 — 차기 범위(`docs/legacy/service-worker-caching-design.md` 참고). Geolocation의 HTTPS 보안 컨텍스트 요구사항 자체는 유효하다.
+> **구현 상태(전제 → 실제):** 백엔드 기술/호스팅은 더 이상 불명이 아니다 — 별도의 자체 도메인 백엔드가 아니라 앱 자체 서버 라우트가 OpenWeather API를 프록시하는 구조로 확정되었다(아래 “날씨 공급자” 정정과 동일한 사실). 이 전제가 말하는 “REST 기준 계약”은 이 프록시가 아니라 별도로 구상했던 자체 도메인 REST 계약을 가리키며, “엔드포인트 목록(권장)” 절의 표와 마찬가지로 대부분 미구현 — 차기 범위로 남아 있다. 검색 데이터 소스는 (A) 로컬 카탈로그로 확정 구현됨(`AGENTS.md`: “Search is Korea-catalog-driven and instant”). 날씨 공급자는 (A)·(B) 어느 쪽도 아니라, **서버가 OpenWeather API 키를 숨기고 위치별 요청을 그대로 프록시**하는 방식으로 구현됨(자체 도메인 집계 백엔드 아님; `/v1/weather/core`, `/v1/weather/aqi`, `/v1/geocode` — `app/routes/v1.weather.core.ts`). 인증 방식(Bearer token/OAuth2)은 미구현 — 차기 범위(계정 기능 자체가 없음). 서비스 워커 전제는 앱 셸/정적 에셋 런타임 캐시로 구현됨(이슈 #78; `public/sw.js`) — 다만 날씨 API(`/v1/*`) 캐시는 범위 밖이다. Geolocation의 HTTPS 보안 컨텍스트 요구사항 자체는 유효하며, 서비스 워커도 프로덕션 HTTPS에서만 동작한다.
 
 ---
 
@@ -148,7 +148,7 @@ Favorites의 카드 상태는 “경영 요약”의 확정 규칙(FAV-03~06)을
 - Cache API/CacheStorage: 오프라인 에셋 저장 및 요청 커스터마이징. citeturn5search0turn5search4
 - Web Storage: 기능별 키와 payload `version` 을 명시해 작은 영속 상태를 명확하게 관리한다.
 
-> **구현 상태:** 위 “이중 구조” 중 (1) 명시적 영속 스냅샷 저장소(Web Storage)는 구현됨. (2) 런타임 HTTP 캐시/서비스워커는 미구현 — 차기 범위다(`docs/legacy/service-worker-caching-design.md` 참고). Cache API/CacheStorage도 같은 이유로 미구현이다.
+> **구현 상태:** 위 “이중 구조” 중 (1) 명시적 영속 스냅샷 저장소(Web Storage)는 구현됨. (2) 서비스워커와 Cache API/CacheStorage는 앱 셸/정적 에셋 런타임 캐시로 구현됨(이슈 #78; `public/sw.js`). 단, 날씨 API(`/v1/*`)의 런타임 HTTP 캐시(원 설계의 `cache-http`)는 의도적으로 미구현이다 — 영속 스냅샷 저장소가 날씨 데이터의 유일한 판단 주체다.
 
 ### 주요 런타임 컴포넌트
 
@@ -158,11 +158,11 @@ Favorites의 카드 상태는 “경영 요약”의 확정 규칙(FAV-03~06)을
 - **SnapshotRepository(Web Storage)**: 날씨/AQI 스냅샷 저장 — 구현됨. 원문은 “요약/상세” 축으로 서술되어 있었으나 실제 축은 Weather/AQI다(`frontend/shared/lib/storage/repositories/snapshot-repositories.ts`)
 - **FavoritesStore**: 즐겨찾기 CRUD/정렬/닉네임 — 구현됨(로컬 `localStorage`만; `frontend/features/favorites/use-favorites.ts`). **SyncQueue + 서버 동기화(ETag 기반)**는 미구현 — 차기 범위(`docs/legacy/favorites-server-sync-design.md` 참고)
 - **RefreshQueue(Weather)**: 화면 진입/포커스 등 트리거로 날씨 갱신 — 구현됨. 개념은 일치하나 `passId` 단위 실행이 아니라 concurrency=2 배치 refetch로 구현됨(`frontend/features/favorites/use-refresh-queue.ts`)
-- **Service Worker**: 앱 셸 precache + 런타임 캐시(스케치/정적 리소스) — 미구현 — 차기 범위. 원래 설계는 `docs/legacy/service-worker-caching-design.md` 참고
+- **Service Worker**: 앱 셸/정적 에셋(스케치·해시된 JS/CSS/폰트) 런타임 캐시 — 구현됨(이슈 #78; `public/sw.js`). 사전 캐시 없이 런타임에 실제 URL로 캐시하며, 날씨 API(`/v1/*`)는 캐시하지 않는다. 원래 설계는 `docs/legacy/service-worker-caching-design.md` 참고
 
 ### 컴포넌트 다이어그램(mermaid)
 
-> **구현 상태:** 아래 다이어그램의 `SW`(Service Worker)/`Cache`(CacheStorage)/`Loc`(Location API)/`Fav`(Favorites API)/`SyncQ`(SyncQueue)는 미구현 — 차기 범위다. `Wx`(Weather API)는 자체 집계 백엔드가 아니라 서버가 프록시하는 OpenWeather 호출로 구현되어 있다(`/v1/weather/core`, `/v1/weather/aqi` — `app/routes.ts`). `Assets`(Manifest API)는 `/v1/assets/manifest`로 구현되어 있으나 현재 `{}`만 반환한다(부분 구현). 다이어그램 자체는 원래 설계를 보존하기 위해 수정하지 않는다.
+> **구현 상태:** 아래 다이어그램의 `SW`(Service Worker)와 `Cache`(CacheStorage)는 앱 셸/정적 에셋 런타임 캐시로 구현됨(이슈 #78; `public/sw.js`) — 단, 다이어그램이 그리는 `SW → Wx`(날씨 API 캐시) 경로는 구현하지 않는다(`/v1/*`는 캐시 대상이 아니다). `Loc`(Location API)/`Fav`(Favorites API)/`SyncQ`(SyncQueue)는 미구현 — 차기 범위다. `Wx`(Weather API)는 자체 집계 백엔드가 아니라 서버가 프록시하는 OpenWeather 호출로 구현되어 있다(`/v1/weather/core`, `/v1/weather/aqi` — `app/routes.ts`). `Assets`(Manifest API)는 `/v1/assets/manifest`로 구현되어 있으나 현재 `{}`만 반환한다(부분 구현). 다이어그램 자체는 원래 설계를 보존하기 위해 수정하지 않는다.
 
 ```mermaid
 flowchart LR
@@ -203,7 +203,7 @@ flowchart LR
 
 ### 런타임 상호작용 시퀀스(mermaid)
 
-> **구현 상태: 부분 구현.** 아래 시퀀스의 `W`(Service Worker) 참여자는 미구현 — 차기 범위다. 스냅샷을 먼저 로드해 즉시 렌더한 뒤 백그라운드에서 갱신하는 순서도 미구현이다. 실제 app-bootstrap 훅은 API 쿼리가 pending인 동안 `loading`을 반환하고, 성공 데이터를 스냅샷으로 저장하며, API 실패 후에만 영속 스냅샷을 읽어 fallback한다. 따라서 아래 다이어그램은 목표 흐름이며, 현재는 실패 후 fallback 경로만 구현되어 있다.
+> **구현 상태: 부분 구현.** 아래 시퀀스의 `W`(Service Worker) 참여자는 앱 셸/정적 에셋 런타임 캐시로 구현됨(이슈 #78; `public/sw.js`) — 단, 이 시퀀스가 그리는 날씨 데이터 흐름에는 SW가 개입하지 않는다(`/v1/*`는 캐시하지 않는다). 스냅샷을 먼저 로드해 즉시 렌더한 뒤 백그라운드에서 갱신하는 순서도 미구현이다. 실제 app-bootstrap 훅은 API 쿼리가 pending인 동안 `loading`을 반환하고, 성공 데이터를 스냅샷으로 저장하며, API 실패 후에만 영속 스냅샷을 읽어 fallback한다. 따라서 아래 다이어그램은 목표 흐름이며, 현재는 실패 후 fallback 경로만 구현되어 있다.
 
 ```mermaid
 sequenceDiagram
@@ -644,7 +644,16 @@ last-updated 표시 규칙 예:
 
 ### 서비스워커 캐싱 전략
 
-서비스 워커는 아직 구현되지 않았다(미구현 — 차기 범위). 원래 설계는 `docs/legacy/service-worker-caching-design.md` 참고.
+서비스 워커(`public/sw.js`)는 앱 셸과 정적 에셋의 런타임 캐시로 구현되어 있다(이슈 #78). 프로덕션 빌드에서만, 그리고 브라우저가 지원할 때만 `AppEffects`에서 등록한다.
+
+- **캐시 버킷(버전드):** `weatherpane-app-shell-v1`(내비게이션 문서), `weatherpane-assets-v1`(`/assets/*` 해시된 JS/CSS/폰트 + `*.webp` 스케치, 교차 출처 매니페스트 override URL 포함).
+- **전략:** 정적 에셋/`.webp`는 **캐시 우선(cache-first)**, 내비게이션은 **네트워크 우선 + 같은 URL 캐시 폴백(network-first with cache fallback)**.
+- **날씨 API는 캐시하지 않는다:** `/v1/*`는 SW가 절대 가로채지 않는다. 원 설계의 `cache-http`(날씨 GET 응답 캐시)는 의도적으로 미구현이며, 영속 스냅샷 저장소가 “보여줘도 되는 날씨 데이터”의 유일한 판단 주체로 남는다.
+- **보수적 활성화:** `skipWaiting`을 호출하지 않고, `activate`에서 이 버전 집합에 없는 오래된 `weatherpane-*` 캐시를 정리한 뒤 `clients.claim()`으로 제어권을 가져온다. 캐시 이름은 버전드다.
+- `routeDiscovery: { mode: 'initial' }`(`react-router.config.ts`)로 RR7의 지연 `/__manifest` fetch를 제거해 오프라인 셸이 캐시된 매니페스트에 의존하지 않게 했다.
+- `/sw.js`에는 `vercel.json`으로 `Cache-Control: public, max-age=0, must-revalidate`를 지정해 워커 스크립트 자체는 항상 재검증되도록 한다.
+
+원래 설계(전략 매핑·fetch 핸들러 의사코드)와 미구현으로 남은 부분(`cache-http`, PWA 매니페스트, Periodic Background Sync)은 `docs/legacy/service-worker-caching-design.md` 참고.
 
 ### 초기 로드 및 재시도 플로우(mermaid)
 
@@ -695,7 +704,7 @@ Favorites 편집 모드의 접근성 이름(권장):
 - 서비스워커/CacheStorage/Geolocation 등은 보안 컨텍스트(HTTPS) 요구가 있으므로 배포 파이프라인에서 HTTPS를 전제한다. citeturn1search3turn5search0turn6search0
 - API 오류 응답(RFC 9457)의 `detail`에 **주소/좌표 등 민감정보를 포함하지 않는다**. citeturn0search2
 
-> **구현 상태:** Geolocation 동의 요구사항(1번째 항목)은 실제로 유효하다(HTTPS 전제 포함). 나머지는 미구현 — 차기 범위다: 계정/로그아웃 기능이 없어 Clear-Site-Data 항목은 적용 대상이 없고, 서비스워커/CacheStorage는 만들어진 적이 없으며(`docs/legacy/service-worker-caching-design.md` 참고), 오류 포맷은 RFC 9457이 아니라 `{ code, message }`다(단, “민감정보를 응답에 포함하지 않는다”는 원칙 자체는 여전히 유효하다).
+> **구현 상태:** Geolocation 동의 요구사항(1번째 항목)은 실제로 유효하다(HTTPS 전제 포함). 서비스워커/CacheStorage는 이제 앱 셸/정적 에셋 캐시로 실제 사용되므로(이슈 #78; `public/sw.js`), 이들의 HTTPS 보안 컨텍스트 요구사항은 가정이 아니라 실제 배포 전제로 작동한다 — SW는 프로덕션 HTTPS에서만 등록·동작한다. 그 외는 미구현 — 차기 범위다: 계정/로그아웃 기능이 없어 Clear-Site-Data 항목은 적용 대상이 없고, 오류 포맷은 RFC 9457이 아니라 `{ code, message }`다(단, “민감정보를 응답에 포함하지 않는다”는 원칙 자체는 여전히 유효하다).
 
 ### 텔레메트리/메트릭(권장)
 
@@ -733,8 +742,8 @@ PR/이슈 템플릿, CODEOWNERS, 보호 브랜치는 entity["company","Git
   - [ ] RFC 9457 오류 파서 + 표준화된 error handling — 미구현 — 차기 범위(실제는 `{ code, message }`)
   - [ ] Favorites 동기화: ETag/If-Match, 412 리베이스 흐름 — 미구현 — 차기 범위(`docs/legacy/favorites-server-sync-design.md` 참고)
   - [x] RefreshQueue 단위 패스 실행 + “같은 패스 재시도 금지” — 구현됨(개념 일치, concurrency=2 배치 refetch로 구현; `frontend/features/favorites/use-refresh-queue.ts`)
-- [ ] 오프라인
-  - [ ] 서비스워커 설치/업데이트/캐시 버전 관리 — 미구현 — 차기 범위(`docs/legacy/service-worker-caching-design.md` 참고)
+- [x] 오프라인
+  - [x] 서비스워커 설치/업데이트/캐시 버전 관리 — 구현됨(이슈 #78; `public/sw.js` — 앱 셸/정적 에셋 런타임 캐시, 버전드 캐시 이름, `activate`에서 오래된 캐시 정리)
   - [x] API 실패 시 스냅샷 fallback, 오프라인 배지 표시 — 구현됨
 - [x] 접근성
   - [x] 키보드 조작/포커스 링/스크린리더 라벨 점검(2.1.1/2.4.7/2.5.7) — 구현됨
@@ -752,7 +761,7 @@ PR/이슈 템플릿, CODEOWNERS, 보호 브랜치는 entity["company","Git
 | Integration | Favorites 412 충돌           | 재조회 → 리베이스 → 재시도 성공           | 미구현 — 차기 범위(서버 동기화 없음; `docs/legacy/favorites-server-sync-design.md` 참고)                                                                                                                        |
 | E2E         | Search → Select → Detail     | ActiveLocation 전환 + Recents 기록        | 구현됨                                                                                                                                                                                                          |
 | E2E         | Favorites 편집/정렬          | 위/아래/드래그 동작 + 저장                | 구현됨                                                                                                                                                                                                          |
-| E2E         | 오프라인 모드                | 스냅샷 렌더 + 오프라인 배지               | 구현됨(서비스 워커 없이 스냅샷 fallback + online/offline 이벤트 수준)                                                                                                                                           |
+| E2E         | 오프라인 모드                | 스냅샷 렌더 + 오프라인 배지               | 구현됨(스냅샷 fallback + online/offline 이벤트, 그리고 이슈 #78의 서비스 워커 오프라인 앱 셸 스모크 — `tests/service-worker-offline.pwa.e2e.ts`)                                                                |
 | A11y        | 키보드 전 기능 조작          | Tab/Enter만으로 가능 citeturn2search2  | 구현됨                                                                                                                                                                                                          |
 | A11y        | 드래그 대안 제공             | 위/아래로 재정렬 가능 citeturn0search0 | 구현됨                                                                                                                                                                                                          |
 
