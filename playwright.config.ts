@@ -5,6 +5,9 @@ const port = 4173;
 export default defineConfig({
   testDir: './tests',
   testMatch: ['**/*.e2e.ts'],
+  // 서비스 워커 스모크는 프로덕션 빌드에서만 유효하다. dev 서버로 도는 이 메인
+  // 스위트에서는 제외하고, playwright.pwa.config.ts가 프로덕션 빌드로 따로 실행한다.
+  testIgnore: ['**/*.pwa.e2e.ts'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
