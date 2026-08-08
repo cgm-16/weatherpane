@@ -44,4 +44,12 @@ export default defineConfig([
       ],
     },
   },
+  // public/sw.js는 서비스 워커 전역(self, caches, clients 등)을 쓰는 클래식 스크립트다.
+  {
+    files: ['public/sw.js'],
+    languageOptions: {
+      sourceType: 'script',
+      globals: { ...globals.serviceworker, ...globals.browser },
+    },
+  },
 ]);
