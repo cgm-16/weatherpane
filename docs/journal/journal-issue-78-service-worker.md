@@ -36,10 +36,12 @@ Background Sync는 범위 밖으로 남겼다.
   cutoff(Weather 24h / AQI 12h)와 last-updated 정직성 규칙이 이중 진실 공급원으로
   깨진다.
 - 안전 가드: `cacheFirst`·`networkFirst` 모두 동일 출처 200 응답만 캐시에
-  넣는다(206 등은 `cache.put`이 던지므로 제외). 캐시 쓰기는
-  `event.waitUntil(cache.put(...).catch(() => {}))`로 감싸 응답 반환 후에도 완료를
-  보장하되, `QuotaExceededError` 등 쓰기 실패는 best-effort로 삼켜 unhandled
-  rejection을 막는다.
+  넣는다(206 등은 `cache.put`이 던지므로 제외). 캐시 열기·조회 실패는 네트워크 요청을
+  막지 않으며, 네트워크 우선 전략은 네트워크 응답을 먼저 확보한 뒤 캐시를 연다. 네트워크와
+  캐시 폴백이 모두 실패하면 CacheStorage 오류가 아니라 원래 네트워크 오류를 다시 던진다.
+  캐시 쓰기는 응답이 소비되기 전에 복제본을 만든 뒤 `event.waitUntil`로 워커 수명을
+  연장하고, 캐시 열기·`cache.put`·쓰기 준비 실패를 best-effort로 삼켜 unhandled
+  rejection과 온라인 응답 실패를 막는다.
 - 교차 출처 WebP override는 SW가 가로채지 않고 브라우저 기본 fetch로 통과시킨다. opaque
   응답은 status가 0이라 교차 출처 404를 성공과 구분할 수 없어 영구 캐시에 넣으면 안 된다.
 
@@ -98,9 +100,14 @@ Background Sync는 범위 밖으로 남겼다.
 ## 서비스 워커 단위 계약
 
 - `tests/service-worker.test.ts`는 활성화 중 이전 앱 셸·에셋 캐시를 정리 전에 현재
-  캐시로 이관하고, 이관 실패 시 정리와 `clients.claim()`을 실행하지 않는지 검증한다.
+  캐시로 이관하고, 더 새 이전 버전을 먼저 읽으며, 이관 실패 시 정리와
+  `clients.claim()`을 실행하지 않는지 검증한다.
 - 같은 테스트는 해시된 `/assets/*` WebP가 캐시 우선이고, 동일 출처 스케치 WebP는
-  네트워크 응답으로 갱신하는지 검증한다.
+  네트워크 응답으로 갱신하는지 검증한다. CacheStorage 열기·조회·쓰기 실패에도 온라인
+  응답을 유지하고, 네트워크와 캐시 폴백이 함께 실패하면 원래 네트워크 오류를 유지하는지도
+  실제 워커 VM으로 확인한다.
+- fetch 하네스는 `respondWith` 호출 여부를 노출해 동일 출처 `/v1/*` GET과 교차 출처
+  WebP GET이 서비스 워커를 통과하는 음성 라우팅 경계를 검증한다.
 
 ## 프로덕션 빌드 전용 e2e
 
