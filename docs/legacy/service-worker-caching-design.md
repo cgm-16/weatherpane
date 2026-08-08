@@ -6,7 +6,7 @@ replaced_by: 이슈 #78 — 앱 셸/정적 에셋 런타임 캐시 서비스 워
 
 # 서비스워커 캐싱 전략 설계 (아카이브)
 
-이 문서는 `docs/specs.md`의 "서비스워커 캐싱 전략" 절에 있던 캐시 분류·전략 매핑·fetch 핸들러 의사코드를 원문 그대로 보존한 것이다. 실제 구현에서는 서비스 워커가 만들어진 적이 없다. Home/Detail 날씨 흐름은 영속 스냅샷 fallback(`frontend/features/app-bootstrap/`)과 브라우저 online/offline 이벤트 수준까지만 구현되어 있다. 반면 Favorites 카드는 별도 영속 날씨 스냅샷 없이 `useCoreWeather()`의 세션 내 TanStack Query 데이터만 사용하므로, 앱 재시작 직후 오프라인 상태에서는 이전 날씨를 표시하지 못한다(`frontend/pages/favorites/ui/favorite-card.tsx`). 앱 셸 precache, 런타임 캐시, CacheStorage 기반 정적 에셋 캐싱 같은 PWA 수준의 오프라인 지원은 아직 없다. 아래 내용은 변경 없이 원문 그대로 옮긴 것이며, 현재 시점에서 사실이 아니다 — 미래에 서비스 워커를 도입할 때 참고용으로만 남긴다.
+이 문서는 `docs/specs.md`의 "서비스워커 캐싱 전략" 절에 있던 캐시 분류·전략 매핑·fetch 핸들러 의사코드를 원문 그대로 보존한 것이다. 이 문서를 아카이브한 시점(2026-07-30)에는 서비스 워커가 만들어진 적이 없었고, Home/Detail 날씨 흐름은 영속 스냅샷 fallback(`frontend/features/app-bootstrap/`)과 브라우저 online/offline 이벤트 수준까지만 구현되어 있었다. Favorites 카드는 별도 영속 날씨 스냅샷 없이 `useCoreWeather()`의 세션 내 TanStack Query 데이터만 사용하므로, 앱 재시작 직후 오프라인 상태에서는 이전 날씨를 표시하지 못한다(`frontend/pages/favorites/ui/favorite-card.tsx`). 이후 이슈 #78에서 이 설계의 부분집합 — 앱 셸/정적 에셋 런타임 캐시(`public/sw.js`, `weatherpane-app-shell-v1`/`weatherpane-assets-v1`) — 이 구현되었다. 다만 아래 원문에 담긴 cache-http(날씨 GET 응답 캐시)·PWA 매니페스트·백그라운드 동기화는 #78 범위 밖으로 여전히 미구현이다. 현재 구현 상태는 `docs/specs.md`의 "서비스워커 캐싱 전략" 절을 따른다. 아래 내용은 변경 없이 원문 그대로 옮긴 것으로, #78이 구현하지 않은 부분은 미래 참고용으로만 남긴다.
 
 ---
 
