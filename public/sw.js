@@ -69,7 +69,7 @@ self.addEventListener('activate', (event) => {
 });
 
 // 캐시 우선: 캐시에 있으면 그대로, 없으면 네트워크로 받아 캐시에 넣는다. 내용이 안정적인
-// 정적 에셋(해시된 /assets/*, 스케치 *.webp)에 쓴다.
+// 정적 에셋(해시된 /assets/*)에 쓴다.
 async function cacheFirst(event, cacheName, request) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
@@ -121,20 +121,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 동일 출처 스케치 등 webp 에셋: 캐시 우선. 교차 출처 webp(예: 향후 원격 매니페스트
-  // override)는 이 분기를 타지 않고 브라우저 기본 fetch로 넘어가 ASSET_CACHE에 들어가지
-  // 않는다 — 오프라인 에셋 캐시는 아래 /assets/ 분기와 동일하게 동일 출처만 대상으로 한다.
-  if (url.origin === self.location.origin && url.pathname.endsWith('.webp')) {
-    event.respondWith(cacheFirst(event, ASSET_CACHE, request));
-    return;
-  }
-
   // 동일 출처 정적 에셋(해시된 JS/CSS/폰트).
   if (
     url.origin === self.location.origin &&
     url.pathname.startsWith('/assets/')
   ) {
     event.respondWith(cacheFirst(event, ASSET_CACHE, request));
+    return;
+  }
+
+  // 동일 출처 스케치 등 webp 에셋: 네트워크 우선. 고정 URL도 새 번들을 배포할 때 최신
+  // 그림으로 갱신하고, 오프라인에서는 이전 캐시로 폴백한다. 교차 출처 webp(예: 향후 원격
+  // 매니페스트 override)는 이 분기를 타지 않고 브라우저 기본 fetch로 넘어가 ASSET_CACHE에
+  // 들어가지 않는다 — 오프라인 에셋 캐시는 위 /assets/ 분기와 동일하게 동일 출처만
+  // 대상으로 한다.
+  if (url.origin === self.location.origin && url.pathname.endsWith('.webp')) {
+    event.respondWith(networkFirst(event, ASSET_CACHE, request));
     return;
   }
 
