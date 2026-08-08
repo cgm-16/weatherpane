@@ -92,6 +92,13 @@ Required smoke coverage when these flows are touched:
 - theme persistence
 - recents persistence
 
+## Service-worker offline smoke
+
+- The service-worker offline smoke lives in `tests/*.pwa.e2e.ts`.
+- It runs only via `pnpm test:e2e:pwa`, which uses `playwright.pwa.config.ts` to build and serve the production bundle — the service worker is emitted only in the production build, so the dev server has none.
+- It is excluded from the main `pnpm test:e2e` (dev-server) run via `testIgnore: ['**/*.pwa.e2e.ts']`.
+- It is not yet wired into CI; a follow-up issue tracks adding it (the production build adds run time).
+
 ## Stop and ask Ori
 
 - the spec is ambiguous about expected behavior, so a test would lock in a guess
