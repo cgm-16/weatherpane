@@ -87,9 +87,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 스케치 등 webp 에셋: 캐시 우선. 원격 매니페스트 override(교차 출처)도 이 경로를
-  // 타지만 opaque라 캐시하지 않고 매번 새로 받는다.
-  if (url.pathname.endsWith('.webp')) {
+  // 동일 출처 스케치 등 webp 에셋: 캐시 우선. 교차 출처 webp(예: 향후 원격 매니페스트
+  // override)는 이 분기를 타지 않고 브라우저 기본 fetch로 넘어가 ASSET_CACHE에 들어가지
+  // 않는다 — 오프라인 에셋 캐시는 아래 /assets/ 분기와 동일하게 동일 출처만 대상으로 한다.
+  if (url.origin === self.location.origin && url.pathname.endsWith('.webp')) {
     event.respondWith(cacheFirst(event, ASSET_CACHE, request));
     return;
   }
