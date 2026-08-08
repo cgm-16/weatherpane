@@ -50,7 +50,7 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 - **날씨 공급자**: (A) 자체 백엔드 집계(권장) 또는 (B) 클라이언트 직접 서드파티 호출(권장하지 않음: 키 노출/쿼터).
 - **플랫폼**: 웹(PWA) 우선. 서비스 워커/Geolocation은 HTTPS 보안 컨텍스트 전제. citeturn1search3turn6search0
 
-> **구현 상태(전제 → 실제):** 백엔드 기술/호스팅은 더 이상 불명이 아니다 — 별도의 자체 도메인 백엔드가 아니라 앱 자체 서버 라우트가 OpenWeather API를 프록시하는 구조로 확정되었다(아래 “날씨 공급자” 정정과 동일한 사실). 이 전제가 말하는 “REST 기준 계약”은 이 프록시가 아니라 별도로 구상했던 자체 도메인 REST 계약을 가리키며, “엔드포인트 목록(권장)” 절의 표와 마찬가지로 대부분 미구현 — 차기 범위로 남아 있다. 검색 데이터 소스는 (A) 로컬 카탈로그로 확정 구현됨(`AGENTS.md`: “Search is Korea-catalog-driven and instant”). 날씨 공급자는 (A)·(B) 어느 쪽도 아니라, **서버가 OpenWeather API 키를 숨기고 위치별 요청을 그대로 프록시**하는 방식으로 구현됨(자체 도메인 집계 백엔드 아님; `/v1/weather/core`, `/v1/weather/aqi`, `/v1/geocode` — `app/routes/v1.weather.core.ts`). 인증 방식(Bearer token/OAuth2)은 미구현 — 차기 범위(계정 기능 자체가 없음). 서비스 워커 전제는 앱 셸/정적 에셋 런타임 캐시로 구현됨(이슈 #78; `public/sw.js`) — 다만 날씨 API(`/v1/*`) 캐시는 범위 밖이다. Geolocation의 HTTPS 보안 컨텍스트 요구사항 자체는 유효하며, 서비스 워커도 프로덕션 HTTPS에서만 동작한다.
+> **구현 상태(전제 → 실제):** 백엔드 기술/호스팅은 더 이상 불명이 아니다 — 별도의 자체 도메인 백엔드가 아니라 앱 자체 서버 라우트가 OpenWeather API를 프록시하는 구조로 확정되었다(아래 “날씨 공급자” 정정과 동일한 사실). 이 전제가 말하는 “REST 기준 계약”은 이 프록시가 아니라 별도로 구상했던 자체 도메인 REST 계약을 가리키며, “엔드포인트 목록(권장)” 절의 표와 마찬가지로 대부분 미구현 — 차기 범위로 남아 있다. 검색 데이터 소스는 (A) 로컬 카탈로그로 확정 구현됨(`AGENTS.md`: “Search is Korea-catalog-driven and instant”). 날씨 공급자는 (A)·(B) 어느 쪽도 아니라, **서버가 OpenWeather API 키를 숨기고 위치별 요청을 그대로 프록시**하는 방식으로 구현됨(자체 도메인 집계 백엔드 아님; `/v1/weather/core`, `/v1/weather/aqi`, `/v1/geocode` — `app/routes/v1.weather.core.ts`). 인증 방식(Bearer token/OAuth2)은 미구현 — 차기 범위(계정 기능 자체가 없음). 서비스 워커 전제는 앱 셸/정적 에셋 런타임 캐시로 구현됨(이슈 #78; `public/sw.js`) — 다만 날씨 API(`/v1/*`) 캐시는 범위 밖이다. Geolocation의 HTTPS 보안 컨텍스트 요구사항 자체는 유효하며, 서비스 워커는 `import.meta.env.PROD` 게이트로 프로덕션 빌드에서만 등록된다(로컬호스트도 보안 컨텍스트라 동작한다).
 
 ---
 
@@ -646,8 +646,9 @@ last-updated 표시 규칙 예:
 
 서비스 워커(`public/sw.js`)는 앱 셸과 정적 에셋의 런타임 캐시로 구현되어 있다(이슈 #78). 프로덕션 빌드에서만, 그리고 브라우저가 지원할 때만 `AppEffects`에서 등록한다.
 
-- **캐시 버킷(버전드):** `weatherpane-app-shell-v1`(내비게이션 문서), `weatherpane-assets-v1`(`/assets/*` 해시된 JS/CSS/폰트 + `*.webp` 스케치, 교차 출처 매니페스트 override URL 포함).
+- **캐시 버킷(버전드):** `weatherpane-app-shell-v1`(내비게이션 문서), `weatherpane-assets-v1`(`/assets/*` 해시된 JS/CSS/폰트 + 동일 출처 `*.webp` 스케치). 교차 출처 매니페스트 override URL도 `.webp` 캐시 우선 경로를 타지만, opaque라 저장하지 않고 매번 새로 받는다.
 - **전략:** 정적 에셋/`.webp`는 **캐시 우선(cache-first)**, 내비게이션은 **네트워크 우선 + 같은 URL 캐시 폴백(network-first with cache fallback)**.
+- **오프라인 커버리지 경계:** 오프라인 새로고침은 사용자가 이전에 SW 제어 하에 전체 내비게이션으로 로드한 적 있는 URL(실무상 `/`)에 대해서만 앱 셸을 부팅한다. 클라이언트 사이드 내비게이션이라 프리페치되지 않은 다른 라우트는 셸 캐시에 없어 오프라인 새로고침 시 여전히 브라우저 오프라인 오류 페이지로 떨어진다. 전용 오프라인 폴백 라우트는 후속 이슈로 미룬다.
 - **날씨 API는 캐시하지 않는다:** `/v1/*`는 SW가 절대 가로채지 않는다. 원 설계의 `cache-http`(날씨 GET 응답 캐시)는 의도적으로 미구현이며, 영속 스냅샷 저장소가 “보여줘도 되는 날씨 데이터”의 유일한 판단 주체로 남는다.
 - **보수적 활성화:** `skipWaiting`을 호출하지 않고, `activate`에서 이 버전 집합에 없는 오래된 `weatherpane-*` 캐시를 정리한 뒤 `clients.claim()`으로 제어권을 가져온다. 캐시 이름은 버전드다.
 - `routeDiscovery: { mode: 'initial' }`(`react-router.config.ts`)로 RR7의 지연 `/__manifest` fetch를 제거해 오프라인 셸이 캐시된 매니페스트에 의존하지 않게 했다.
@@ -704,7 +705,7 @@ Favorites 편집 모드의 접근성 이름(권장):
 - 서비스워커/CacheStorage/Geolocation 등은 보안 컨텍스트(HTTPS) 요구가 있으므로 배포 파이프라인에서 HTTPS를 전제한다. citeturn1search3turn5search0turn6search0
 - API 오류 응답(RFC 9457)의 `detail`에 **주소/좌표 등 민감정보를 포함하지 않는다**. citeturn0search2
 
-> **구현 상태:** Geolocation 동의 요구사항(1번째 항목)은 실제로 유효하다(HTTPS 전제 포함). 서비스워커/CacheStorage는 이제 앱 셸/정적 에셋 캐시로 실제 사용되므로(이슈 #78; `public/sw.js`), 이들의 HTTPS 보안 컨텍스트 요구사항은 가정이 아니라 실제 배포 전제로 작동한다 — SW는 프로덕션 HTTPS에서만 등록·동작한다. 그 외는 미구현 — 차기 범위다: 계정/로그아웃 기능이 없어 Clear-Site-Data 항목은 적용 대상이 없고, 오류 포맷은 RFC 9457이 아니라 `{ code, message }`다(단, “민감정보를 응답에 포함하지 않는다”는 원칙 자체는 여전히 유효하다).
+> **구현 상태:** Geolocation 동의 요구사항(1번째 항목)은 실제로 유효하다(HTTPS 전제 포함). 서비스워커/CacheStorage는 이제 앱 셸/정적 에셋 캐시로 실제 사용되므로(이슈 #78; `public/sw.js`), 이들의 HTTPS 보안 컨텍스트 요구사항은 가정이 아니라 실제 배포 전제로 작동한다 — SW는 `import.meta.env.PROD` 게이트로 프로덕션 빌드에서만 등록되며(로컬호스트도 보안 컨텍스트라 동작하고, 프로덕션 배포는 HTTPS를 전제한다). 그 외는 미구현 — 차기 범위다: 계정/로그아웃 기능이 없어 Clear-Site-Data 항목은 적용 대상이 없고, 오류 포맷은 RFC 9457이 아니라 `{ code, message }`다(단, “민감정보를 응답에 포함하지 않는다”는 원칙 자체는 여전히 유효하다).
 
 ### 텔레메트리/메트릭(권장)
 
