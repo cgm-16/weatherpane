@@ -24,12 +24,35 @@ export async function loader({ request }: { request: Request }) {
     );
   }
 
+  // 비수치·범위 밖 좌표는 업스트림 호출 이전에 거부한다(쿼터를 낭비하지 않는다).
+  const latNum = Number(lat);
+  const lonNum = Number(lon);
+  if (
+    !Number.isFinite(latNum) ||
+    !Number.isFinite(lonNum) ||
+    latNum < -90 ||
+    latNum > 90 ||
+    lonNum < -180 ||
+    lonNum > 180
+  ) {
+    return applyProxyCacheControl(
+      Response.json(
+        {
+          code: 'INVALID_PROVIDER_RESPONSE',
+          message: 'lat, lon 값이 유효한 좌표가 아닙니다.',
+        },
+        { status: 400 }
+      ),
+      CORE_CACHE_S_MAXAGE
+    );
+  }
+
   const upstreamUrl = new URL(
     'https://api.openweathermap.org/data/3.0/onecall'
   );
   // 업스트림에 보내는 좌표 정밀도를 2자리로 제한한다. CDN 캐시 키는 들어온 요청 URL 기준이라 서버측 반올림으로는 합쳐지지 않는다(키 정규화는 클라이언트측 반올림 담당).
-  upstreamUrl.searchParams.set('lat', String(roundCoordinate(Number(lat))));
-  upstreamUrl.searchParams.set('lon', String(roundCoordinate(Number(lon))));
+  upstreamUrl.searchParams.set('lat', String(roundCoordinate(latNum)));
+  upstreamUrl.searchParams.set('lon', String(roundCoordinate(lonNum)));
   upstreamUrl.searchParams.set('exclude', 'minutely,alerts');
   upstreamUrl.searchParams.set('units', 'metric');
 
