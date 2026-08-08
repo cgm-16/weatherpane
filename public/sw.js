@@ -15,12 +15,46 @@ const EXPECTED_CACHES = [APP_SHELL_CACHE, ASSET_CACHE];
 // 청크와 섞어 내보내는 사고를 피한다.
 self.addEventListener('install', () => {});
 
-// 활성화: 이 버전 집합에 없는 오래된 weatherpane- 캐시를 정리하고, 열려 있는 클라이언트의
-// 제어권을 가져온다.
+// 같은 종류의 이전 캐시는 높은 버전부터 읽어 현재 캐시에 없는 항목만 옮긴다. 새 워커가
+// 활성화되기 전에 이전 버전의 런타임 캐시를 비워 오프라인 폴백을 잃지 않게 한다.
+function previousCacheNames(names, currentCache) {
+  const prefix = currentCache.replace(/\d+$/, '');
+  return names
+    .map((name) => {
+      const match = name.match(new RegExp(`^${prefix}(\\d+)$`));
+      return match && name !== currentCache
+        ? { name, version: Number(match[1]) }
+        : null;
+    })
+    .filter(Boolean)
+    .sort((left, right) => right.version - left.version)
+    .map(({ name }) => name);
+}
+
+async function migrateCacheEntries(sourceName, targetName) {
+  const source = await caches.open(sourceName);
+  const target = await caches.open(targetName);
+  const requests = await source.keys();
+
+  for (const request of requests) {
+    if (await target.match(request)) continue;
+    const response = await source.match(request);
+    if (response) await target.put(request, response.clone());
+  }
+}
+
+// 활성화: 이전 앱 셸/에셋 캐시의 항목을 현재 캐시에 무손실로 옮긴 뒤 오래된
+// weatherpane- 캐시를 정리하고, 열려 있는 클라이언트의 제어권을 가져온다.
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       const names = await caches.keys();
+      for (const name of previousCacheNames(names, APP_SHELL_CACHE)) {
+        await migrateCacheEntries(name, APP_SHELL_CACHE);
+      }
+      for (const name of previousCacheNames(names, ASSET_CACHE)) {
+        await migrateCacheEntries(name, ASSET_CACHE);
+      }
       await Promise.all(
         names
           .filter(
