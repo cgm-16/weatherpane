@@ -13,6 +13,7 @@
     "test:unit": "vitest run",
     "test:storybook": "vitest run --config .storybook/vitest.config.ts",
     "test:e2e": "playwright test",
+    "test:e2e:pwa": "playwright test --config playwright.pwa.config.ts",
     "lint": "eslint .",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
