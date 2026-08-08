@@ -134,16 +134,41 @@ Ori가 실행**한다. 어시스턴트는 스테이징만 하며, attack-mode를
 
 ```bash
 vercel link
-vercel firewall overview
+vercel firewall rules list   # 커스텀 규칙 가용성·현재 규칙 확인
+vercel firewall diff         # 미게시 초안 상태 확인
 ```
 
-`vercel firewall overview`로 방화벽 관리 권한과 rate-limit 설정 한도를 확인한다.
-커스텀 규칙과 IP 기준 `rate_limit`은 모든 플랜에서 사용 가능하다(지속 `--duration`·
-`token_bucket` 알고리즘·`header:` 카운팅 키·`ja3`는 Enterprise 전용이나 이 규칙에는
-불필요하다). 따라서 실제 게이트는 커스텀 규칙 사용 가능 여부가 아니라 방화벽을 변경할
-권한과 rate-limit 파라미터 한도(창 10–3600초, 요청 1–10,000,000)다. 권한이 없으면 이
-단계를 Ori에게 넘긴다. 방화벽을 쓸 수 없는 예외 상황이라면 코드 PR의 캐시 + 타임아웃
-보호가 단독으로 유효하며 요청 제한 메커니즘은 다시 검토한다.
+`vercel firewall overview`는 **프리플라이트로 쓰지 않는다.** IP Bypass(system-bypass)
+서브기능이 게이트된 플랜(예: Hobby)에서는 overview가 그 항목을 집계하다
+`IP Bypass is unavailable for this plan. (404)`로 실패한다. 이 오류는 방화벽 전체가
+막혔다는 뜻이 아니라 IP Bypass 하나만 미가용이라는 뜻이다. 프리플라이트는
+`rules list`(커스텀 규칙 가용성)와 `diff`(초안 상태)로 대신하며, 이 두 명령은 IP Bypass
+게이트와 무관하게 동작한다.
+
+커스텀 규칙과 IP 기준 `rate_limit`은 Hobby를 포함한 모든 플랜에서 사용 가능하다. 다만
+한도는 플랜별로 다르다.
+
+| 항목               | Hobby              | Pro          | Enterprise                      |
+| ------------------ | ------------------ | ------------ | ------------------------------- |
+| 카운팅 키          | IP, JA4            | IP, JA4      | IP, JA4, User-Agent·임의 Header |
+| 알고리즘           | fixed window       | fixed window | fixed window, token bucket      |
+| 창(window)         | 10초–**600초**     | 10초–600초   | 10초–3600초                     |
+| rate-limit 규칙 수 | **프로젝트당 1개** | 40개         | 1000개                          |
+| 포함 요청          | 월 100만 allowed   | 사용량 기반  | 커스텀                          |
+
+(Hobby는 전체 커스텀 방화벽 규칙도 프로젝트당 3개까지다.) 이 런북은 IP 키·fixed
+window·60초 창·규칙 1개만 쓰므로 **Hobby 한도 안에서 전부 동작한다.** 지속 `--duration`·
+`token_bucket`·`header:` 카운팅 키·`ja3`·600초 초과 창은 Enterprise 전용이며 이 규칙에는
+불필요하다.
+
+따라서 실제 게이트는 커스텀 규칙 사용 가능 여부가 아니라 (a) 방화벽을 변경할 권한과
+(b) **"WAF Rate Limiting" 권한 + 최초 rate-limit 규칙 생성 시 일회성 "Rate Limiting
+Pricing" 승인**이다. 이 두 가지는 읽기 전용 명령으로는 확인되지 않는다 — `rules add`가
+권한/승인 사유로 실패하면 Ori가 대시보드에서 1회 승인한 뒤 재실행한다. **실제 가용성
+게이트는 아래 스테이지 1을 `log`로 스테이징(미게시)해 보는 것**이다(초안이 깨끗이 잡히면
+rate_limit 액션 가용 확정, `vercel firewall discard`로 폐기 가능). 권한이 없으면 이 단계를
+Ori에게 넘긴다. 방화벽 rate_limit을 쓸 수 없는 예외 상황이라도 코드 PR의 캐시 + 타임아웃
+보호는 단독으로 유효하다.
 
 ### 스테이지 1 — log 모드로 등록
 
@@ -177,9 +202,14 @@ vercel firewall publish --yes
 
 `log` 관측이 깨끗하면 `--rate-limit-action rate_limit`로 바꾸되 `environment=preview`
 조건을 붙여 preview에서 먼저 강제한다. 게시 후 preview URL에서 검증하고, 문제가
-없으면 production으로 확장한다.
+없으면 `environment=preview` 조건을 제거해 전 환경(production 포함)으로 확장한다.
 
-정리하면 롤아웃 순서는 **log → preview deny → production**이다.
+**규칙 1개 제한:** Hobby는 rate-limit 규칙이 프로젝트당 1개이므로, 위 단계 전체를 새
+규칙을 추가하지 않고 **같은 규칙 하나를 편집**하며 진행한다. `environment=preview`를 붙인
+구간 동안 production에는 이 규칙이 매칭되지 않아 스로틀이 적용되지 않는다 — 다만 그 직전
+단계까지 규칙은 `log` 모드여서 어차피 스로틀이 없었으므로 보호 회귀는 아니다.
+
+정리하면 롤아웃 순서는 **log(전 환경) → preview deny → production(전 환경) deny**이다.
 
 ## 관측
 
