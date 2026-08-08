@@ -22,7 +22,7 @@
 - The remote override manifest, if fetched, applies only on the next app load — never mid-session
 - Remote asset fetch failure must fall back to the deterministic local asset immediately
 - No mid-session manifest hot swap; the resolved manifest is fixed for the session lifetime
-- When the service worker is in scope, hashed same-origin `/assets/*` use cache-first; stable same-origin WebP sketches use network-first with a cached fallback; cross-origin override WebP is browser passthrough and is not stored in the service-worker cache
+- When the service worker is in scope, the same-origin `/assets/*` path is evaluated before generic same-origin WebP routing: `/assets/*`, including `/assets/*.webp`, uses cache-first; stable same-origin WebP sketches outside `/assets/` use network-first with a cached fallback; cross-origin override WebP is browser passthrough and is not stored in the service-worker cache
 - Master asset ratio: 3:2; master size: 2400×1600; format: WebP; max target size: 400 KB
 - Safe zone: left 40%; top 15% and bottom 20% are low-detail safety margins; subject is right-weighted
 - `scripts/stitch/sketch-batch.json` is the single source of truth for which keys need art; its `keys` array must stay in exact lockstep with the baseline manifest key set (enforced by the drift test)
@@ -49,12 +49,13 @@
    - confirm that if the remote fetch fails, the baseline manifest is used in full
      Done-check: a remote fetch failure results in a fully functional session using baseline assets.
 
-4. Intent: preserve service-worker cache boundaries when an override URL changes.
+4. Intent: preserve service-worker path precedence and cache boundaries when an override URL changes.
    Action:
-   - confirm hashed same-origin `/assets/*` remain cache-first
-   - confirm stable same-origin WebP sketches use network-first with the same-URL cached fallback
+   - confirm the same-origin `/assets/*` path is evaluated before generic same-origin WebP routing
+   - confirm `/assets/*`, including `/assets/*.webp`, remain cache-first
+   - confirm stable same-origin WebP sketches outside `/assets/` use network-first with the same-URL cached fallback
    - confirm a cross-origin override WebP is not intercepted or cached by the service worker
-     Done-check: asset URL origin determines the documented runtime strategy without caching an opaque override response.
+     Done-check: path precedence is validated before origin-based routing: same-origin `/assets/*` (including `/assets/*.webp`) is cache-first, same-origin WebP outside `/assets/` is network-first, and cross-origin WebP remains browser passthrough without caching an opaque override response.
 
 5. Intent: verify asset dimensions and format before adding new files.
    Action:
