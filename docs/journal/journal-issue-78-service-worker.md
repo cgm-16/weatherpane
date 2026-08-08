@@ -100,8 +100,7 @@ Background Sync는 범위 밖으로 남겼다.
 - `tests/service-worker.test.ts`는 활성화 중 이전 앱 셸·에셋 캐시를 정리 전에 현재
   캐시로 이관하고, 이관 실패 시 정리와 `clients.claim()`을 실행하지 않는지 검증한다.
 - 같은 테스트는 해시된 `/assets/*` WebP가 캐시 우선이고, 동일 출처 스케치 WebP는
-  네트워크 응답으로 갱신하는지 검증한다. 교차 출처 override WebP는 SW가 가로채지 않아
-  브라우저 기본 fetch로 통과한다.
+  네트워크 응답으로 갱신하는지 검증한다.
 
 ## 프로덕션 빌드 전용 e2e
 
