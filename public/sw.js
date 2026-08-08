@@ -71,9 +71,14 @@ self.addEventListener('activate', (event) => {
 // 캐시 우선: 캐시에 있으면 그대로, 없으면 네트워크로 받아 캐시에 넣는다. 내용이 안정적인
 // 정적 에셋(해시된 /assets/*)에 쓴다.
 async function cacheFirst(event, cacheName, request) {
-  const cache = await caches.open(cacheName);
-  const cached = await cache.match(request);
-  if (cached) return cached;
+  let cache;
+  try {
+    cache = await caches.open(cacheName);
+    const cached = await cache.match(request);
+    if (cached) return cached;
+  } catch {
+    // CacheStorage 읽기 실패는 네트워크 요청을 막지 않는다.
+  }
   const response = await fetch(request);
   // 동일 출처 200 응답만 캐시한다(206 등은 cache.put이 던지므로 제외). 교차 출처
   // (opaque) 응답 — 예: 향후 원격 매니페스트 override URL — 은 매번 새로 받고 오프라인
@@ -83,7 +88,20 @@ async function cacheFirst(event, cacheName, request) {
   if (response && response.status === 200) {
     // 캐시 쓰기는 best-effort다. QuotaExceededError 등으로 실패해도 삼켜서
     // unhandled rejection이 새지 않게 한다(응답은 이미 반환됨).
-    event.waitUntil(cache.put(request, response.clone()).catch(() => {}));
+    try {
+      // 응답 본문이 반환 과정에서 소비되기 전에 캐시용 복제본을 만든다.
+      const responseForCache = response.clone();
+      const cacheReady = cache
+        ? Promise.resolve(cache)
+        : caches.open(cacheName);
+      event.waitUntil(
+        cacheReady
+          .then((target) => target.put(request, responseForCache))
+          .catch(() => {})
+      );
+    } catch {
+      // 캐시 쓰기 준비 실패도 네트워크 응답을 막지 않는다.
+    }
   }
   return response;
 }
@@ -92,7 +110,6 @@ async function cacheFirst(event, cacheName, request) {
 // URL의 캐시된 응답으로 폴백한다. 내비게이션(HTML 문서)에 써서, 오프라인에서 "이전에
 // 열었던 페이지 새로고침" 시 앱 셸이 뜨게 한다.
 async function networkFirst(event, cacheName, request) {
-  const cache = await caches.open(cacheName);
   try {
     const response = await fetch(request);
     // 200 응답만 캐시한다(206 등은 cache.put이 던지므로 제외). waitUntil로 워커
@@ -100,12 +117,28 @@ async function networkFirst(event, cacheName, request) {
     if (response && response.status === 200) {
       // 캐시 쓰기는 best-effort다. QuotaExceededError 등으로 실패해도 삼켜서
       // unhandled rejection이 새지 않게 한다(응답은 이미 반환됨).
-      event.waitUntil(cache.put(request, response.clone()).catch(() => {}));
+      try {
+        // 응답 본문이 반환 과정에서 소비되기 전에 캐시용 복제본을 만든다.
+        const responseForCache = response.clone();
+        event.waitUntil(
+          caches
+            .open(cacheName)
+            .then((cache) => cache.put(request, responseForCache))
+            .catch(() => {})
+        );
+      } catch {
+        // 캐시 쓰기 준비 실패도 네트워크 응답을 막지 않는다.
+      }
     }
     return response;
   } catch (error) {
-    const cached = await cache.match(request);
-    if (cached) return cached;
+    try {
+      const cache = await caches.open(cacheName);
+      const cached = await cache.match(request);
+      if (cached) return cached;
+    } catch {
+      // CacheStorage 오류 대신 원래 네트워크 오류를 아래에서 다시 던진다.
+    }
     throw error;
   }
 }
