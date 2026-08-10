@@ -122,6 +122,8 @@ API 계약은 (1) 즐겨찾기 컬렉션 CRUD 및 정렬 저장, (2) 즐겨찾�
 
 > **구현 상태: 구현됨.**
 
+동일 탭에서 동시에 마운트된 모든 `useFavorites` 소비자는 feature-local external store의 단일 runtime snapshot(favorites, hydration, 최신 undo 한 건)을 공유한다. 마지막 subscriber가 해제되면 transient snapshot과 5초 undo timer를 폐기하지만 영속 favorites는 지우지 않으며, 다음 첫 subscriber가 versioned `localStorage` repository에서 다시 hydrate한다. `storage` event 또는 BroadcastChannel 기반 cross-tab 동기화는 지원하지 않으므로, 다른 탭이나 외부 storage write는 현재 subscriber에게 즉시 반영되지 않는다.
+
 웹 클라이언트는 브라우저 `localStorage`를 저장소로 사용한다(`frontend/shared/lib/storage/browser-storage.ts`의 `getLocalStorage()`). IndexedDB는 사용하지 않는다 — 원래 IndexedDB 설계는 `docs/legacy/favorites-server-sync-design.md`에 보존되어 있다.
 
 저장은 레코드 단위 CRUD가 아니라, `FavoriteLocation[]` 전체 배열을 하나의 버전 봉투(payload)로 통째로 읽고 쓰는 방식이다(`frontend/shared/lib/storage/repositories/location-repositories.ts`의 `createFavoritesRepository()` → `frontend/shared/lib/storage/repositories/repository-utils.ts`의 `createVersionedCollectionRepository()`).
