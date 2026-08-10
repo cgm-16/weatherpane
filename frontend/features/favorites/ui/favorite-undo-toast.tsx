@@ -3,7 +3,7 @@ interface FavoriteUndoToastProps {
   onUndo: () => void;
 }
 
-// 즐겨찾기 제거 후 실행 취소 토스트. 5초 타이머는 useFavorites 훅이 관리한다.
+// 즐겨찾기 제거 후 실행 취소 토스트. 5초 타이머는 favorites store가 관리한다.
 export function FavoriteUndoToast({
   locationName,
   onUndo,
