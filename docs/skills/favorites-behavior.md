@@ -24,6 +24,8 @@
 - Drag handle is the primary reorder affordance; `위로` / `아래로` buttons are the accessible fallback (FAV-07)
 - Undo restores the exact previous favorites state including position and nickname (not just "re-adds") (FAV-09 area)
 - Only the latest removal is undoable; undo clears when a new removal happens or after 5 seconds
+- Simultaneously mounted `useFavorites` consumers in the same tab share favorites and the single latest undo state; an action in one consumer updates every consumer immediately
+- Cross-tab synchronization is out of scope; do not add `storage` event listeners or `BroadcastChannel` for Favorites
 - Removing a favorite does not affect the active location
 - Raw GPS location cannot be added to Favorites
 - Card skeleton: shown when no snapshot exists and data is loading (FAV-03)
@@ -38,40 +40,49 @@
    Action:
    - read [docs/specs-favorites.md](../specs-favorites.md) for the relevant FAV rule
    - if a change would alter a FAV rule, stop — do not proceed without explicit re-agreement
-   Done-check: the relevant FAV rule is named; no silent drift from the confirmed decisions.
+     Done-check: the relevant FAV rule is named; no silent drift from the confirmed decisions.
 
 2. Intent: enforce the 6-favorite cap at the action layer, not the UI layer.
    Action:
    - locate the favorites store action that handles add
    - confirm it checks `favorites.length < 6` before adding
    - confirm the UI reflects the blocked state but the store is the authority
-   Done-check: adding a 7th favorite is blocked at the store level with a clear return signal.
+     Done-check: adding a 7th favorite is blocked at the store level with a clear return signal.
 
 3. Intent: confirm edit mode gating is complete.
    Action:
    - confirm drag handle, up/down buttons, and nickname input are only rendered or enabled inside 편집/정렬 mode
    - confirm toggling out of edit mode commits any in-progress nickname edit before closing (auto-blur → commit → close)
-   Done-check: none of the edit-mode controls are accessible outside edit mode.
+     Done-check: none of the edit-mode controls are accessible outside edit mode.
 
 4. Intent: verify card state rendering matches the three-state contract.
    Action:
    - confirm the card component renders skeleton when `snapshot === null && isLoading`
    - confirm the card component renders inline error + retry button when `snapshot === null && isError`
    - confirm the card is navigable only when snapshot data is available
-   Done-check: all three states render distinctly; no state is silently swallowed.
+     Done-check: all three states render distinctly; no state is silently swallowed.
 
 5. Intent: confirm undo scope.
    Action:
    - confirm the undo store holds only one removal at a time
    - confirm the undo timer resets or clears when a new removal occurs
    - confirm undo restores the exact favorites array (not just appends)
-   Done-check: undo is tested for position and nickname restoration, not just presence.
+     Done-check: undo is tested for position and nickname restoration, not just presence.
+
+6. Intent: confirm the shared same-tab state boundary and excluded cross-tab scope.
+   Action:
+   - mount two `useFavorites` consumers and perform an add or removal from one consumer
+   - confirm both consumers immediately expose the same favorites and single latest `undoEntry`
+   - inspect the Favorites feature for `storage` event listeners or `BroadcastChannel`
+     Done-check: both consumers stay synchronized within the tab, and no cross-tab synchronization mechanism is added.
 
 ## Verification
 
 - `pnpm exec vitest run` for the favorites store and card state logic
 - Confirm the 6-cap, undo scope, and edit-mode gating each have a dedicated test
 - Confirm card state tests cover all three variants (skeleton, inline error, navigable)
+- `pnpm exec vitest run tests/use-favorites.test.ts tests/use-favorites-edit.test.ts` for same-tab shared favorites and latest undo behavior
+- `rg -n "addEventListener\\(['\"]storage|BroadcastChannel" frontend/features/favorites` must return exit 1 with no matches
 
 ## Stop and ask Ori
 
