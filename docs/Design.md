@@ -71,6 +71,25 @@ background (#131313)                    ← 전체 페이지 기반
           └─ popover (#20201f)          ← 팝오버, 부유 요소
 ```
 
+### 오류 상태 의미 색상
+
+홈 설정·연결 오류 화면은 현재 프로젝트 팔레트와 일치하는 Stitch 상세 화면
+16번(햇살)·15번(달빛 밤)의 MD3 의미 역할을 사용한다. 기존 shadcn 별칭과 값이
+같더라도 역할 이름을 합치지 않으며, 컴포넌트는 아래 토큰의 Tailwind 유틸리티를
+사용한다.
+
+| 토큰                               | 밝은 모드 | 어두운 모드 | 용도                              |
+| ---------------------------------- | --------- | ----------- | --------------------------------- |
+| `--color-on-surface`               | `#1b1c1c` | `#e5e2e1`   | 오류 카드의 주요 제목과 본문 강조 |
+| `--color-on-surface-variant`       | `#5c3f41` | `#e5bdbe`   | 오류 설명, 상태 라벨, 보조 문구   |
+| `--color-secondary-container`      | `#e3e2e2` | `#8a1f31`   | 오류 화면의 보조 동작 배경        |
+| `--color-outline-variant`          | `#e5bdbe` | `#5c3f41`   | 오프라인 상태 표시 점             |
+| `--color-primary-container`        | `#e21e4a` | `#ff5169`   | 주요 오류 복구 동작의 호버 배경   |
+| `--color-on-primary`               | `#ffffff` | `#68001a`   | 주요 오류 복구 버튼의 전경        |
+| `--color-on-secondary-fixed`       | `#1b1c1c` | `#40000d`   | 보조 오류 복구 버튼의 전경        |
+| `--color-surface-container-high`   | `#eae7e7` | `#2a2a2a`   | 오프라인 상태 배지 표면           |
+| `--color-surface-container-lowest` | `#ffffff` | `#0e0e0e`   | 오류 아이콘의 작은 표면           |
+
 ### 주요 색상: Rausch Red
 
 - 밝은 모드: `primary = #ba0036` (진한 빨강)
