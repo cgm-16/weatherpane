@@ -106,15 +106,33 @@ describe('HomePage 상태별 렌더링', () => {
     ).toBeInTheDocument();
   });
 
-  test('recoverable-error → 다시 시도 버튼을 표시한다', () => {
+  test('recoverable-error → 공유 유리 컨테이너와 다시 시도 버튼을 표시한다', () => {
     vi.mocked(useHomeBootstrap).mockReturnValue({
       kind: 'recoverable-error',
       location: loc,
     });
     renderPage();
+
+    const card = screen.getByRole('heading', {
+      name: '연결이 끊겼습니다',
+    }).parentElement;
+
     expect(
       screen.getByRole('button', { name: /다시 시도/ })
     ).toBeInTheDocument();
+    expect(card).toHaveClass(
+      'bg-surface-container-highest/60',
+      'backdrop-blur-[20px]',
+      'dark:bg-surface-bright/40',
+      'flex',
+      'w-full',
+      'max-w-md',
+      'flex-col',
+      'items-center',
+      'rounded-lg',
+      'p-8',
+      'text-center'
+    );
   });
 
   test('stale-fallback → 선택한 화씨 단위로 기온, 최고·최저 기온을 표시한다', () => {

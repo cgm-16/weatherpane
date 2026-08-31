@@ -1,4 +1,6 @@
 // 연결 오류 화면입니다. 스냅샷 없이 fetch 실패 시 표시됩니다.
+import { GlassContainer } from '~/shared/ui/glass-container';
+
 interface HomeConnectionErrorProps {
   onRetry: () => void;
   // WP-017 즐겨찾기 구현 전까지는 전달하지 않으면 버튼을 숨깁니다.
@@ -14,7 +16,7 @@ export function HomeConnectionError({
       className="flex min-h-screen flex-col items-center justify-center bg-background px-6"
       role="main"
     >
-      <div className="flex w-full max-w-md flex-col items-center rounded-lg bg-surface-container-highest/50 p-8 text-center backdrop-blur-[20px]">
+      <GlassContainer className="flex w-full max-w-md flex-col items-center rounded-lg p-8 text-center">
         {/* 오프라인 표시 */}
         <div className="bg-surface-container-high/40 mb-10 flex items-center gap-2 rounded-full px-4 py-2 backdrop-blur-md">
           <span className="bg-outline-variant h-2 w-2 animate-pulse rounded-full" />
@@ -77,7 +79,7 @@ export function HomeConnectionError({
         <p className="font-label text-on-surface-variant/60 mt-8 text-xs font-medium tracking-widest uppercase">
           오류 코드: CONNECTION_FAILED
         </p>
-      </div>
+      </GlassContainer>
     </main>
   );
 }
