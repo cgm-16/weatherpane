@@ -32,7 +32,7 @@ test.describe('디자인 토큰 — Haet-Ssal (밝은 모드)', () => {
     );
   });
 
-  test('기본 색상 토큰이 Haet-Ssal 값으로 적용된다', async ({ page }) => {
+  test('오류 화면 MD3 토큰이 Haet-Ssal 값으로 적용된다', async ({ page }) => {
     expect(await getCssVar(page, '--color-background')).toBe('#fcf9f8');
     expect(await getCssVar(page, '--color-foreground')).toBe('#1b1c1c');
     expect(await getCssVar(page, '--color-card')).toBe('#ffffff');
@@ -50,6 +50,21 @@ test.describe('디자인 토큰 — Haet-Ssal (밝은 모드)', () => {
     expect(await getCssVar(page, '--color-muted')).toBe('#f0eded');
     expect(await getCssVar(page, '--color-destructive')).toBe('#ba1a1a');
     expect(await getCssVar(page, '--color-destructive-foreground')).toBe(
+      '#ffffff'
+    );
+    expect(await getCssVar(page, '--color-on-surface')).toBe('#1b1c1c');
+    expect(await getCssVar(page, '--color-on-surface-variant')).toBe('#5c3f41');
+    expect(await getCssVar(page, '--color-secondary-container')).toBe(
+      '#e3e2e2'
+    );
+    expect(await getCssVar(page, '--color-outline-variant')).toBe('#e5bdbe');
+    expect(await getCssVar(page, '--color-primary-container')).toBe('#e21e4a');
+    expect(await getCssVar(page, '--color-on-primary')).toBe('#ffffff');
+    expect(await getCssVar(page, '--color-on-secondary-fixed')).toBe('#1b1c1c');
+    expect(await getCssVar(page, '--color-surface-container-high')).toBe(
+      '#eae7e7'
+    );
+    expect(await getCssVar(page, '--color-surface-container-lowest')).toBe(
       '#ffffff'
     );
   });
@@ -108,7 +123,7 @@ test.describe('디자인 토큰 — Dal-Bit Night (어두운 모드)', () => {
     );
   });
 
-  test('어두운 모드 색상 토큰이 Dal-Bit Night 값으로 전환된다', async ({
+  test('어두운 모드 오류 화면 MD3 토큰이 Dal-Bit Night 값으로 전환된다', async ({
     page,
   }) => {
     expect(await getCssVar(page, '--color-background')).toBe('#131313');
@@ -129,6 +144,21 @@ test.describe('디자인 토큰 — Dal-Bit Night (어두운 모드)', () => {
     expect(await getCssVar(page, '--color-destructive')).toBe('#ffb4ab');
     expect(await getCssVar(page, '--color-destructive-foreground')).toBe(
       '#690005'
+    );
+    expect(await getCssVar(page, '--color-on-surface')).toBe('#e5e2e1');
+    expect(await getCssVar(page, '--color-on-surface-variant')).toBe('#e5bdbe');
+    expect(await getCssVar(page, '--color-secondary-container')).toBe(
+      '#8a1f31'
+    );
+    expect(await getCssVar(page, '--color-outline-variant')).toBe('#5c3f41');
+    expect(await getCssVar(page, '--color-primary-container')).toBe('#ff5169');
+    expect(await getCssVar(page, '--color-on-primary')).toBe('#68001a');
+    expect(await getCssVar(page, '--color-on-secondary-fixed')).toBe('#40000d');
+    expect(await getCssVar(page, '--color-surface-container-high')).toBe(
+      '#2a2a2a'
+    );
+    expect(await getCssVar(page, '--color-surface-container-lowest')).toBe(
+      '#0e0e0e'
     );
   });
 

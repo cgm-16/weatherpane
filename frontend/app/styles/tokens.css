@@ -57,6 +57,17 @@
   --color-muted: #f0eded;
   --color-muted-foreground: #5c3f41;
 
+  /* MD3 오류 상태 화면의 의미 기반 색상 역할 */
+  --color-on-surface: #1b1c1c;
+  --color-on-surface-variant: #5c3f41;
+  --color-secondary-container: #e3e2e2;
+  --color-outline-variant: #e5bdbe;
+  --color-primary-container: #e21e4a;
+  --color-on-primary: #ffffff;
+  --color-on-secondary-fixed: #1b1c1c;
+  --color-surface-container-high: #eae7e7;
+  --color-surface-container-lowest: #ffffff;
+
   /* 오류 상태 */
   --color-destructive: #ba1a1a;
   --color-destructive-foreground: #ffffff;
@@ -106,6 +117,17 @@
   /* 음소거 — surface_container */
   --color-muted: #20201f;
   --color-muted-foreground: #e5bdbe;
+
+  /* MD3 오류 상태 화면의 의미 기반 색상 역할 */
+  --color-on-surface: #e5e2e1;
+  --color-on-surface-variant: #e5bdbe;
+  --color-secondary-container: #8a1f31;
+  --color-outline-variant: #5c3f41;
+  --color-primary-container: #ff5169;
+  --color-on-primary: #68001a;
+  --color-on-secondary-fixed: #40000d;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-container-lowest: #0e0e0e;
 
   /* 오류 상태 */
   --color-destructive: #ffb4ab;
