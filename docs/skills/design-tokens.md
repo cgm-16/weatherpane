@@ -105,6 +105,15 @@ Expected: no errors. The build output should include the font assets for Plus Ja
 | `secondary` / `secondary-foreground`     | `#5e5e5e` / `#ffffff` | `#ffb2b6` / `#67001a` | Supporting actions                                   |
 | `accent` / `accent-foreground`           | `#eae7e7` / `#1b1c1c` | `#2a2a2a` / `#e5e2e1` | Hover states, subtle highlights                      |
 | `muted` / `muted-foreground`             | `#f0eded` / `#5c3f41` | `#20201f` / `#e5bdbe` | De-emphasized content, labels                        |
+| `on-surface`                             | `#1b1c1c`             | `#e5e2e1`             | Primary error-state surface text                     |
+| `on-surface-variant`                     | `#5c3f41`             | `#e5bdbe`             | Error descriptions, status labels, supporting text   |
+| `secondary-container`                    | `#e3e2e2`             | `#8a1f31`             | Secondary error-action container                     |
+| `outline-variant`                        | `#e5bdbe`             | `#5c3f41`             | Offline status indicator                             |
+| `primary-container`                      | `#e21e4a`             | `#ff5169`             | Primary error-action hover container                 |
+| `on-primary`                             | `#ffffff`             | `#68001a`             | Foreground on primary error actions                  |
+| `on-secondary-fixed`                     | `#1b1c1c`             | `#40000d`             | Foreground on the current secondary error action     |
+| `surface-container-high`                 | `#eae7e7`             | `#2a2a2a`             | Offline status badge surface                         |
+| `surface-container-lowest`               | `#ffffff`             | `#0e0e0e`             | Small error-icon surface                             |
 | `destructive` / `destructive-foreground` | `#ba1a1a` / `#ffffff` | `#ffb4ab` / `#690005` | Error states                                         |
 | `border`                                 | `#e5bdbe`             | `#5c3f41`             | Structural outlines (use sparingly — see Hard rules) |
 | `input`                                  | `#f6f3f2`             | `#1c1b1b`             | Form input backgrounds                               |
