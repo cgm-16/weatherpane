@@ -18,9 +18,9 @@ export function HomeConnectionError({
     >
       <GlassContainer className="flex w-full max-w-md flex-col items-center rounded-lg p-8 text-center">
         {/* 오프라인 표시 */}
-        <div className="bg-surface-container-high/40 mb-10 flex items-center gap-2 rounded-full px-4 py-2 backdrop-blur-md">
-          <span className="bg-outline-variant h-2 w-2 animate-pulse rounded-full" />
-          <span className="font-headline text-on-surface-variant text-[11px] font-bold tracking-widest uppercase">
+        <div className="mb-10 flex items-center gap-2 rounded-full bg-surface-container-high/40 px-4 py-2 backdrop-blur-md">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-outline-variant" />
+          <span className="font-headline text-[11px] font-bold tracking-widest text-on-surface-variant uppercase">
             오프라인 상태
           </span>
         </div>
@@ -35,7 +35,7 @@ export function HomeConnectionError({
               signal_disconnected
             </span>
           </div>
-          <div className="bg-surface-container-lowest absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full shadow-lg">
+          <div className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-lowest shadow-lg">
             <span
               className="material-symbols-outlined text-xl text-primary"
               style={{ fontVariationSettings: "'FILL' 1" }}
@@ -45,10 +45,10 @@ export function HomeConnectionError({
           </div>
         </div>
 
-        <h2 className="font-headline text-on-surface mb-4 text-3xl leading-tight font-extrabold">
+        <h2 className="font-headline mb-4 text-3xl leading-tight font-extrabold text-on-surface">
           연결이 끊겼습니다
         </h2>
-        <p className="text-on-surface-variant mb-10 px-2 font-body text-base leading-relaxed">
+        <p className="mb-10 px-2 font-body text-base leading-relaxed text-on-surface-variant">
           날씨 정보를 불러오지 못했습니다. 신호 상태를 확인한 후 다시 시도해
           주세요.
         </p>
@@ -57,7 +57,7 @@ export function HomeConnectionError({
           <button
             type="button"
             onClick={onRetry}
-            className="font-headline text-on-primary hover:bg-primary-container flex w-full items-center justify-center gap-2 rounded-sm bg-primary px-6 py-5 font-bold shadow-lg transition-all active:scale-95"
+            className="font-headline flex w-full items-center justify-center gap-2 rounded-sm bg-primary px-6 py-5 font-bold text-on-primary shadow-lg transition-all hover:bg-primary-container hover:text-on-primary-container active:scale-95"
           >
             <span className="material-symbols-outlined text-xl">refresh</span>
             다시 시도
@@ -66,7 +66,7 @@ export function HomeConnectionError({
             <button
               type="button"
               onClick={onGoToSavedPlaces}
-              className="bg-secondary-container font-headline text-on-secondary-fixed flex w-full items-center justify-center gap-2 rounded-sm px-6 py-4 font-semibold transition-all hover:bg-surface-container-highest active:scale-95"
+              className="font-headline flex w-full items-center justify-center gap-2 rounded-sm bg-secondary-container px-6 py-4 font-semibold text-on-secondary-fixed transition-all hover:bg-surface-container-highest active:scale-95"
             >
               <span className="material-symbols-outlined text-xl">
                 bookmarks
@@ -76,7 +76,7 @@ export function HomeConnectionError({
           )}
         </div>
 
-        <p className="font-label text-on-surface-variant/60 mt-8 text-xs font-medium tracking-widest uppercase">
+        <p className="font-label mt-8 text-xs font-medium tracking-widest text-on-surface-variant uppercase">
           오류 코드: CONNECTION_FAILED
         </p>
       </GlassContainer>

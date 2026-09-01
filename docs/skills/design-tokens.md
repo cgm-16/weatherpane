@@ -19,6 +19,7 @@
 - Never create component-scoped CSS custom properties that duplicate semantic tokens.
 - All new tokens go in `tokens.css`. No token definitions in `global.css` or component files.
 - Both `@theme {}` (light default) and `.dark {}` (dark override) must be updated if the token differs between modes.
+- Pair `hover:bg-primary-container` with `hover:text-on-primary-container`; retain `text-on-primary` for the default `bg-primary` state.
 - Write a Playwright assertion in `tests/design-tokens.e2e.ts` for every new token in both modes.
 - Token names must use shadcn kebab-case naming: `--color-*`, `--radius-*`, `--font-*`, `--shadow-*`.
 
@@ -110,6 +111,7 @@ Expected: no errors. The build output should include the font assets for Plus Ja
 | `secondary-container`                    | `#e3e2e2`             | `#8a1f31`             | Secondary error-action container                     |
 | `outline-variant`                        | `#e5bdbe`             | `#5c3f41`             | Offline status indicator                             |
 | `primary-container`                      | `#e21e4a`             | `#ff5169`             | Primary error-action hover container                 |
+| `on-primary-container`                   | `#fffbff`             | `#5b0016`             | Foreground on primary error-action hover containers  |
 | `on-primary`                             | `#ffffff`             | `#68001a`             | Foreground on primary error actions                  |
 | `on-secondary-fixed`                     | `#1b1c1c`             | `#40000d`             | Foreground on the current secondary error action     |
 | `surface-container-high`                 | `#eae7e7`             | `#2a2a2a`             | Offline status badge surface                         |
