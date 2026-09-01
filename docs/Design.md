@@ -85,10 +85,15 @@ background (#131313)                    ← 전체 페이지 기반
 | `--color-secondary-container`      | `#e3e2e2` | `#8a1f31`   | 오류 화면의 보조 동작 배경        |
 | `--color-outline-variant`          | `#e5bdbe` | `#5c3f41`   | 오프라인 상태 표시 점             |
 | `--color-primary-container`        | `#e21e4a` | `#ff5169`   | 주요 오류 복구 동작의 호버 배경   |
+| `--color-on-primary-container`     | `#fffbff` | `#5b0016`   | 주요 오류 복구 동작 호버 전경     |
 | `--color-on-primary`               | `#ffffff` | `#68001a`   | 주요 오류 복구 버튼의 전경        |
 | `--color-on-secondary-fixed`       | `#1b1c1c` | `#40000d`   | 보조 오류 복구 버튼의 전경        |
 | `--color-surface-container-high`   | `#eae7e7` | `#2a2a2a`   | 오프라인 상태 배지 표면           |
 | `--color-surface-container-lowest` | `#ffffff` | `#0e0e0e`   | 오류 아이콘의 작은 표면           |
+
+`primary-container` 호버 배경에는 `on-primary-container` 전경을 함께 사용한다.
+12px 오류 코드처럼 상태를 설명하는 작은 텍스트는 `on-surface-variant`를 불투명하게
+사용해 두 테마에서 일반 텍스트 대비를 유지한다.
 
 ### 주요 색상: Rausch Red
 

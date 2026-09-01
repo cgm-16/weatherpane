@@ -82,7 +82,15 @@ describe('HomePage 상태별 렌더링', () => {
   test('no-location → 지역 검색 링크를 표시한다', () => {
     vi.mocked(useHomeBootstrap).mockReturnValue({ kind: 'no-location' });
     renderPage();
-    expect(screen.getByRole('link', { name: '지역 검색' })).toBeInTheDocument();
+    const searchLink = screen.getByRole('link', { name: '지역 검색' });
+
+    expect(searchLink).toBeInTheDocument();
+    expect(searchLink).toHaveClass(
+      'bg-primary',
+      'text-on-primary',
+      'hover:bg-primary-container',
+      'hover:text-on-primary-container'
+    );
   });
 
   test('loading → 로딩 메시지를 표시한다', () => {
@@ -117,9 +125,10 @@ describe('HomePage 상태별 렌더링', () => {
       name: '연결이 끊겼습니다',
     }).parentElement;
 
-    expect(
-      screen.getByRole('button', { name: /다시 시도/ })
-    ).toBeInTheDocument();
+    const retryButton = screen.getByRole('button', { name: /다시 시도/ });
+    const errorCode = screen.getByText('오류 코드: CONNECTION_FAILED');
+
+    expect(retryButton).toBeInTheDocument();
     expect(card).toHaveClass(
       'bg-surface-container-highest/60',
       'backdrop-blur-[20px]',
@@ -133,6 +142,14 @@ describe('HomePage 상태별 렌더링', () => {
       'p-8',
       'text-center'
     );
+    expect(retryButton).toHaveClass(
+      'bg-primary',
+      'text-on-primary',
+      'hover:bg-primary-container',
+      'hover:text-on-primary-container'
+    );
+    expect(errorCode).toHaveClass('text-on-surface-variant');
+    expect(errorCode).not.toHaveClass('text-on-surface-variant/60');
   });
 
   test('stale-fallback → 선택한 화씨 단위로 기온, 최고·최저 기온을 표시한다', () => {

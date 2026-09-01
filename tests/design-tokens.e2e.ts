@@ -59,6 +59,9 @@ test.describe('디자인 토큰 — Haet-Ssal (밝은 모드)', () => {
     );
     expect(await getCssVar(page, '--color-outline-variant')).toBe('#e5bdbe');
     expect(await getCssVar(page, '--color-primary-container')).toBe('#e21e4a');
+    expect(await getCssVar(page, '--color-on-primary-container')).toBe(
+      '#fffbff'
+    );
     expect(await getCssVar(page, '--color-on-primary')).toBe('#ffffff');
     expect(await getCssVar(page, '--color-on-secondary-fixed')).toBe('#1b1c1c');
     expect(await getCssVar(page, '--color-surface-container-high')).toBe(
@@ -152,6 +155,9 @@ test.describe('디자인 토큰 — Dal-Bit Night (어두운 모드)', () => {
     );
     expect(await getCssVar(page, '--color-outline-variant')).toBe('#5c3f41');
     expect(await getCssVar(page, '--color-primary-container')).toBe('#ff5169');
+    expect(await getCssVar(page, '--color-on-primary-container')).toBe(
+      '#5b0016'
+    );
     expect(await getCssVar(page, '--color-on-primary')).toBe('#68001a');
     expect(await getCssVar(page, '--color-on-secondary-fixed')).toBe('#40000d');
     expect(await getCssVar(page, '--color-surface-container-high')).toBe(
