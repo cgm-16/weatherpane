@@ -3,6 +3,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -299,6 +300,75 @@ describe('search route', () => {
       vi.advanceTimersByTime(300);
 
       expect(router.state.location.search).toBe('?q=%EC%84%9C%EC%9A%B8');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('자체 URL acknowledgement가 새 local input을 덮어쓰지 않는다', () => {
+    vi.useFakeTimers();
+    let unsubscribe: (() => void) | undefined;
+
+    try {
+      const { router } = renderSearchRoute('/search');
+      const input = document.querySelector<HTMLInputElement>('#search-query')!;
+      let clearedAfterInternalNavigation = false;
+
+      unsubscribe = router.subscribe((state) => {
+        if (
+          !clearedAfterInternalNavigation &&
+          state.location.search === '?q=%EC%A2%85%EB%A1%9C'
+        ) {
+          clearedAfterInternalNavigation = true;
+          fireEvent.change(input, { target: { value: '' } });
+        }
+      });
+
+      fireEvent.change(input, { target: { value: '종로' } });
+
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('');
+      expect(router.state.location.search).toBe('?q=%EC%A2%85%EB%A1%9C');
+
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('');
+      expect(router.state.location.search).toBe('');
+    } finally {
+      unsubscribe?.();
+      vi.useRealTimers();
+    }
+  });
+
+  test('외부 back/forward는 대기 입력을 취소하고 URL 값을 복원한다', async () => {
+    vi.useFakeTimers();
+    try {
+      const { router } = renderSearchRoute('/search?q=%EC%A2%85%EB%A1%9C');
+      const input = document.querySelector<HTMLInputElement>('#search-query')!;
+
+      await act(async () => {
+        await router.navigate('/search?q=%EB%B6%80%EC%82%B0');
+      });
+      fireEvent.change(input, { target: { value: '서울' } });
+      await act(async () => {
+        await router.navigate(-1);
+      });
+
+      expect(input).toHaveValue('종로');
+      expect(router.state.location.search).toBe('?q=%EC%A2%85%EB%A1%9C');
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('종로');
+      expect(router.state.location.search).toBe('?q=%EC%A2%85%EB%A1%9C');
+
+      fireEvent.change(input, { target: { value: '대전' } });
+      await act(async () => {
+        await router.navigate(1);
+      });
+
+      expect(input).toHaveValue('부산');
+      expect(router.state.location.search).toBe('?q=%EB%B6%80%EC%82%B0');
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('부산');
+      expect(router.state.location.search).toBe('?q=%EB%B6%80%EC%82%B0');
     } finally {
       vi.useRealTimers();
     }

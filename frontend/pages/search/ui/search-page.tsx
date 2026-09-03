@@ -1,4 +1,11 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { useSearchSelection } from '../../../features/search';
@@ -168,20 +175,34 @@ export function SearchPage() {
   // 입력 박스 표시 값 — URL 쿼리와 분리하여 타이핑 중 React가 DOM 값을 덮어쓰지 않도록 함
   const [inputValue, setInputValue] = useState(query);
   const queryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingInternalQueryRef = useRef<string | null>(null);
+  const cancelPendingQueryUpdate = useCallback(() => {
+    if (queryDebounceRef.current !== null) {
+      clearTimeout(queryDebounceRef.current);
+      queryDebounceRef.current = null;
+    }
+  }, []);
   // 렌더마다 최신 query 값 유지 — 디바운스 콜백에서 오래된 URL 업데이트 여부 판단에 사용
   const latestQueryRef = useRef(query);
   latestQueryRef.current = query;
   // 브라우저 뒤로/앞으로 이동 시 URL이 외부에서 변경되면 입력 박스를 동기화
   useEffect(() => {
+    if (pendingInternalQueryRef.current === query) {
+      pendingInternalQueryRef.current = null;
+      return;
+    }
+
+    pendingInternalQueryRef.current = null;
+    cancelPendingQueryUpdate();
+    latestQueryRef.current = query;
     // eslint-disable-next-line @eslint-react/set-state-in-effect
     setInputValue(query);
-  }, [query]);
+  }, [cancelPendingQueryUpdate, query]);
   useEffect(() => {
     return () => {
-      if (queryDebounceRef.current !== null)
-        clearTimeout(queryDebounceRef.current);
+      cancelPendingQueryUpdate();
     };
-  }, []);
+  }, [cancelPendingQueryUpdate]);
   const hasActiveQuery = query.trim().length > 0;
   const queryResults = hasActiveQuery ? searchCatalogLocations(query) : [];
   const hasHighlightForCurrentQuery =
@@ -199,18 +220,17 @@ export function SearchPage() {
       : undefined;
 
   function updateQuery(nextQuery: string) {
-    // 직접 호출(예: Escape) 시 진행 중인 디바운스를 취소
-    if (queryDebounceRef.current !== null) {
-      clearTimeout(queryDebounceRef.current);
-      queryDebounceRef.current = null;
-    }
-    const nextSearchParams = new URLSearchParams(searchParams);
+    cancelPendingQueryUpdate();
     const normalizedQuery = nextQuery.trim().length === 0 ? '' : nextQuery;
 
+    latestQueryRef.current = normalizedQuery;
+    pendingInternalQueryRef.current = normalizedQuery;
     setInputValue(normalizedQuery);
     setHighlightedQuery(normalizedQuery);
     setManualHighlightedIndex(0);
     setIsHighlightActive(normalizedQuery.length > 0);
+
+    const nextSearchParams = new URLSearchParams(searchParams);
 
     if (normalizedQuery.length === 0) {
       nextSearchParams.delete('q');
@@ -338,8 +358,7 @@ export function SearchPage() {
                 onChange={(event) => {
                   const val = event.currentTarget.value;
                   setInputValue(val);
-                  if (queryDebounceRef.current !== null)
-                    clearTimeout(queryDebounceRef.current);
+                  cancelPendingQueryUpdate();
                   const queryAtKeystroke = latestQueryRef.current;
                   queryDebounceRef.current = setTimeout(() => {
                     // 키 입력 이후 URL이 외부에서 변경됐으면 오래된 디바운스이므로 무시
