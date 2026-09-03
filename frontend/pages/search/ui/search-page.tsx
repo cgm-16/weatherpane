@@ -258,6 +258,21 @@ export function SearchPage() {
       return;
     }
 
+    if (event.key === 'Escape') {
+      event.preventDefault();
+
+      if (hasHighlightForCurrentQuery) {
+        cancelPendingQueryUpdate();
+        setInputValue(query);
+        setHighlightedQuery(query);
+        setManualHighlightedIndex(0);
+        setIsHighlightActive(false);
+      } else {
+        updateQuery('');
+      }
+      return;
+    }
+
     if (!hasActiveQuery) {
       return;
     }
@@ -289,18 +304,6 @@ export function SearchPage() {
       event.preventDefault();
       selectResult(queryResults[highlightedIndex]);
       return;
-    }
-
-    if (event.key === 'Escape') {
-      event.preventDefault();
-
-      if (hasHighlightForCurrentQuery) {
-        setHighlightedQuery(query);
-        setManualHighlightedIndex(0);
-        setIsHighlightActive(false);
-      } else {
-        updateQuery('');
-      }
     }
   }
 
