@@ -374,6 +374,55 @@ describe('search route', () => {
     }
   });
 
+  test('빈 URL의 pending 입력은 Escape로 즉시 취소된다', () => {
+    vi.useFakeTimers();
+    try {
+      const { router } = renderSearchRoute('/search');
+      const input = document.querySelector<HTMLInputElement>('#search-query')!;
+
+      fireEvent.change(input, { target: { value: '서울' } });
+      fireEvent.keyDown(input, { key: 'Escape' });
+
+      expect(input).toHaveValue('');
+      expect(router.state.location.search).toBe('');
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('');
+      expect(router.state.location.search).toBe('');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('highlight 상태의 pending 입력은 Escape로 URL query를 복원한다', () => {
+    vi.useFakeTimers();
+    try {
+      const { router } = renderSearchRoute(
+        '/search?q=%EC%B2%AD%EC%9A%B4%EB%8F%99'
+      );
+      const input = document.querySelector<HTMLInputElement>('#search-query')!;
+      const option = screen.getAllByRole('option')[0];
+
+      expect(option).toHaveAttribute('aria-selected', 'true');
+      fireEvent.change(input, { target: { value: '서울' } });
+      fireEvent.keyDown(input, { key: 'Escape' });
+
+      expect(input).toHaveValue('청운동');
+      expect(option).toHaveAttribute('aria-selected', 'false');
+      expect(input).not.toHaveAttribute('aria-activedescendant');
+      expect(router.state.location.search).toBe(
+        '?q=%EC%B2%AD%EC%9A%B4%EB%8F%99'
+      );
+
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('청운동');
+      expect(router.state.location.search).toBe(
+        '?q=%EC%B2%AD%EC%9A%B4%EB%8F%99'
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test('clears the auto-highlight on the first Esc, then clears the query on the next Esc', async () => {
     const { router, user } = renderSearchRoute(
       '/search?q=%EC%B2%AD%EC%9A%B4%EB%8F%99'
