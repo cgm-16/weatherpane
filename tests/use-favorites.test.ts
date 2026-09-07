@@ -5,7 +5,10 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, expect, test, beforeEach, vi, afterEach } from 'vitest';
 import { useFavorites } from '../frontend/features/favorites/use-favorites';
 import { createFavoritesRepository } from '../frontend/shared/lib/storage/repositories/location-repositories';
-import type { ResolvedLocation } from '../frontend/entities/location/model/types';
+import type {
+  FavoriteLocation,
+  ResolvedLocation,
+} from '../frontend/entities/location/model/types';
 
 const makeLocation = (id: string, index = 0): ResolvedLocation => ({
   kind: 'resolved',
@@ -20,6 +23,29 @@ const makeLocation = (id: string, index = 0): ResolvedLocation => ({
 
 const seoul = makeLocation('KR-Seoul');
 const busan = makeLocation('KR-Busan');
+const jeju = makeLocation('KR-Jeju', 2);
+
+function makeFavorite(
+  favoriteId: string,
+  location: ResolvedLocation,
+  order: number,
+  nickname: string | null = null
+): FavoriteLocation {
+  const now = new Date().toISOString();
+
+  return {
+    favoriteId,
+    location,
+    nickname,
+    order,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function readStoredFavorites(): FavoriteLocation[] {
+  return createFavoritesRepository().getAll();
+}
 
 function FavoritesCountProbe() {
   const { favorites } = useFavorites();
@@ -320,5 +346,256 @@ describe('useFavorites', () => {
     );
 
     expect(html).toContain('disabled=""');
+  });
+});
+
+describe('useFavorites — 동일 탭 공유 store', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('동시에 마운트된 두 훅은 추가와 상한 상태를 즉시 공유한다', () => {
+    const first = renderHook(() => useFavorites());
+    const second = renderHook(() => useFavorites());
+    const locations = Array.from({ length: 6 }, (_, index) =>
+      makeLocation(`KR-Shared${index}`, index)
+    );
+
+    act(() => {
+      expect(first.result.current.addFavorite(locations[0])).toBe('added');
+    });
+    expect(second.result.current.favorites).toHaveLength(1);
+    expect(second.result.current.isFavorite(locations[0].locationId)).toBe(
+      true
+    );
+
+    act(() => {
+      expect(second.result.current.addFavorite(locations[0])).toBe('duplicate');
+      locations.slice(1).forEach((location) => {
+        expect(second.result.current.addFavorite(location)).toBe('added');
+      });
+    });
+
+    expect(first.result.current.favorites).toHaveLength(6);
+    expect(first.result.current.atMaxFavorites).toBe(true);
+    expect(second.result.current.atMaxFavorites).toBe(true);
+
+    act(() => {
+      expect(first.result.current.addFavorite(jeju)).toBe('max-reached');
+    });
+    expect(readStoredFavorites()).toEqual(first.result.current.favorites);
+  });
+
+  test('닉네임과 수동 순서 변경은 두 훅과 repository에 동일하게 반영된다', () => {
+    const first = renderHook(() => useFavorites());
+    const second = renderHook(() => useFavorites());
+
+    act(() => {
+      first.result.current.addFavorite(seoul);
+      first.result.current.addFavorite(busan);
+      first.result.current.addFavorite(jeju);
+    });
+
+    const busanFavorite = first.result.current.favorites.find(
+      (favorite) => favorite.location.locationId === busan.locationId
+    );
+    expect(busanFavorite).toBeDefined();
+
+    act(() => {
+      second.result.current.updateNickname(
+        busanFavorite!.favoriteId,
+        '  우리 집  '
+      );
+    });
+    expect(first.result.current.favorites[1].nickname).toBe('우리 집');
+    expect(second.result.current.favorites).toBe(
+      first.result.current.favorites
+    );
+
+    const [seoulFavorite, updatedBusanFavorite, jejuFavorite] =
+      first.result.current.favorites;
+    const reordered = [
+      { ...jejuFavorite, order: 0 },
+      { ...seoulFavorite, order: 1 },
+      { ...updatedBusanFavorite, order: 2 },
+    ];
+
+    act(() => {
+      first.result.current.reorderFavorites(reordered);
+    });
+
+    expect(second.result.current.favorites).toBe(
+      first.result.current.favorites
+    );
+    expect(
+      second.result.current.favorites.map((favorite) => favorite.order)
+    ).toEqual([0, 1, 2]);
+    expect(readStoredFavorites()).toEqual(reordered);
+  });
+
+  test('삭제와 다른 훅의 undo는 위치와 닉네임을 포함한 전체 배열을 복원한다', () => {
+    const first = renderHook(() => useFavorites());
+    const second = renderHook(() => useFavorites());
+
+    act(() => {
+      first.result.current.addFavorite(seoul);
+      first.result.current.addFavorite(busan);
+      first.result.current.addFavorite(jeju);
+    });
+    const busanFavoriteId = first.result.current.favorites[1].favoriteId;
+    act(() => {
+      first.result.current.updateNickname(busanFavoriteId, '부산 집');
+    });
+    const previous = first.result.current.favorites;
+
+    act(() => {
+      expect(first.result.current.removeFavorite(busan.locationId)).toBe(
+        'removed'
+      );
+    });
+    expect(second.result.current.undoEntry).toBe(
+      first.result.current.undoEntry
+    );
+    expect(
+      second.result.current.favorites.map((favorite) => favorite.order)
+    ).toEqual([0, 1]);
+
+    act(() => {
+      second.result.current.undoRemove();
+    });
+
+    expect(first.result.current.favorites).toEqual(previous);
+    expect(second.result.current.favorites).toBe(
+      first.result.current.favorites
+    );
+    expect(second.result.current.favorites[1].nickname).toBe('부산 집');
+    expect(first.result.current.undoEntry).toBeNull();
+    expect(second.result.current.undoEntry).toBeNull();
+    expect(readStoredFavorites()).toEqual(previous);
+  });
+
+  test('새 삭제는 공유 undo를 교체하고 5초 후 두 훅에서 함께 만료된다', () => {
+    vi.useFakeTimers();
+    const first = renderHook(() => useFavorites());
+    const second = renderHook(() => useFavorites());
+
+    act(() => {
+      first.result.current.addFavorite(seoul);
+      first.result.current.addFavorite(busan);
+      first.result.current.addFavorite(jeju);
+      first.result.current.removeFavorite(seoul.locationId);
+    });
+    act(() => {
+      second.result.current.removeFavorite(busan.locationId);
+    });
+
+    expect(
+      first.result.current.undoEntry?.removedItem.location.locationId
+    ).toBe(busan.locationId);
+    expect(second.result.current.undoEntry).toBe(
+      first.result.current.undoEntry
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(4999);
+    });
+    expect(first.result.current.undoEntry).not.toBeNull();
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(first.result.current.undoEntry).toBeNull();
+    expect(second.result.current.undoEntry).toBeNull();
+  });
+
+  test('서버 snapshot은 비어 있고 첫 구독 hydrate 결과를 두 훅이 공유한다', () => {
+    const persisted = [makeFavorite('fav-persisted', seoul, 0, '서울 집')];
+    createFavoritesRepository().replaceAll(persisted);
+
+    const serverHtml = renderToString(createElement(FavoritesCountProbe));
+    expect(serverHtml).toContain('>0<');
+
+    const first = renderHook(() => useFavorites());
+    const second = renderHook(() => useFavorites());
+
+    expect(first.result.current.isHydrated).toBe(true);
+    expect(second.result.current.isHydrated).toBe(true);
+    expect(first.result.current.favorites).toEqual(persisted);
+    expect(second.result.current.favorites).toBe(
+      first.result.current.favorites
+    );
+  });
+
+  test('마지막 구독 해제는 transient undo를 버리고 이전 timer가 다음 session을 지우지 못하게 한다', () => {
+    vi.useFakeTimers();
+    const first = renderHook(() => useFavorites());
+    const second = renderHook(() => useFavorites());
+
+    act(() => {
+      first.result.current.addFavorite(seoul);
+      first.result.current.addFavorite(busan);
+      first.result.current.removeFavorite(seoul.locationId);
+    });
+    expect(second.result.current.undoEntry).not.toBeNull();
+
+    first.unmount();
+    second.unmount();
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
+
+    const nextSession = renderHook(() => useFavorites());
+    expect(nextSession.result.current.favorites).toEqual(readStoredFavorites());
+    expect(nextSession.result.current.favorites).toHaveLength(1);
+    expect(nextSession.result.current.undoEntry).toBeNull();
+
+    act(() => {
+      nextSession.result.current.addFavorite(seoul);
+      nextSession.result.current.removeFavorite(seoul.locationId);
+    });
+    expect(nextSession.result.current.undoEntry).not.toBeNull();
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(nextSession.result.current.undoEntry).not.toBeNull();
+
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
+    expect(nextSession.result.current.undoEntry).toBeNull();
+  });
+
+  test('구독 중 외부 storage 변경과 storage event는 runtime snapshot을 바꾸지 않는다', () => {
+    const first = renderHook(() => useFavorites());
+    const second = renderHook(() => useFavorites());
+
+    act(() => {
+      first.result.current.addFavorite(seoul);
+    });
+    const runtimeFavorites = first.result.current.favorites;
+    createFavoritesRepository().replaceAll([
+      makeFavorite('fav-external', busan, 0),
+    ]);
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', { key: 'weatherpane.favorites.v1' })
+      );
+    });
+
+    expect(first.result.current.favorites).toBe(runtimeFavorites);
+    expect(second.result.current.favorites).toBe(runtimeFavorites);
+    expect(first.result.current.isFavorite(seoul.locationId)).toBe(true);
+    expect(first.result.current.isFavorite(busan.locationId)).toBe(false);
+
+    first.unmount();
+    second.unmount();
+    const nextSession = renderHook(() => useFavorites());
+    expect(nextSession.result.current.isFavorite(busan.locationId)).toBe(true);
   });
 });
