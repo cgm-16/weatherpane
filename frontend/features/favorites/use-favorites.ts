@@ -1,126 +1,49 @@
-import { useState, useEffect } from 'react';
-import { createFavoritesRepository } from '~/shared/lib/storage/repositories/location-repositories';
+import { useSyncExternalStore } from 'react';
 import type {
   FavoriteLocation,
   ResolvedLocation,
 } from '~/entities/location/model/types';
+import {
+  favoritesStore,
+  type AddFavoriteResult,
+  type RemoveFavoriteResult,
+  type UndoEntry,
+} from './favorites-store';
 
-const MAX_FAVORITES = 6;
+export type {
+  AddFavoriteResult,
+  RemoveFavoriteResult,
+  UndoEntry,
+} from './favorites-store';
 
-export type AddFavoriteResult = 'added' | 'duplicate' | 'max-reached';
-export type RemoveFavoriteResult = 'removed' | 'not-found';
-
-export interface UndoEntry {
-  snapshot: FavoriteLocation[];
-  removedItem: FavoriteLocation;
-}
-
-// 참고: 이 훅은 단일 인스턴스를 가정합니다. React 트리에 두 인스턴스가 동시에
-// 마운트되면 각각의 useState가 독립적으로 동작하여 서로의 변경을 인식하지 못합니다.
-// 현재 호출 지점(홈, 상세, 즐겨찾기)은 각각 다른 라우트에 마운트되므로 동시 충돌이 없습니다.
-// 동시 마운트가 필요해지면 컨텍스트 또는 외부 상태로 교체해야 합니다.
-export function useFavorites() {
-  // 초기값은 SSR과 클라이언트가 일치하도록 빈 배열로 고정하고,
-  // 마운트 후 useEffect에서 storage의 실제 값을 동기화한다.
-  const [favorites, setFavorites] = useState<FavoriteLocation[]>([]);
-  const [undoEntry, setUndoEntry] = useState<UndoEntry | null>(null);
-  // storage 동기화 useEffect가 한 번 실행되었는지 여부.
-  // favorites === []는 "즐겨찾기 없음"과 "아직 동기화 전"을 구분하지 못하므로,
-  // 동기화 전에 add/remove가 발생해 storage를 빈 배열 기반으로 덮어쓰지 않도록
-  // 소비자가 이 값으로 변경 액션을 막아야 한다.
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    // eslint-disable-next-line @eslint-react/set-state-in-effect -- 마운트 시 storage 값을 한 번 동기화하는 것이 의도이므로 setState 호출은 정상이다
-    setFavorites(createFavoritesRepository().getAll());
-    // eslint-disable-next-line @eslint-react/set-state-in-effect -- 위와 동일한 이유로 마운트 시 1회 호출은 정상이다
-    setIsHydrated(true);
-  }, []);
-
-  // 5초 후 undo 항목 만료
-  useEffect(() => {
-    if (!undoEntry) return;
-    const timer = setTimeout(() => setUndoEntry(null), 5000);
-    return () => clearTimeout(timer);
-  }, [undoEntry]);
-
-  function isFavorite(locationId: string): boolean {
-    return favorites.some((f) => f.location.locationId === locationId);
-  }
-
-  function addFavorite(location: ResolvedLocation): AddFavoriteResult {
-    if (favorites.some((f) => f.location.locationId === location.locationId)) {
-      return 'duplicate';
-    }
-    if (favorites.length >= MAX_FAVORITES) {
-      return 'max-reached';
-    }
-
-    const now = new Date().toISOString();
-    const newFav: FavoriteLocation = {
-      favoriteId: crypto.randomUUID(),
-      location,
-      nickname: null,
-      order: favorites.length,
-      createdAt: now,
-      updatedAt: now,
-    };
-    const next = [...favorites, newFav];
-    createFavoritesRepository().replaceAll(next);
-    setFavorites(next);
-    return 'added';
-  }
-
-  function removeFavorite(locationId: string): RemoveFavoriteResult {
-    const toRemove = favorites.find(
-      (f) => f.location.locationId === locationId
-    );
-    if (!toRemove) return 'not-found';
-
-    const updated = favorites
-      .filter((f) => f.location.locationId !== locationId)
-      .map((f, i) => ({ ...f, order: i }));
-    createFavoritesRepository().replaceAll(updated);
-    setFavorites(updated);
-    setUndoEntry({ snapshot: favorites, removedItem: toRemove });
-    return 'removed';
-  }
-
-  function undoRemove(): void {
-    if (!undoEntry) return;
-    createFavoritesRepository().replaceAll(undoEntry.snapshot);
-    setFavorites(undoEntry.snapshot);
-    setUndoEntry(null);
-  }
-
-  function updateNickname(favoriteId: string, nickname: string | null): void {
-    const trimmed = nickname?.trim().slice(0, 20) ?? null;
-    const normalized = trimmed && trimmed.length > 0 ? trimmed : null;
-    const now = new Date().toISOString();
-    const next = favorites.map((f) =>
-      f.favoriteId === favoriteId
-        ? { ...f, nickname: normalized, updatedAt: now }
-        : f
-    );
-    createFavoritesRepository().replaceAll(next);
-    setFavorites(next);
-  }
-
-  function reorderFavorites(reordered: FavoriteLocation[]): void {
-    createFavoritesRepository().replaceAll(reordered);
-    setFavorites(reordered);
-  }
+export function useFavorites(): {
+  favorites: FavoriteLocation[];
+  isHydrated: boolean;
+  isFavorite: (locationId: string) => boolean;
+  addFavorite: (location: ResolvedLocation) => AddFavoriteResult;
+  removeFavorite: (locationId: string) => RemoveFavoriteResult;
+  updateNickname: (favoriteId: string, nickname: string | null) => void;
+  reorderFavorites: (reordered: FavoriteLocation[]) => void;
+  undoEntry: UndoEntry | null;
+  undoRemove: () => void;
+  atMaxFavorites: boolean;
+} {
+  const { favorites, undoEntry, isHydrated } = useSyncExternalStore(
+    favoritesStore.subscribe,
+    favoritesStore.getSnapshot,
+    favoritesStore.getServerSnapshot
+  );
 
   return {
     favorites,
     isHydrated,
-    isFavorite,
-    addFavorite,
-    removeFavorite,
-    updateNickname,
-    reorderFavorites,
+    isFavorite: favoritesStore.isFavorite,
+    addFavorite: favoritesStore.addFavorite,
+    removeFavorite: favoritesStore.removeFavorite,
+    updateNickname: favoritesStore.updateNickname,
+    reorderFavorites: favoritesStore.reorderFavorites,
     undoEntry,
-    undoRemove,
-    atMaxFavorites: favorites.length >= MAX_FAVORITES,
+    undoRemove: favoritesStore.undoRemove,
+    atMaxFavorites: favoritesStore.atMaxFavorites(),
   };
 }

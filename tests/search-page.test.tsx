@@ -3,6 +3,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -10,7 +11,14 @@ import {
   within,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { RouterProvider, createMemoryRouter, useParams } from 'react-router';
+import { Suspense } from 'react';
+import { flushSync } from 'react-dom';
+import {
+  RouterProvider,
+  createMemoryRouter,
+  useLocation,
+  useParams,
+} from 'react-router';
 import { vi, afterEach, describe, expect, test } from 'vitest';
 
 import SearchRoute from '../app/routes/search';
@@ -75,7 +83,20 @@ function LocationStub() {
   return <p>선택된 위치: {resolvedLocationId}</p>;
 }
 
-function renderSearchRoute(initialEntry = '/search') {
+/**
+ * 외부 URL 전환이 커밋되지 않은 상태를 시뮬레이션하는 테스트 헬퍼
+ * '?q=external' 쿼리일 때 pending Promise를 throw하여 Suspense 경계를 활성화함
+ */
+function SuspendExternalQuery({ pending }: { pending: Promise<void> }) {
+  const location = useLocation();
+  if (location.search === '?q=external') throw pending;
+  return null;
+}
+
+function renderSearchRoute(
+  initialEntry = '/search',
+  searchElement = <SearchRoute />
+) {
   vi.mocked(useWeatherProvider).mockReturnValue({
     mode: 'mock',
     getCoreWeather: vi.fn(),
@@ -98,7 +119,7 @@ function renderSearchRoute(initialEntry = '/search') {
     [
       {
         path: '/search',
-        element: <SearchRoute />,
+        element: searchElement,
       },
       {
         path: '/location/:resolvedLocationId',
@@ -112,7 +133,9 @@ function renderSearchRoute(initialEntry = '/search') {
 
   render(
     <ActiveLocationProvider storage={storage}>
-      <RouterProvider router={router} />
+      <Suspense fallback={<p>대기 중</p>}>
+        <RouterProvider router={router} />
+      </Suspense>
     </ActiveLocationProvider>
   );
 
@@ -299,6 +322,206 @@ describe('search route', () => {
       vi.advanceTimersByTime(300);
 
       expect(router.state.location.search).toBe('?q=%EC%84%9C%EC%9A%B8');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('자체 URL acknowledgement가 새 local input을 덮어쓰지 않는다', () => {
+    vi.useFakeTimers();
+    let unsubscribe: (() => void) | undefined;
+
+    try {
+      const { router } = renderSearchRoute('/search');
+      const input = document.querySelector<HTMLInputElement>('#search-query')!;
+      let clearedAfterInternalNavigation = false;
+
+      unsubscribe = router.subscribe((state) => {
+        if (
+          !clearedAfterInternalNavigation &&
+          state.location.search === '?q=%EC%A2%85%EB%A1%9C'
+        ) {
+          clearedAfterInternalNavigation = true;
+          fireEvent.change(input, { target: { value: '' } });
+        }
+      });
+
+      fireEvent.change(input, { target: { value: '종로' } });
+
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('');
+      expect(router.state.location.search).toBe('?q=%EC%A2%85%EB%A1%9C');
+
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('');
+      expect(router.state.location.search).toBe('');
+    } finally {
+      unsubscribe?.();
+      vi.useRealTimers();
+    }
+  });
+
+  test('자체 URL 전환의 긴급 렌더 뒤 입력도 URL에 반영한다', () => {
+    vi.useFakeTimers();
+    try {
+      const { router } = renderSearchRoute('/search');
+      const input = document.querySelector<HTMLInputElement>('#search-query')!;
+
+      fireEvent.change(input, { target: { value: '종로' } });
+
+      act(() => {
+        // 라우터 전환보다 긴급 렌더를 먼저 확정해 경합 순서를 고정함
+        // eslint-disable-next-line @eslint-react/dom-no-flush-sync
+        flushSync(() => vi.advanceTimersByTime(300));
+        fireEvent.change(input, { target: { value: '서울' } });
+      });
+
+      expect(input).toHaveValue('서울');
+      expect(router.state.location.search).toBe('?q=%EC%A2%85%EB%A1%9C');
+
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('서울');
+      expect(router.state.location.search).toBe('?q=%EC%84%9C%EC%9A%B8');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('커밋되지 않은 외부 URL 렌더가 대기 입력을 무효화하지 않는다', async () => {
+    vi.useFakeTimers();
+    const suspended = new Promise<void>(() => {});
+    const { router } = renderSearchRoute(
+      '/search',
+      <>
+        <SearchRoute />
+        <SuspendExternalQuery pending={suspended} />
+      </>
+    );
+    try {
+      const input = screen.getByRole('searchbox', { name: '지역 검색' });
+      fireEvent.change(input, { target: { value: '서울' } });
+
+      await act(async () => {
+        await router.navigate('/search?q=external');
+      });
+
+      expect(input).toBeVisible();
+      expect(input).toHaveValue('서울');
+      expect(screen.queryByText('대기 중')).not.toBeInTheDocument();
+      act(() => vi.advanceTimersByTime(300));
+      expect(router.state.location.search).toBe('?q=%EC%84%9C%EC%9A%B8');
+      expect(input).toHaveValue('서울');
+    } finally {
+      router.dispose();
+      vi.useRealTimers();
+    }
+  });
+
+  test('외부 back/forward는 대기 입력을 취소하고 URL 값을 복원한다', async () => {
+    vi.useFakeTimers();
+    try {
+      const { router } = renderSearchRoute('/search?q=%EC%A2%85%EB%A1%9C');
+      const input = document.querySelector<HTMLInputElement>('#search-query')!;
+
+      await act(async () => {
+        await router.navigate('/search?q=%EB%B6%80%EC%82%B0');
+      });
+      fireEvent.change(input, { target: { value: '서울' } });
+      await act(async () => {
+        await router.navigate(-1);
+      });
+
+      expect(input).toHaveValue('종로');
+      expect(router.state.location.search).toBe('?q=%EC%A2%85%EB%A1%9C');
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('종로');
+      expect(router.state.location.search).toBe('?q=%EC%A2%85%EB%A1%9C');
+
+      fireEvent.change(input, { target: { value: '대전' } });
+      await act(async () => {
+        await router.navigate(1);
+      });
+
+      expect(input).toHaveValue('부산');
+      expect(router.state.location.search).toBe('?q=%EB%B6%80%EC%82%B0');
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('부산');
+      expect(router.state.location.search).toBe('?q=%EB%B6%80%EC%82%B0');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('빈 URL의 pending 입력은 Escape로 즉시 취소된다', () => {
+    vi.useFakeTimers();
+    try {
+      const { router } = renderSearchRoute('/search');
+      const input = document.querySelector<HTMLInputElement>('#search-query')!;
+
+      fireEvent.change(input, { target: { value: '서울' } });
+      fireEvent.keyDown(input, { key: 'Escape' });
+
+      expect(input).toHaveValue('');
+      expect(router.state.location.search).toBe('');
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('');
+      expect(router.state.location.search).toBe('');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('highlight 상태의 pending 입력은 Escape로 URL query를 복원한다', () => {
+    vi.useFakeTimers();
+    try {
+      const { router } = renderSearchRoute(
+        '/search?q=%EC%B2%AD%EC%9A%B4%EB%8F%99'
+      );
+      const input = document.querySelector<HTMLInputElement>('#search-query')!;
+      const option = screen.getAllByRole('option')[0];
+
+      expect(option).toHaveAttribute('aria-selected', 'true');
+      fireEvent.change(input, { target: { value: '서울' } });
+      fireEvent.keyDown(input, { key: 'Escape' });
+
+      expect(input).toHaveValue('청운동');
+      expect(option).toHaveAttribute('aria-selected', 'false');
+      expect(input).not.toHaveAttribute('aria-activedescendant');
+      expect(router.state.location.search).toBe(
+        '?q=%EC%B2%AD%EC%9A%B4%EB%8F%99'
+      );
+
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('청운동');
+      expect(router.state.location.search).toBe(
+        '?q=%EC%B2%AD%EC%9A%B4%EB%8F%99'
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('highlight 상태의 Escape는 진행 중인 자체 URL 전환도 취소한다', () => {
+    vi.useFakeTimers();
+    try {
+      const { router } = renderSearchRoute('/search?q=%EC%A2%85%EB%A1%9C');
+      const input = screen.getByRole('searchbox', { name: '지역 검색' });
+
+      fireEvent.change(input, { target: { value: '서울' } });
+      act(() => {
+        // URL 전환이 시작된 뒤 이전 검색 결과가 표시되는 동안 Escape를 누름
+        // eslint-disable-next-line @eslint-react/dom-no-flush-sync
+        flushSync(() => vi.advanceTimersByTime(300));
+        expect(router.state.location.search).toBe('?q=%EC%84%9C%EC%9A%B8');
+        fireEvent.keyDown(input, { key: 'Escape' });
+      });
+
+      expect(input).toHaveValue('종로');
+      expect(router.state.location.search).toBe('?q=%EC%A2%85%EB%A1%9C');
+      expect(input).not.toHaveAttribute('aria-activedescendant');
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('종로');
+      expect(router.state.location.search).toBe('?q=%EC%A2%85%EB%A1%9C');
     } finally {
       vi.useRealTimers();
     }
