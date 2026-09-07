@@ -176,6 +176,7 @@ export function SearchPage() {
   const [inputValue, setInputValue] = useState(query);
   const queryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingInternalQueryRef = useRef<string | null>(null);
+  /** 진행 중인 디바운스 타이머를 취소하여 오래된 URL 업데이트를 방지함 */
   const cancelPendingQueryUpdate = useCallback(() => {
     if (queryDebounceRef.current !== null) {
       clearTimeout(queryDebounceRef.current);
@@ -218,6 +219,10 @@ export function SearchPage() {
       ? `${optionBaseId}-option-${highlightedIndex}`
       : undefined;
 
+  /**
+   * 입력 박스와 URL을 새 쿼리로 동기화하고 하이라이트 상태를 초기화함
+   * 직접 호출(예: Escape) 시 대기 중인 디바운스를 먼저 취소하여 경합을 방지
+   */
   function updateQuery(nextQuery: string) {
     cancelPendingQueryUpdate();
     const normalizedQuery = nextQuery.trim().length === 0 ? '' : nextQuery;
@@ -251,6 +256,10 @@ export function SearchPage() {
     );
   }
 
+  /**
+   * 검색 입력 박스의 키보드 이벤트를 처리함
+   * Escape는 하이라이트 해제 또는 쿼리 초기화, 화살표는 결과 탐색, Enter는 선택 확정
+   */
   function handleInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     // IME 조합 중 키 이벤트를 무시하여 한국어 입력이 방해받지 않도록 함
     if (event.nativeEvent.isComposing) {
