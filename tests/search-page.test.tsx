@@ -83,6 +83,10 @@ function LocationStub() {
   return <p>선택된 위치: {resolvedLocationId}</p>;
 }
 
+/**
+ * 외부 URL 전환이 커밋되지 않은 상태를 시뮬레이션하는 테스트 헬퍼
+ * '?q=external' 쿼리일 때 pending Promise를 throw하여 Suspense 경계를 활성화함
+ */
 function SuspendExternalQuery({ pending }: { pending: Promise<void> }) {
   const location = useLocation();
   if (location.search === '?q=external') throw pending;
