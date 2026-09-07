@@ -182,11 +182,8 @@ export function SearchPage() {
       queryDebounceRef.current = null;
     }
   }, []);
-  // 자체 전환 중에는 목표를 보존하고 그 외에는 최신 URL로 오래된 디바운스를 판별
+  // 이벤트의 자체 전환 목표와 effect의 확정된 외부 URL로 디바운스를 판별
   const latestQueryRef = useRef(query);
-  if (pendingInternalQueryRef.current === null) {
-    latestQueryRef.current = query;
-  }
   // 브라우저 뒤로/앞으로 이동 시 URL이 외부에서 변경되면 입력 박스를 동기화
   useEffect(() => {
     if (pendingInternalQueryRef.current === query) {

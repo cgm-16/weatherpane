@@ -11,8 +11,14 @@ import {
   within,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Suspense } from 'react';
 import { flushSync } from 'react-dom';
-import { RouterProvider, createMemoryRouter, useParams } from 'react-router';
+import {
+  RouterProvider,
+  createMemoryRouter,
+  useLocation,
+  useParams,
+} from 'react-router';
 import { vi, afterEach, describe, expect, test } from 'vitest';
 
 import SearchRoute from '../app/routes/search';
@@ -77,7 +83,16 @@ function LocationStub() {
   return <p>선택된 위치: {resolvedLocationId}</p>;
 }
 
-function renderSearchRoute(initialEntry = '/search') {
+function SuspendExternalQuery({ pending }: { pending: Promise<void> }) {
+  const location = useLocation();
+  if (location.search === '?q=external') throw pending;
+  return null;
+}
+
+function renderSearchRoute(
+  initialEntry = '/search',
+  searchElement = <SearchRoute />
+) {
   vi.mocked(useWeatherProvider).mockReturnValue({
     mode: 'mock',
     getCoreWeather: vi.fn(),
@@ -100,7 +115,7 @@ function renderSearchRoute(initialEntry = '/search') {
     [
       {
         path: '/search',
-        element: <SearchRoute />,
+        element: searchElement,
       },
       {
         path: '/location/:resolvedLocationId',
@@ -114,7 +129,9 @@ function renderSearchRoute(initialEntry = '/search') {
 
   render(
     <ActiveLocationProvider storage={storage}>
-      <RouterProvider router={router} />
+      <Suspense fallback={<p>대기 중</p>}>
+        <RouterProvider router={router} />
+      </Suspense>
     </ActiveLocationProvider>
   );
 
@@ -362,6 +379,36 @@ describe('search route', () => {
       expect(input).toHaveValue('서울');
       expect(router.state.location.search).toBe('?q=%EC%84%9C%EC%9A%B8');
     } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('커밋되지 않은 외부 URL 렌더가 대기 입력을 무효화하지 않는다', async () => {
+    vi.useFakeTimers();
+    const suspended = new Promise<void>(() => {});
+    const { router } = renderSearchRoute(
+      '/search',
+      <>
+        <SearchRoute />
+        <SuspendExternalQuery pending={suspended} />
+      </>
+    );
+    try {
+      const input = screen.getByRole('searchbox', { name: '지역 검색' });
+      fireEvent.change(input, { target: { value: '서울' } });
+
+      await act(async () => {
+        await router.navigate('/search?q=external');
+      });
+
+      expect(input).toBeVisible();
+      expect(input).toHaveValue('서울');
+      expect(screen.queryByText('대기 중')).not.toBeInTheDocument();
+      act(() => vi.advanceTimersByTime(300));
+      expect(router.state.location.search).toBe('?q=%EC%84%9C%EC%9A%B8');
+      expect(input).toHaveValue('서울');
+    } finally {
+      router.dispose();
       vi.useRealTimers();
     }
   });
