@@ -264,10 +264,7 @@ export function SearchPage() {
       event.preventDefault();
 
       if (hasHighlightForCurrentQuery) {
-        cancelPendingQueryUpdate();
-        setInputValue(query);
-        setHighlightedQuery(query);
-        setManualHighlightedIndex(0);
+        updateQuery(query);
         setIsHighlightActive(false);
       } else {
         updateQuery('');

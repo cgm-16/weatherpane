@@ -450,6 +450,32 @@ describe('search route', () => {
     }
   });
 
+  test('highlight 상태의 Escape는 진행 중인 자체 URL 전환도 취소한다', () => {
+    vi.useFakeTimers();
+    try {
+      const { router } = renderSearchRoute('/search?q=%EC%A2%85%EB%A1%9C');
+      const input = screen.getByRole('searchbox', { name: '지역 검색' });
+
+      fireEvent.change(input, { target: { value: '서울' } });
+      act(() => {
+        // URL 전환이 시작된 뒤 이전 검색 결과가 표시되는 동안 Escape를 누름
+        // eslint-disable-next-line @eslint-react/dom-no-flush-sync
+        flushSync(() => vi.advanceTimersByTime(300));
+        expect(router.state.location.search).toBe('?q=%EC%84%9C%EC%9A%B8');
+        fireEvent.keyDown(input, { key: 'Escape' });
+      });
+
+      expect(input).toHaveValue('종로');
+      expect(router.state.location.search).toBe('?q=%EC%A2%85%EB%A1%9C');
+      expect(input).not.toHaveAttribute('aria-activedescendant');
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('종로');
+      expect(router.state.location.search).toBe('?q=%EC%A2%85%EB%A1%9C');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test('clears the auto-highlight on the first Esc, then clears the query on the next Esc', async () => {
     const { router, user } = renderSearchRoute(
       '/search?q=%EC%B2%AD%EC%9A%B4%EB%8F%99'
