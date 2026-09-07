@@ -11,6 +11,7 @@ import {
   within,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { flushSync } from 'react-dom';
 import { RouterProvider, createMemoryRouter, useParams } from 'react-router';
 import { vi, afterEach, describe, expect, test } from 'vitest';
 
@@ -335,6 +336,32 @@ describe('search route', () => {
       expect(router.state.location.search).toBe('');
     } finally {
       unsubscribe?.();
+      vi.useRealTimers();
+    }
+  });
+
+  test('자체 URL 전환의 긴급 렌더 뒤 입력도 URL에 반영한다', () => {
+    vi.useFakeTimers();
+    try {
+      const { router } = renderSearchRoute('/search');
+      const input = document.querySelector<HTMLInputElement>('#search-query')!;
+
+      fireEvent.change(input, { target: { value: '종로' } });
+
+      act(() => {
+        // 라우터 전환보다 긴급 렌더를 먼저 확정해 경합 순서를 고정함
+        // eslint-disable-next-line @eslint-react/dom-no-flush-sync
+        flushSync(() => vi.advanceTimersByTime(300));
+        fireEvent.change(input, { target: { value: '서울' } });
+      });
+
+      expect(input).toHaveValue('서울');
+      expect(router.state.location.search).toBe('?q=%EC%A2%85%EB%A1%9C');
+
+      act(() => vi.advanceTimersByTime(300));
+      expect(input).toHaveValue('서울');
+      expect(router.state.location.search).toBe('?q=%EC%84%9C%EC%9A%B8');
+    } finally {
       vi.useRealTimers();
     }
   });
