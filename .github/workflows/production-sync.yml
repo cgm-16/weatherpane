@@ -4,9 +4,8 @@ name: release / production-sync
 # "production <- main (vX.Y.Z)" PR을 자동으로 연다. 병합은 사람이 직접 한다 —
 # 이 워크플로는 PR을 열기만 하고 절대 자동 병합하지 않는다.
 # 배경: docs/skills/github-flow-and-release.md의 "Release from tags" 규칙을
-# 실제로 동작하게 만드는 장치. production 브랜치는 GitHub 브랜치 보호가 걸려
-# 있지 않지만 Vercel 프로덕션 배포 대상이므로, main/release/*에 준하는 방식으로
-# 다룬다 — 직접 push나 자동 병합 없이 항상 PR을 거친다.
+# 실제로 동작하게 만드는 장치. production은 보호된 Vercel 배포 브랜치이므로
+# 직접 push나 자동 병합 없이 항상 PR과 사람의 rebase merge를 거친다.
 on:
   push:
     tags: ['v*']
@@ -57,7 +56,7 @@ jobs:
 
             - Type: release-sync (자동 생성, `type/issue-area-slug` 규칙 대상 아님)
             - Area: ci
-            - head는 `__TAG_NAME__` 태그 시점에 고정된 브랜치이며 main과 별개로 관리된다
+            - head는 production을 부모로 하며 `__TAG_NAME__`과 파일 트리가 같은 단일 승격 커밋이다
 
             ## Scope
 
@@ -75,7 +74,7 @@ jobs:
 
             ## Testing
 
-            - [x] ci.yml이 이 PR(production base)에도 동일하게 실행된다
+            - 병합 전 이 PR의 CI 성공, 병합 가능 상태, 태그와의 파일 트리 일치를 확인한다
 
             ## Risks
 
@@ -93,7 +92,8 @@ jobs:
           # 체크아웃된 HEAD가 곧 이 태그가 가리키는 커밋이므로, 태그 ref를 따로
           # 참조하지 않고 HEAD 트리를 그대로 "이 릴리스가 배포해야 할 내용"으로 쓴다.
           RELEASE_TREE="$(git rev-parse HEAD^{tree})"
-          PRODUCTION_TREE="$(git rev-parse origin/production^{tree})"
+          PRODUCTION_SHA="$(git rev-parse origin/production)"
+          PRODUCTION_TREE="$(git rev-parse "${PRODUCTION_SHA}^{tree}")"
 
           # 멱등성 가드: 커밋 조상 관계가 아니라 트리 내용을 비교한다.
           # production으로 향하는 동기화 PR은 (기존 PR #70처럼) squash 병합될 수
@@ -111,12 +111,17 @@ jobs:
             exit 0
           fi
 
-          # main이 리뷰 도중 더 진행되어도 이 PR의 diff가 흔들리지 않도록,
-          # head를 main이 아니라 태그에 고정된 새 브랜치로 만든다.
-          git branch "$SYNC_BRANCH" HEAD
+          # rebase 배포는 main과 공통 조상을 갱신하지 않는다. production을 부모로
+          # 삼고 태그 트리를 그대로 승격해야 과거 변경을 다시 병합하지 않는다.
+          # main이 진행되어도 승격 내용은 태그에 고정되며 체크아웃 파일은 바꾸지 않는다.
+          SYNC_COMMIT="$(git -c user.name='github-actions[bot]' \
+            -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit-tree "$RELEASE_TREE" -p "$PRODUCTION_SHA" \
+            -m "chore(release): ${TAG_NAME} production 승격")"
+          git branch "$SYNC_BRANCH" "$SYNC_COMMIT"
           git push origin "$SYNC_BRANCH"
 
-          COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/production...${TAG_NAME}"
+          COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/production...${SYNC_BRANCH}"
 
           PR_BODY="${PR_BODY_TEMPLATE//__TAG_NAME__/$TAG_NAME}"
           PR_BODY="${PR_BODY//__COMPARE_URL__/$COMPARE_URL}"

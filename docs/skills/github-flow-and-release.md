@@ -24,11 +24,11 @@
 - Every implementation branch maps to one issue.
 - Do not rebase pushed shared branches.
 - Do not silently expand scope inside a PR.
-- Release from tags. Pushing a `vX.Y.Z` tag on `main` triggers `.github/workflows/production-sync.yml`, which opens a `production <- main (vX.Y.Z)` PR for human review/merge. Merging that PR is what deploys to Vercel Production — never commit or push directly to `production`. Both `production` and `main` are covered by an active GitHub ruleset ("base rules") that requires a PR, enforces linear history, and restricts merges to `allowed_merge_methods: ["rebase"]` — merge `production <- main` sync PRs with "Rebase and merge", not "Create a merge commit" or "Squash and merge". Repo owners can bypass the ruleset, but doing so for a sync PR breaks the guarantee described below. `production <- main` sync PRs are exempt from the `Closes #<issue>` check in `agent-guardrails.yml` (base ref `production`), since they carry commits already issue-linked on `main`.
+- Release from tags. Pushing a `vX.Y.Z` tag on `main` triggers `.github/workflows/production-sync.yml`, which opens a `production <- main (vX.Y.Z)` PR for human review/merge. Its head is one promotion commit whose sole parent is the fetched `production` tip and whose tree exactly matches the tag; it does not branch from the tagged commit. Merging that PR is what deploys to Vercel Production — never commit or push directly to `production`. Both `production` and `main` are covered by an active GitHub ruleset ("base rules") that requires a PR, enforces linear history, and restricts merges to `allowed_merge_methods: ["rebase"]` — merge sync PRs with "Rebase and merge". Sync PRs are exempt from the `Closes #<issue>` check in `agent-guardrails.yml` (base ref `production`), since they promote content already issue-linked on `main`.
 
 ## Reading `production` vs `main` divergence
 
-- `production` and `main` will not have identical commit graphs after a release, even when their content matches exactly. `production` is rebase-only, so every compliant `production <- main` sync PR merge mints a new commit SHA for each commit it promotes — `git log origin/main..origin/production` grows by that many commits per release, permanently.
+- `production` and `main` have different commit graphs even when their content matches exactly. Rebase-only promotion does not advance their common ancestor. A branch created at a main tag can therefore conflict with production on changes already released; matching the previous tag's tree does not guarantee mergeability. A production-parented snapshot commit avoids replaying that divergent history and adds one promotion commit per release.
 - Do not treat a nonzero `git log origin/main..origin/production` count, or a GitHub compare page showing "N commits ahead," as a problem on its own. The health check is content, not ancestry: `git diff <latest-tag> origin/production` (should be empty), or `production-drift-check.yml`'s weekly tree-hash comparison.
 - Known baseline: as of `v1.0.0`, `production` carries 5 commits with no equivalent SHA on `main` — 4 from PR #70 (2026-04-22, compliant rebase-merge) and 1 from PR #111 (2026-08-05, a ruleset bypass that used "Create a merge commit" instead of rebase). Both are historical; `production`'s tree matches `v1.0.0` exactly. Do not "clean up" this history — `production` is a live Vercel deploy target and a shared branch (see "Do not rebase pushed shared branches" above).
 
@@ -70,12 +70,15 @@
 
 6. Intent: cut a release (promote `main` to `production`).
    Action:
-   - confirm `main` is green (`ci.yml` passing) at the commit to release
+   - `git fetch origin main production --tags`; confirm `main` is green (`ci.yml` passing) at the exact commit to release
    - choose the next `vMAJOR.MINOR.PATCH` tag
-   - `git tag vX.Y.Z && git push origin vX.Y.Z`
+   - `git tag vX.Y.Z <verified-main-sha> && git push origin refs/tags/vX.Y.Z`; keep published tags immutable
    - wait for `production-sync.yml` to open the `production <- main (vX.Y.Z)` PR
-   - review the diff and merge it using "Rebase and merge" — this is the step that deploys to Vercel Production
-     Done-check: a new Vercel Production deployment exists at the tagged commit, and `production-drift-check.yml` reports no drift on its next run (or via manual `workflow_dispatch`).
+   - `gh pr view <N> --json mergeable,mergeStateStatus,baseRefOid,headRefOid,statusCheckRollup`; wait through `UNKNOWN`, require `MERGEABLE`, passing required checks, and report any remaining review/ruleset restrictions
+   - fetch the PR head and production refs; verify the head's sole parent equals the current production tip and `git diff --exit-code vX.Y.Z <pr-head-sha>` is empty. If either ref changes, repeat the checks
+   - hand off only after those checks; workflow success and PR creation alone are not release readiness
+   - when Ori authorizes deployment, review the diff and merge using "Rebase and merge"
+     Done-check: distinguish a verified PR awaiting Ori from a deployed release. Deployment is complete only when Vercel Production succeeds at the resulting production commit and its tree matches the tag (`git diff --exit-code vX.Y.Z origin/production`); rebase means the deployment SHA need not equal the tag SHA. `production-drift-check.yml` should report no drift on its next run (or via manual `workflow_dispatch`).
 
 ## Verification
 
@@ -83,7 +86,8 @@
 - `git diff --check`
 - confirm the branch name matches `type/issue-area-slug`
 - confirm the PR links the issue and keeps the issue open until merge
-- after a tag push: confirm the `production <- main` sync PR opened, and that `production-drift-check.yml` shows no open `[release-drift]` issue once it's merged
+- `pnpm exec vitest run tests/production-sync.test.ts` exercises the workflow shell with real local Git repositories: divergent release history, exact snapshot promotion, repeated runs, and consecutive releases
+- after a tag push: verify sync PR mergeability, required checks, production parent, and tag-tree equality before handoff; confirm no open `[release-drift]` issue once merged
 - do not use a nonzero `git log origin/main..origin/production` count as a drift signal by itself — see "Reading `production` vs `main` divergence" above
 
 ## Stop and ask Ori
@@ -93,6 +97,7 @@
 - worktree setup is blocked and a fallback would change the workflow
 - release work needs a backport decision that is not already specified
 - a `production <- main` sync PR's diff includes anything unexpected for the tag being released
+- a sync PR conflicts, its parent is not current production, or its tree differs from the tag; recover through a replacement production-based snapshot PR without rewriting published history or moving the tag
 - a `[release-drift] production is behind vX.Y.Z` issue is open for a reason other than an unmerged sync PR
 
 ## Portability note
