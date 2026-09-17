@@ -27,9 +27,9 @@ The original's named-issue instruction also says to skip the stage containing th
 | Original canonical skill            | 4,891 | 30,885 |
 | Installed SDD 6.3.0                 | 4,825 | 32,339 |
 | Original + SDD                      | 9,716 | 63,224 |
-| Lean skill, final validated version |   925 |  6,793 |
+| Lean skill, final validated version |   991 |  7,203 |
 
-The final version is 81.1% fewer words than the canonical skill and 90.5% fewer than canonical + SDD. This excludes common repository guidance and any other skills required by the active harness. Runtime savings remain unmeasured: cache pricing, task complexity, model, inherited context, turns, and retries affect actual cost.
+The final version is 79.7% fewer words than the canonical skill and 89.8% fewer than canonical + SDD. This excludes common repository guidance and any other skills required by the active harness. Runtime savings remain unmeasured: cache pricing, task complexity, model, inherited context, turns, and retries affect actual cost.
 
 ## Preserved delivery contract
 
@@ -57,3 +57,7 @@ The evaluator followed all six expected branches and found one ambiguity: claimi
 Observed checks: the existing picker suite passed all 13 tests; the skill frontmatter validator, `pnpm lint`, `pnpm typecheck`, and `git diff --check` passed. No app behavior or UI changes are involved, so app unit/integration additions and Playwright screenshots are inapplicable. Simulation establishes decision coverage, not a guarantee of future agent behavior or measured end-to-end token reduction.
 
 For a runtime comparison, use equivalent isolated task snapshots and the same model/harness; record input/output/cache tokens, dispatches, tool calls, verification outcomes, and elapsed time. Keep this audit out of routine skill loading.
+
+## PR review follow-up
+
+Review identified two resume gaps: a fresh checkout could branch from main instead of the existing PR head, and the shipping step could overwrite a retained workflow status such as `status:qa`. The revised skill separates new and resumed runs: resume the fetched PR head and compare its SHA and reconcile any divergence before editing; retain existing issue/PR statuses and metadata when reusing a PR. The original six-case simulation did not cover these cases end to end. Focused validation covers a missing local PR branch, an existing QA status, and the unchanged new-run path.
