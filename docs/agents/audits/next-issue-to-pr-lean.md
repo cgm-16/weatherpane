@@ -2,7 +2,7 @@
 
 ## Scope and method
 
-Issue #140 adds `.agents/skills/next-issue-to-pr-lean/SKILL.md` as a standalone alternative. The original Codex wrapper, canonical Claude skill, and picker remain unchanged. Invoke `$next-issue-to-pr-lean` from a checkout containing the new skill. Its description targets requests for the lean workflow, leaving ordinary original-skill requests intact.
+Issue #140 adds `.claude/skills/next-issue-to-pr-lean/SKILL.md` as an alternative, with `.agents/skills/next-issue-to-pr-lean/` as its Codex wrapper. This follows the layout declared in `docs/superpowers/specs/2026-07-31-next-issue-to-pr-codex-wrapper-design.md`: the canonical body lives under `.claude/`, and the `.agents/` entry point only resolves and delegates to it, so both harnesses read one document. The original skill pair and the picker remain unchanged. Invoke `$next-issue-to-pr-lean` from a checkout containing the new skill. Its description targets requests for the lean workflow, leaving ordinary original-skill requests intact.
 
 This is a source audit and simulated decision test, not a paired live issue benchmark. Counts below use `wc -w -c`; words and bytes are not model tokens. Historical token figures quoted by the original skill were not independently verified.
 
@@ -22,14 +22,15 @@ The original's named-issue instruction also says to skip the stage containing th
 
 ## Static size
 
-| Loaded document                     | Words |  Bytes |
-| ----------------------------------- | ----: | -----: |
-| Original canonical skill            | 4,891 | 30,885 |
-| Installed SDD 6.3.0                 | 4,825 | 32,339 |
-| Original + SDD                      | 9,716 | 63,224 |
-| Lean skill, final validated version | 1,085 |  7,895 |
+| Loaded document            | Words |  Bytes |
+| -------------------------- | ----: | -----: |
+| Original canonical skill   | 4,891 | 30,885 |
+| Installed SDD 6.3.0        | 4,825 | 32,339 |
+| Original + SDD             | 9,716 | 63,224 |
+| Lean skill, canonical body | 1,139 |  8,235 |
+| Lean skill, Codex wrapper  |   166 |  1,125 |
 
-The final version is 77.8% fewer words than the canonical skill and 88.8% fewer than canonical + SDD. This excludes common repository guidance and any other skills required by the active harness. Runtime savings remain unmeasured: cache pricing, task complexity, model, inherited context, turns, and retries affect actual cost.
+The canonical lean body is 76.7% fewer words than the original canonical skill and 88.3% fewer than original + SDD. Codex additionally loads the 166-word wrapper, matching the existing non-lean pair. This excludes common repository guidance and any other skills required by the active harness. Runtime savings remain unmeasured: cache pricing, task complexity, model, inherited context, turns, and retries affect actual cost.
 
 ## Preserved delivery contract
 
@@ -57,6 +58,10 @@ The evaluator followed all six expected branches and found one ambiguity: claimi
 Observed checks: the existing picker suite passed all 13 tests; the skill frontmatter validator, `pnpm lint`, `pnpm typecheck`, and `git diff --check` passed. No app behavior or UI changes are involved, so app unit/integration additions and Playwright screenshots are inapplicable. Simulation establishes decision coverage, not a guarantee of future agent behavior or measured end-to-end token reduction.
 
 For a runtime comparison, use equivalent isolated task snapshots and the same model/harness; record input/output/cache tokens, dispatches, tool calls, verification outcomes, and elapsed time. Keep this audit out of routine skill loading.
+
+## Harness layout follow-up
+
+An earlier revision placed the lean body under `.agents/` alone, which inverted the wrapper spec and left Claude Code without the lean workflow even though the body was already harness-agnostic. Relocating the body to `.claude/` and adding the standard wrapper pair resolves both. The body now also states that it supersedes the original skill's router model and context budget, because a Claude agent holding both would otherwise face contradictory instructions about reading source files, and names the `Agent` dispatch used for the independent final review.
 
 ## PR review follow-up
 
