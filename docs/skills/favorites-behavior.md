@@ -90,7 +90,7 @@
 
 - `pnpm exec vitest run` for the favorites store and card state logic
 - Confirm the 6-cap, undo scope, and edit-mode gating each have a dedicated test
-- Confirm card state tests cover all three variants (skeleton, inline error, navigable)
+- Confirm card state tests cover all four variants (skeleton, inline error, navigable live data, and the persisted snapshot fallback within the 24h cutoff — including its expiry while already on screen)
 - `pnpm exec vitest run tests/use-favorites.test.ts tests/use-favorites-edit.test.ts` for same-tab shared favorites and latest undo behavior
 - `rg -n "addEventListener\\(['\"]storage|BroadcastChannel" frontend/features/favorites` must return exit 1 with no matches
 
