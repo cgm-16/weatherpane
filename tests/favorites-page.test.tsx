@@ -28,7 +28,7 @@ vi.mock('../frontend/features/settings', () => ({
 }));
 
 import '@testing-library/jest-dom/vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useNavigate } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -522,6 +522,30 @@ describe('FavoriteCard', () => {
       expect(
         screen.queryByRole('button', { name: /다시 시도/i })
       ).not.toBeInTheDocument();
+    });
+
+    test('표시 중이던 스냅샷이 24h를 넘기면 CardError로 전환된다', () => {
+      vi.useFakeTimers();
+      try {
+        goOffline();
+        // 마운트 시점에는 cutoff 이내(23h59m)지만 곧 넘긴다.
+        seedSnapshot(24 * HOUR_MS - 60_000);
+        setupActiveLocation();
+        vi.mocked(useCoreWeather).mockReturnValue(offlinePausedQuery());
+        renderCard(seoulFav);
+
+        expect(screen.getByText('11°')).toBeInTheDocument();
+
+        // 쿼리 상태가 변하지 않아도 cutoff는 다시 평가되어야 한다.
+        act(() => {
+          vi.advanceTimersByTime(2 * 60_000);
+        });
+
+        expect(screen.queryByText('11°')).not.toBeInTheDocument();
+        expect(screen.getByText(/오프라인/i)).toBeInTheDocument();
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     test('쿼리 성공 시 다음 오프라인을 대비해 스냅샷을 저장한다', () => {
