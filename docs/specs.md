@@ -203,7 +203,7 @@ flowchart LR
 
 ### 런타임 상호작용 시퀀스(mermaid)
 
-> **구현 상태: 부분 구현.** 아래 시퀀스의 `W`(Service Worker) 참여자는 앱 셸/정적 에셋 런타임 캐시로 구현됨(이슈 #78; `public/sw.js`) — 단, 이 시퀀스가 그리는 날씨 데이터 흐름에는 SW가 개입하지 않는다(`/v1/*`는 캐시하지 않는다). 스냅샷을 먼저 로드해 즉시 렌더한 뒤 백그라운드에서 갱신하는 순서도 미구현이다. 실제 app-bootstrap 훅은 API 쿼리가 pending인 동안 `loading`을 반환하고, 성공 데이터를 스냅샷으로 저장하며, API 실패 후에만 영속 스냅샷을 읽어 fallback한다. 따라서 아래 다이어그램은 목표 흐름이며, 현재는 실패 후 fallback 경로만 구현되어 있다.
+> **구현 상태: 부분 구현.** 아래 시퀀스의 `W`(Service Worker) 참여자는 앱 셸/정적 에셋 런타임 캐시로 구현됨(이슈 #78; `public/sw.js`) — 단, 이 시퀀스가 그리는 날씨 데이터 흐름에는 SW가 개입하지 않는다(`/v1/*`는 캐시하지 않는다). 스냅샷을 먼저 로드해 즉시 렌더한 뒤 백그라운드에서 갱신하는 순서는 Home/Detail에서는 미구현이다. 실제 app-bootstrap 훅은 API 쿼리가 pending인 동안 `loading`을 반환하고, 성공 데이터를 스냅샷으로 저장하며, API 실패 후에만 영속 스냅샷을 읽어 fallback한다. 따라서 아래 다이어그램은 Home/Detail에서는 목표 흐름이며, 현재는 실패 후 fallback 경로만 구현되어 있다. 예외적으로 즐겨찾기 카드(이슈 #126)는 pending 중에도 24h 이내 영속 스냅샷을 즉시 렌더한다(`frontend/pages/favorites/ui/favorite-card.tsx`).
 
 ```mermaid
 sequenceDiagram
@@ -624,7 +624,7 @@ PATCH는 리소스의 부분 수정을 위한 HTTP 메서드로 RFC 5789에 정�
 
 Weatherpane는 “스냅샷 즉시 제공 + 백그라운드 갱신”을 목표 UX로 한다. HTTP 캐시 확장인 stale-while-revalidate는 백그라운드 재검증 동안 오래된 응답을 제공하는 개념을 정의한다. citeturn1search0turn0search7
 
-> **구현 상태: 부분 구현 및 정책 축 정정.** 아래는 원래 “Summary/Detail” 축으로 서술되어 있었으나 실제 구현에는 그런 축이 없다. 실제 축은 Weather(핵심 날씨)/AQI이며, `AGENTS.md`의 Query and persistence rules와 `frontend/features/app-bootstrap/snapshot-cutoff.ts`가 단일 출처다. staleTime과 실패 후 스냅샷 fallback은 구현되어 있지만, 초기 pending 중 영속 스냅샷을 즉시 렌더하고 백그라운드에서 갱신하는 순서는 미구현이다.
+> **구현 상태: 부분 구현 및 정책 축 정정.** 아래는 원래 “Summary/Detail” 축으로 서술되어 있었으나 실제 구현에는 그런 축이 없다. 실제 축은 Weather(핵심 날씨)/AQI이며, `AGENTS.md`의 Query and persistence rules와 `frontend/features/app-bootstrap/snapshot-cutoff.ts`가 단일 출처다. staleTime과 실패 후 스냅샷 fallback은 구현되어 있다. 초기 pending 중 영속 스냅샷을 즉시 렌더하고 백그라운드에서 갱신하는 순서는 즐겨찾기 카드에만 구현되어 있고(이슈 #126), Home/Detail에서는 미구현이다.
 
 실제 정책(구현됨):
 
