@@ -7,7 +7,7 @@ export function LocationUnsupported() {
       className="flex min-h-screen flex-col items-center justify-center bg-background px-6"
       role="main"
     >
-      <div className="w-full max-w-md rounded-[--radius-lg] bg-card p-8">
+      <div className="w-full max-w-md rounded-(--radius-lg) bg-card p-8">
         <p className="font-headline mb-6 text-xs font-bold tracking-[0.3em] text-muted-foreground uppercase">
           지원 불가 지역
         </p>
@@ -28,7 +28,7 @@ export function LocationUnsupported() {
         <div className="w-full space-y-3">
           <Link
             to="/search"
-            className="font-headline flex w-full items-center justify-center gap-2 rounded-[--radius-sm] bg-primary px-6 py-4 font-bold text-primary-foreground"
+            className="font-headline flex w-full items-center justify-center gap-2 rounded-(--radius-sm) bg-primary px-6 py-4 font-bold text-primary-foreground"
           >
             <span
               aria-hidden="true"
@@ -40,7 +40,7 @@ export function LocationUnsupported() {
           </Link>
           <Link
             to="/"
-            className="flex w-full items-center justify-center gap-2 rounded-[--radius-sm] bg-muted px-6 py-4 font-body text-foreground"
+            className="flex w-full items-center justify-center gap-2 rounded-(--radius-sm) bg-muted px-6 py-4 font-body text-foreground"
           >
             <span
               aria-hidden="true"
@@ -52,7 +52,7 @@ export function LocationUnsupported() {
           </Link>
           <Link
             to="/"
-            className="flex w-full items-center justify-center gap-2 rounded-[--radius-sm] bg-muted px-6 py-4 font-body text-foreground"
+            className="flex w-full items-center justify-center gap-2 rounded-(--radius-sm) bg-muted px-6 py-4 font-body text-foreground"
           >
             <span
               aria-hidden="true"

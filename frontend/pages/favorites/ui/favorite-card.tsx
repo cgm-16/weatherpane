@@ -27,7 +27,7 @@ function CardSkeleton() {
   return (
     <div
       data-testid="card-skeleton"
-      className="h-44 animate-pulse rounded-[--radius-md] bg-card p-6"
+      className="h-44 animate-pulse rounded-(--radius-md) bg-card p-6"
     >
       <div className="mb-4 h-6 w-1/2 rounded-full bg-muted" />
       <div className="mb-2 h-12 w-1/3 rounded-full bg-muted" />
@@ -47,7 +47,7 @@ function CardError({
   onRetry: () => void;
 }) {
   return (
-    <div className="flex h-44 flex-col items-center justify-center gap-3 rounded-[--radius-md] bg-card p-6 text-center">
+    <div className="flex h-44 flex-col items-center justify-center gap-3 rounded-(--radius-md) bg-card p-6 text-center">
       <span className="material-symbols-outlined text-3xl text-muted-foreground opacity-50">
         {isOffline ? 'wifi_off' : 'cloud_off'}
       </span>
@@ -224,7 +224,7 @@ function CardSnapshot({
   );
 
   const cardClasses =
-    'group relative flex h-44 w-full flex-col justify-between overflow-hidden rounded-[--radius-md] bg-card p-6 text-left';
+    'group relative flex h-44 w-full flex-col justify-between overflow-hidden rounded-(--radius-md) bg-card p-6 text-left';
 
   // 영속 스냅샷 폴백에는 condition이 없어 스케치 키를 결정할 수 없다.
   // 배경은 장식이므로 이때는 생략한다(레이아웃은 그대로 유지된다).

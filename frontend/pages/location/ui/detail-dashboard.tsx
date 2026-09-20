@@ -114,14 +114,14 @@ export function DetailDashboard({
       {hasRefreshError && (
         <div
           role="alert"
-          className="mx-4 rounded-[--radius-sm] bg-destructive/10 px-4 py-2 text-sm text-destructive"
+          className="mx-4 rounded-(--radius-sm) bg-destructive/10 px-4 py-2 text-sm text-destructive"
         >
           새로고침에 실패했습니다. 이전 날씨 정보를 표시합니다.
         </div>
       )}
 
       {/* 현재 날씨 카드 */}
-      <div className="relative mx-4 mt-3 overflow-hidden rounded-[--radius-md] bg-card">
+      <div className="relative mx-4 mt-3 overflow-hidden rounded-(--radius-md) bg-card">
         <SketchBackground
           location={location}
           condition={weather.current.condition}
@@ -175,7 +175,7 @@ export function DetailDashboard({
         <DetailUvCard uvIndex={weather.current.uvIndex} />
 
         {/* 습도 카드 */}
-        <div className="flex flex-col gap-1 rounded-[--radius-md] bg-card p-4">
+        <div className="flex flex-col gap-1 rounded-(--radius-md) bg-card p-4">
           <span className="material-symbols-outlined text-[20px] text-muted-foreground">
             humidity_percentage
           </span>
@@ -188,7 +188,7 @@ export function DetailDashboard({
         </div>
 
         {/* 이슬점 카드 */}
-        <div className="flex flex-col gap-1 rounded-[--radius-md] bg-card p-4">
+        <div className="flex flex-col gap-1 rounded-(--radius-md) bg-card p-4">
           <span className="material-symbols-outlined text-[20px] text-muted-foreground">
             dew_point
           </span>
