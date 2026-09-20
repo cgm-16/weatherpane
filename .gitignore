@@ -28,3 +28,4 @@ storybook-static
 # Worktrees
 .pnpm-store/
 scripts/stitch/_raw/
+.env*
