@@ -393,6 +393,8 @@ flowchart TD
 
 ### 테스트 계획(핵심 케이스)
 
+`tests/favorites-snapshot.provider.e2e.ts`는 별도 `weather-provider` Playwright 프로젝트에서 HTTP provider를 사용하되 `/v1/weather/**` 응답을 모두 모킹한다. 온라인 조회가 저장한 실제 스냅샷을 사용하고 문서 재로드로 인메모리 쿼리 캐시를 비운 뒤, 요청 실패 및 오프라인 전환에서 24h 직전의 stale 카드·상세 이동과 24h 직후의 비탐색 오류 카드를 검증한다. `pnpm test:e2e`에 포함되며, 단독 실행은 `pnpm exec playwright test --project=weather-provider`다. 기본 프로젝트의 in-process mock은 네트워크 단절로 실패하지 않으므로 이 검증을 대신할 수 없다. 브라우저 오프라인 상태에서는 쿼리가 일시 중지되므로 요청 실패 검증을 먼저 완료한다. 오프라인 문서 새로고침의 앱 셸 검증은 별도 PWA 스위트의 책임이다.
+
 > **참고:** 아래 표의 “429 + Retry-After”, “412 충돌 리베이스” 행과 “오프라인에서 변경 후 복귀” 행의 syncQueue 소진 부분은 서버 동기화 설계(미구현 — 차기 범위, `docs/legacy/favorites-server-sync-design.md` 참고)를 전제로 한 테스트 케이스다. 나머지 행은 현재 구현 대상이다.
 
 | 레벨        | 케이스                     | 시나리오                     | 기대 결과                                                                |
