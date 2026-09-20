@@ -3,10 +3,17 @@ import { useNavigate } from 'react-router';
 import { useCoreWeather } from '~/features/weather-queries/use-core-weather';
 import { CORE_WEATHER_STALE_TIME } from '~/features/weather-queries/weather-query-options';
 import { useActiveLocation } from '~/features/app-bootstrap/active-location-context';
+import { isWeatherSnapshotFresh } from '~/features/app-bootstrap/snapshot-cutoff';
 import { useOnlineStatus } from '~/shared/hooks/use-online-status';
+import { createWeatherSnapshotRepository } from '~/shared/lib/storage/repositories/snapshot-repositories';
+import { coreWeatherToSnapshot } from '~/entities/weather/model/core-weather-to-snapshot';
 import { SketchBackground } from '~/entities/asset';
 import type { FavoriteLocation } from '~/entities/location/model/types';
-import type { CoreWeather } from '~/entities/weather/model/core-weather';
+import type {
+  CoreWeather,
+  WeatherCondition,
+} from '~/entities/weather/model/core-weather';
+import type { PersistedWeatherSnapshot } from '~/entities/weather/model/persisted-weather-snapshot';
 import {
   formatTemperature,
   type TemperatureUnit,
@@ -21,6 +28,44 @@ function getStaleness(fetchedAt: string): Staleness {
   if (ageMs > VERY_STALE_MS) return 'very-stale';
   if (ageMs > CORE_WEATHER_STALE_TIME) return 'stale';
   return 'fresh';
+}
+
+// 카드가 실제로 그리는 날씨 필드만 담는 뷰 모델.
+// 세션 내 쿼리 결과(CoreWeather)와 영속 스냅샷(PersistedWeatherSnapshot)을
+// 같은 표면으로 렌더링하기 위한 어댑터 대상이다.
+interface CardWeather {
+  fetchedAt: string;
+  temperatureC: number;
+  conditionText: string;
+  // 스케치 배경 선택에는 visualBucket/isDay가 필요하다.
+  // 영속 스냅샷은 이 값들을 저장하지 않으므로 없을 수 있으며, 그때는 배경을 생략한다.
+  condition: WeatherCondition | null;
+  todayMinC: number;
+  todayMaxC: number;
+}
+
+function toCardWeather(weather: CoreWeather): CardWeather {
+  return {
+    fetchedAt: weather.fetchedAt,
+    temperatureC: weather.current.temperatureC,
+    conditionText: weather.current.condition.text,
+    condition: weather.current.condition,
+    todayMinC: weather.today.minC,
+    todayMaxC: weather.today.maxC,
+  };
+}
+
+function snapshotToCardWeather(
+  snapshot: PersistedWeatherSnapshot
+): CardWeather {
+  return {
+    fetchedAt: snapshot.fetchedAt,
+    temperatureC: snapshot.temperatureC,
+    conditionText: snapshot.conditionText,
+    condition: null,
+    todayMinC: snapshot.todayMinC,
+    todayMaxC: snapshot.todayMaxC,
+  };
 }
 
 function CardSkeleton() {
@@ -85,7 +130,7 @@ function CardSnapshot({
   temperatureUnit,
 }: {
   favorite: FavoriteLocation;
-  weather: CoreWeather;
+  weather: CardWeather;
   hasRefreshError: boolean;
   onCardClick: () => void;
   editProps?: CardEditProps;
@@ -210,24 +255,20 @@ function CardSnapshot({
   const bottomSection = (
     <div className="flex flex-col gap-2">
       <span className="font-headline text-5xl leading-none font-extrabold text-card-foreground">
-        {formatTemperature(weather.current.temperatureC, temperatureUnit)}
+        {formatTemperature(weather.temperatureC, temperatureUnit)}
       </span>
       <div className="flex items-center gap-2">
         <span className="font-body text-xs font-medium text-muted-foreground">
-          {weather.current.condition.text}
+          {weather.conditionText}
         </span>
         <div className="ml-auto flex gap-1.5">
           <span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 font-body text-[10px] font-bold text-foreground">
             <span className="text-muted-foreground">H</span>
-            <span>
-              {formatTemperature(weather.today.maxC, temperatureUnit)}
-            </span>
+            <span>{formatTemperature(weather.todayMaxC, temperatureUnit)}</span>
           </span>
           <span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 font-body text-[10px] font-bold text-foreground">
             <span className="text-muted-foreground">L</span>
-            <span>
-              {formatTemperature(weather.today.minC, temperatureUnit)}
-            </span>
+            <span>{formatTemperature(weather.todayMinC, temperatureUnit)}</span>
           </span>
         </div>
       </div>
@@ -237,10 +278,12 @@ function CardSnapshot({
   const cardClasses =
     'group relative flex h-44 w-full flex-col justify-between overflow-hidden rounded-[--radius-md] bg-card p-6 text-left';
 
-  const sketch = (
+  // 영속 스냅샷 폴백에는 condition이 없어 스케치 키를 결정할 수 없다.
+  // 배경은 장식이므로 이때는 생략한다(레이아웃은 그대로 유지된다).
+  const sketch = weather.condition && (
     <SketchBackground
       location={favorite.location}
-      condition={weather.current.condition}
+      condition={weather.condition}
       sizeHint="compact"
       className="absolute inset-0 h-full w-full object-cover opacity-30"
     />
@@ -300,6 +343,18 @@ export function FavoriteCard({
   const weatherQuery = useCoreWeather(favorite.location);
   const { isOnline } = useOnlineStatus();
   const isOffline = !isOnline;
+  const { locationId } = favorite.location;
+
+  // 조회 성공 시 스냅샷을 저장한다 — 다음 오프라인 진입에서 이 카드가 폴백할 대상이다.
+  // Home/Detail을 거치지 않고 즐겨찾기 화면에서만 본 위치도 폴백을 갖게 된다.
+  useEffect(() => {
+    if (weatherQuery.data) {
+      createWeatherSnapshotRepository().set(
+        locationId,
+        coreWeatherToSnapshot(weatherQuery.data)
+      );
+    }
+  }, [weatherQuery.data, locationId]);
 
   function handleCardClick() {
     setActiveLocation({
@@ -311,7 +366,26 @@ export function FavoriteCard({
     navigate(`/location/${favorite.location.locationId}`);
   }
 
+  // 세션 내 쿼리 결과가 없으면 24h 이내 영속 스냅샷으로 폴백한다.
+  // 스냅샷이 있으면 카드는 stale 표기와 함께 유지되고 네비게이션도 가능하다.
+  // 스냅샷이 없거나 cutoff를 넘겼을 때만 스켈레톤/인라인 오류로 내려간다(UX-03/04/05).
   if (!weatherQuery.data) {
+    const snapshot = createWeatherSnapshotRepository().get(locationId);
+
+    if (snapshot && isWeatherSnapshotFresh(snapshot.fetchedAt)) {
+      return (
+        <CardSnapshot
+          key={editProps ? 'edit' : 'read'}
+          favorite={favorite}
+          weather={snapshotToCardWeather(snapshot)}
+          hasRefreshError={weatherQuery.isError}
+          onCardClick={handleCardClick}
+          editProps={editProps}
+          temperatureUnit={temperatureUnit}
+        />
+      );
+    }
+
     if (weatherQuery.isLoading) return <CardSkeleton />;
     return (
       <CardError isOffline={isOffline} onRetry={() => weatherQuery.refetch()} />
@@ -322,7 +396,7 @@ export function FavoriteCard({
     <CardSnapshot
       key={editProps ? 'edit' : 'read'}
       favorite={favorite}
-      weather={weatherQuery.data}
+      weather={toCardWeather(weatherQuery.data)}
       hasRefreshError={weatherQuery.isError}
       onCardClick={handleCardClick}
       editProps={editProps}
