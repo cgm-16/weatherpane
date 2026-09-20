@@ -2,18 +2,48 @@
 // Weatherpane 서비스 워커 — 앱 셸/정적 에셋 런타임 캐시 (이슈 #78).
 // 날씨 API(/v1/*)는 캐시하지 않는다 — 스냅샷 저장소가 "보여줘도 되는 데이터"의 유일한
 // 판단 주체다. 파일명이 빌드마다 해시로 바뀌므로 사전 캐시 대신 런타임에 실제 URL로
-// 캐시한다.
+// 캐시한다. 전용 오프라인 안내 문서만 설치 때 미리 저장한다.
+
+const OFFLINE_URL = new URL('/offline.html', self.location.origin).href;
+// ponytail: 항목 수만 제한한다. 에셋 크기가 커지면 바이트 예산 기반으로 확장한다.
+const MAX_ASSET_ENTRIES = 200;
 
 // 캐시 버전. 전략이나 대상이 바뀌면 숫자를 올린다. activate에서 이 목록에 없는
 // weatherpane- 캐시는 삭제한다.
-const APP_SHELL_CACHE = 'weatherpane-app-shell-v1';
-const ASSET_CACHE = 'weatherpane-assets-v1';
+const APP_SHELL_CACHE = 'weatherpane-app-shell-v2';
+const ASSET_CACHE = 'weatherpane-assets-v2';
 const EXPECTED_CACHES = [APP_SHELL_CACHE, ASSET_CACHE];
 
 // 설치: skipWaiting을 호출하지 않는다. 새 워커는 대기 상태로 두었다가 기존 탭이 모두
 // 사라진 뒤 다음 내비게이션에서 제어권을 넘겨받는다. 이렇게 해야 새 HTML을 옛 캐시된
 // 청크와 섞어 내보내는 사고를 피한다.
-self.addEventListener('install', () => {});
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    (async () => {
+      const response = await fetch(OFFLINE_URL, { cache: 'reload' });
+      if (response.status !== 200) throw new Error('오프라인 문서 설치 실패');
+      const cache = await caches.open(APP_SHELL_CACHE);
+      await cache.put(OFFLINE_URL, response);
+    })()
+  );
+});
+
+// Cache.keys()의 삽입 순서를 사용해 가장 오래 저장된 에셋부터 제거한다.
+async function trimAssetCache(cache) {
+  const keys = await cache.keys();
+  for (const key of keys.slice(
+    0,
+    Math.max(0, keys.length - MAX_ASSET_ENTRIES)
+  )) {
+    await cache.delete(key);
+  }
+}
+
+async function storeResponse(cacheName, request, response) {
+  const cache = await caches.open(cacheName);
+  await cache.put(request, response);
+  if (cacheName === ASSET_CACHE) await trimAssetCache(cache);
+}
 
 // 같은 종류의 이전 캐시는 높은 버전부터 읽어 현재 캐시에 없는 항목만 옮긴다. 새 워커가
 // 활성화되기 전에 이전 버전의 런타임 캐시를 비워 오프라인 폴백을 잃지 않게 한다.
@@ -43,7 +73,7 @@ async function migrateCacheEntries(sourceName, targetName) {
   }
 }
 
-// 활성화: 이전 앱 셸/에셋 캐시의 항목을 현재 캐시에 무손실로 옮긴 뒤 오래된
+// 활성화: 이전 앱 셸/에셋 캐시를 이관하고 에셋 상한을 적용한 뒤 오래된
 // weatherpane- 캐시를 정리하고, 열려 있는 클라이언트의 제어권을 가져온다.
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -55,6 +85,7 @@ self.addEventListener('activate', (event) => {
       for (const name of previousCacheNames(names, ASSET_CACHE)) {
         await migrateCacheEntries(name, ASSET_CACHE);
       }
+      await trimAssetCache(await caches.open(ASSET_CACHE));
       await Promise.all(
         names
           .filter(
@@ -71,9 +102,8 @@ self.addEventListener('activate', (event) => {
 // 캐시 우선: 캐시에 있으면 그대로, 없으면 네트워크로 받아 캐시에 넣는다. 내용이 안정적인
 // 정적 에셋(해시된 /assets/*)에 쓴다.
 async function cacheFirst(event, cacheName, request) {
-  let cache;
   try {
-    cache = await caches.open(cacheName);
+    const cache = await caches.open(cacheName);
     const cached = await cache.match(request);
     if (cached) return cached;
   } catch {
@@ -91,13 +121,8 @@ async function cacheFirst(event, cacheName, request) {
     try {
       // 응답 본문이 반환 과정에서 소비되기 전에 캐시용 복제본을 만든다.
       const responseForCache = response.clone();
-      const cacheReady = cache
-        ? Promise.resolve(cache)
-        : caches.open(cacheName);
       event.waitUntil(
-        cacheReady
-          .then((target) => target.put(request, responseForCache))
-          .catch(() => {})
+        storeResponse(cacheName, request, responseForCache).catch(() => {})
       );
     } catch {
       // 캐시 쓰기 준비 실패도 네트워크 응답을 막지 않는다.
@@ -108,7 +133,7 @@ async function cacheFirst(event, cacheName, request) {
 
 // 네트워크 우선: 네트워크가 되면 최신 응답으로 캐시를 갱신해 반환하고, 실패하면 같은
 // URL의 캐시된 응답으로 폴백한다. 내비게이션(HTML 문서)에 써서, 오프라인에서 "이전에
-// 열었던 페이지 새로고침" 시 앱 셸이 뜨게 한다.
+// 열었던 페이지 새로고침" 시 앱 셸을, 미방문 URL에는 전용 안내 문서를 보여준다.
 async function networkFirst(event, cacheName, request) {
   try {
     const response = await fetch(request);
@@ -121,10 +146,7 @@ async function networkFirst(event, cacheName, request) {
         // 응답 본문이 반환 과정에서 소비되기 전에 캐시용 복제본을 만든다.
         const responseForCache = response.clone();
         event.waitUntil(
-          caches
-            .open(cacheName)
-            .then((cache) => cache.put(request, responseForCache))
-            .catch(() => {})
+          storeResponse(cacheName, request, responseForCache).catch(() => {})
         );
       } catch {
         // 캐시 쓰기 준비 실패도 네트워크 응답을 막지 않는다.
@@ -136,6 +158,11 @@ async function networkFirst(event, cacheName, request) {
       const cache = await caches.open(cacheName);
       const cached = await cache.match(request);
       if (cached) return cached;
+      // 다른 라우트의 SSR 문서를 반환하면 하이드레이션이 어긋난다.
+      if (request.mode === 'navigate') {
+        const offline = await cache.match(OFFLINE_URL);
+        if (offline) return offline;
+      }
     } catch {
       // CacheStorage 오류 대신 원래 네트워크 오류를 아래에서 다시 던진다.
     }
@@ -173,7 +200,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 내비게이션(HTML 문서): 네트워크 우선 + 같은 URL 캐시 폴백.
+  // 내비게이션(HTML 문서): 네트워크 → 같은 URL 캐시 → 전용 오프라인 문서.
   if (request.mode === 'navigate') {
     event.respondWith(networkFirst(event, APP_SHELL_CACHE, request));
     return;
