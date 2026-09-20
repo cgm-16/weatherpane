@@ -29,16 +29,16 @@ Weatherpane의 기능 범위는 다음 8개 축으로 정리한다.
 
 ### MVP 우선순위(권장)
 
-| 우선순위 | 기능                   | MVP 목표                                               | 구현 상태                                                                                                        | 비고                                     |
-| -------- | ---------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| P0       | Home/Active Location   | 즉시 렌더 + 스냅샷 fallback + stale 표시               | 부분 구현(API 실패 후 스냅샷 fallback + stale 표시는 구현, 초기 pending 중 스냅샷 즉시 렌더는 미구현)            | 오프라인 핵심                            |
-| P0       | Search                 | 위치 선택 → Active Location 전환 + Recents 기록        | 구현됨                                                                                                           | 로컬 대한민국 카탈로그 기반              |
-| P0       | Weather Detail         | 최소한 “현재/시간별/일별” 표시 + 오류/스켈레톤         | 구현됨(현재/시간별/일별 + 오류/스켈레톤; 일별 예보는 이슈 #87)                                                   | 데이터 계약 필요                         |
-| P0       | Favorites              | **확정 UX** 준수(편집/정렬, 위·아래, 스켈레톤/오류 등) | 구현됨                                                                                                           | 본 문서에서 고정                         |
-| P1       | Settings               | 테마/단위/동작 줄이기 + 선택적 로컬 데이터 초기화      | 구현됨(이슈 #77; `frontend/features/settings/`)                                                                  | 확인 뒤 Weatherpane 소유 데이터만 초기화 |
-| P1       | Service Worker         | 앱 셸/정적 에셋 런타임 캐시                            | 구현됨(이슈 #78; `public/sw.js` — 앱 셸·에셋 런타임 캐시. cache-http·PWA 매니페스트·백그라운드 동기화는 범위 밖) | 사전 캐시 없이 런타임 캐시               |
-| P2       | 원격 스케치 매니페스트 | 다음 세션에 적용되는 원격 오버라이드                   | 부분 구현(`/v1/assets/manifest`는 오버라이드 로직은 구현되어 있으나 현재 `{}` 반환 — 활성 데이터 없음)           | 운영 편의                                |
-| P2       | 고급 오프라인 동기화   | Periodic Background Sync 등                            | 미구현 — 차기 범위                                                                                               | 브라우저 지원 고려                       |
+| 우선순위 | 기능                   | MVP 목표                                               | 구현 상태                                                                                                        | 비고                                          |
+| -------- | ---------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| P0       | Home/Active Location   | 즉시 렌더 + 스냅샷 fallback + stale 표시               | 부분 구현(API 실패 후 스냅샷 fallback + stale 표시는 구현, 초기 pending 중 스냅샷 즉시 렌더는 미구현)            | 오프라인 핵심                                 |
+| P0       | Search                 | 위치 선택 → Active Location 전환 + Recents 기록        | 구현됨                                                                                                           | 로컬 대한민국 카탈로그 기반                   |
+| P0       | Weather Detail         | 최소한 “현재/시간별/일별” 표시 + 오류/스켈레톤         | 구현됨(현재/시간별/일별 + 오류/스켈레톤; 일별 예보는 이슈 #87)                                                   | 데이터 계약 필요                              |
+| P0       | Favorites              | **확정 UX** 준수(편집/정렬, 위·아래, 스켈레톤/오류 등) | 구현됨                                                                                                           | 본 문서에서 고정                              |
+| P1       | Settings               | 테마/단위/동작 줄이기 + 선택적 로컬 데이터 초기화      | 구현됨(이슈 #77; `frontend/features/settings/`)                                                                  | 확인 뒤 Weatherpane 소유 데이터만 초기화      |
+| P1       | Service Worker         | 앱 셸/정적 에셋 런타임 캐시                            | 구현됨(이슈 #78; `public/sw.js` — 앱 셸·에셋 런타임 캐시. cache-http·PWA 매니페스트·백그라운드 동기화는 범위 밖) | 정적 에셋 런타임 캐시·오프라인 안내 사전 캐시 |
+| P2       | 원격 스케치 매니페스트 | 다음 세션에 적용되는 원격 오버라이드                   | 부분 구현(`/v1/assets/manifest`는 오버라이드 로직은 구현되어 있으나 현재 `{}` 반환 — 활성 데이터 없음)           | 운영 편의                                     |
+| P2       | 고급 오프라인 동기화   | Periodic Background Sync 등                            | 미구현 — 차기 범위                                                                                               | 브라우저 지원 고려                            |
 
 ### 명시적 전제(Assumptions)
 
@@ -158,7 +158,7 @@ Favorites의 카드 상태는 “경영 요약”의 확정 규칙(FAV-03~06)을
 - **SnapshotRepository(Web Storage)**: 날씨/AQI 스냅샷 저장 — 구현됨. 원문은 “요약/상세” 축으로 서술되어 있었으나 실제 축은 Weather/AQI다(`frontend/shared/lib/storage/repositories/snapshot-repositories.ts`)
 - **FavoritesStore**: 즐겨찾기 CRUD/정렬/닉네임 — 구현됨(로컬 `localStorage`만; `frontend/features/favorites/use-favorites.ts`). **SyncQueue + 서버 동기화(ETag 기반)**는 미구현 — 차기 범위(`docs/legacy/favorites-server-sync-design.md` 참고)
 - **RefreshQueue(Weather)**: 화면 진입/포커스 등 트리거로 날씨 갱신 — 구현됨. 개념은 일치하나 `passId` 단위 실행이 아니라 concurrency=2 배치 refetch로 구현됨(`frontend/features/favorites/use-refresh-queue.ts`)
-- **Service Worker**: 앱 셸/정적 에셋(스케치·해시된 JS/CSS/폰트) 런타임 캐시 — 구현됨(이슈 #78; `public/sw.js`). 사전 캐시 없이 런타임에 실제 URL로 캐시하며, 날씨 API(`/v1/*`)는 캐시하지 않는다. 원래 설계는 `docs/legacy/service-worker-caching-design.md` 참고
+- **Service Worker**: 앱 셸/정적 에셋(스케치·해시된 JS/CSS/폰트) 런타임 캐시 — 구현됨(이슈 #78; `public/sw.js`). 정적 에셋은 런타임에 실제 URL로 캐시하고 전용 `/offline.html`만 설치 시 사전 캐시하며, 날씨 API(`/v1/*`)는 캐시하지 않는다. 원래 설계는 `docs/legacy/service-worker-caching-design.md` 참고
 
 ### 컴포넌트 다이어그램(mermaid)
 
@@ -648,12 +648,13 @@ last-updated 표시 규칙 예:
 
 서비스 워커(`public/sw.js`)는 앱 셸과 정적 에셋의 런타임 캐시로 구현되어 있다(이슈 #78). 프로덕션 빌드에서만, 그리고 브라우저가 지원할 때만 `AppEffects`에서 등록한다.
 
-- **캐시 버킷(버전드):** `weatherpane-app-shell-v1`(내비게이션 문서), `weatherpane-assets-v1`(`/assets/*` 해시된 JS/CSS/폰트 + 동일 출처 `*.webp` 스케치). 교차 출처 매니페스트 override WebP는 SW가 가로채지 않아 브라우저 기본 fetch로 통과하며 캐시 버킷에 넣지 않는다.
+- **캐시 버킷(버전드):** `weatherpane-app-shell-v2`(내비게이션 문서·전용 오프라인 안내), `weatherpane-assets-v2`(`/assets/*` 해시된 JS/CSS/폰트 + 동일 출처 `*.webp` 스케치). 교차 출처 매니페스트 override WebP는 SW가 가로채지 않아 브라우저 기본 fetch로 통과하며 캐시 버킷에 넣지 않는다.
 - **전략 및 경로 우선순위:** 동일 출처 정적 에셋 요청은 일반 WebP 출처 판정보다 `/assets/*` 경로를 먼저 평가한다. 따라서 `/assets/*`(여기에는 `/assets/*.webp` 포함)는 **캐시 우선(cache-first)**이다. `/assets/` 바깥의 동일 출처 WebP 스케치만 **네트워크 우선 + 같은 URL 캐시 폴백(network-first with cache fallback)**이며, 교차 출처 WebP는 이 분기를 타지 않고 브라우저 기본 fetch로 통과한다. 내비게이션도 **네트워크 우선 + 같은 URL 캐시 폴백**이다.
 - **CacheStorage 실패 안전성:** 캐시 열기·조회·쓰기는 모두 best-effort다. 캐시 우선 요청에서 캐시 읽기가 실패하면 네트워크로 진행하고, 네트워크 우선 요청은 캐시를 열기 전에 네트워크 응답부터 확보한다. 네트워크도 실패해 캐시 폴백을 읽을 수 없으면 CacheStorage 오류가 아니라 원래 네트워크 오류를 유지한다. 따라서 선택적 서비스 워커 저장소 장애가 온라인 응답을 막지 않는다.
-- **오프라인 커버리지 경계:** 오프라인 새로고침은 사용자가 이전에 SW 제어 하에 전체 내비게이션으로 로드한 적 있는 URL(실무상 `/`)에 대해서만 앱 셸을 부팅한다. 클라이언트 사이드 내비게이션이라 프리페치되지 않은 다른 라우트는 셸 캐시에 없어 오프라인 새로고침 시 여전히 브라우저 오프라인 오류 페이지로 떨어진다. 전용 오프라인 폴백 라우트는 후속 이슈로 미룬다.
+- **오프라인 커버리지:** 같은 URL의 문서 캐시가 있으면 앱 셸을 부팅한다. 클라이언트 이동만 한 `/favorites`·`/settings`·`/search` 등 문서 캐시가 없는 URL에는 설치 때 저장한 전용 `/offline.html`을 반환한다. 요청 URL을 유지하며, “다시 시도”는 연결 복구 후 같은 URL을 다시 열고 “홈으로”는 `/`로 이동한다. 다른 라우트의 SSR 문서를 대신 반환하지 않는다. 안내 문서는 React·외부 에셋 없이 동작하고 브라우저 기본 색상/시스템 글꼴을 사용하므로 하이드레이션 불일치나 추가 다운로드가 없다. 첫 방문부터 오프라인이거나 CacheStorage가 삭제·고장난 경우까지 보장하지는 않는다.
+- **에셋 상한:** 에셋 저장 및 이전 버전 이관 완료 후 가장 먼저 저장된 항목부터 제거해 200개 이하로 유지한다. 문서/오프라인 안내 캐시는 이 트림 대상이 아니다. 개수 제한은 바이트 쿼터 보장이 아니며, 제거된 에셋은 다음 온라인 요청에서 다시 받는다. 오래된 문서의 일부 에셋이 제거되면 해당 문서의 완전한 오프라인 부팅은 보장하지 않는다.
 - **날씨 API는 캐시하지 않는다:** `/v1/*`는 SW가 절대 가로채지 않는다. 원 설계의 `cache-http`(날씨 GET 응답 캐시)는 의도적으로 미구현이며, 영속 스냅샷 저장소가 “보여줘도 되는 날씨 데이터”의 유일한 판단 주체로 남는다.
-- **보수적 활성화:** `skipWaiting`을 호출하지 않고, `activate`에서 같은 종류의 이전 버전 캐시 항목을 현재 캐시에 옮긴 뒤 이 버전 집합에 없는 오래된 `weatherpane-*` 캐시를 정리하고 `clients.claim()`으로 제어권을 가져온다. 캐시 이름은 버전드다.
+- **보수적 활성화:** `skipWaiting`을 호출하지 않고, `activate`에서 같은 종류의 이전 버전 캐시 항목을 현재 캐시에 옮기고 에셋 상한을 적용한 뒤 이 버전 집합에 없는 오래된 `weatherpane-*` 캐시를 정리하고 `clients.claim()`으로 제어권을 가져온다. 캐시 이름은 버전드다.
 - `routeDiscovery: { mode: 'initial' }`(`react-router.config.ts`)로 RR7의 지연 `/__manifest` fetch를 제거해 오프라인 셸이 캐시된 매니페스트에 의존하지 않게 했다.
 - `/sw.js`에는 `vercel.json`으로 `Cache-Control: public, max-age=0, must-revalidate`를 지정해 워커 스크립트 자체는 항상 재검증되도록 한다.
 

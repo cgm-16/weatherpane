@@ -39,6 +39,10 @@ class MemoryCache {
     return [...this.entries.keys()];
   }
 
+  async delete(request: string | { url: string }) {
+    return this.entries.delete(cacheKey(request));
+  }
+
   async match(request: string | { url: string }) {
     const key = cacheKey(request);
     if (this.failures.match?.(this.name, key)) {
@@ -133,6 +137,15 @@ function loadServiceWorker(caches: MemoryCacheStorage, networkFetch = vi.fn()) {
 
   return {
     claim,
+    async install() {
+      let installation: Promise<void> | undefined;
+      listeners.get('install')?.({
+        waitUntil(promise: Promise<void>) {
+          installation = promise;
+        },
+      });
+      await installation;
+    },
     async activate() {
       let activation: Promise<void> | undefined;
       listeners.get('activate')?.({
@@ -161,75 +174,75 @@ async function responseBody(cache: MemoryCache, request: string) {
 describe('서비스 워커 캐시 버전 전환', () => {
   test('이전 앱 셸과 에셋 캐시 항목을 삭제 전에 현재 캐시로 옮긴다', async () => {
     const caches = new MemoryCacheStorage();
-    caches.add('weatherpane-app-shell-v0', {
+    caches.add('weatherpane-app-shell-v1', {
       'https://weatherpane.test/': '셸',
     });
-    caches.add('weatherpane-assets-v0', {
+    caches.add('weatherpane-assets-v1', {
       'https://weatherpane.test/assets/app.js': '에셋',
     });
     const serviceWorker = loadServiceWorker(caches);
 
     await serviceWorker.activate();
 
-    const appShell = await caches.open('weatherpane-app-shell-v1');
-    const assets = await caches.open('weatherpane-assets-v1');
+    const appShell = await caches.open('weatherpane-app-shell-v2');
+    const assets = await caches.open('weatherpane-assets-v2');
     expect(await responseBody(appShell, 'https://weatherpane.test/')).toBe(
       '셸'
     );
     expect(
       await responseBody(assets, 'https://weatherpane.test/assets/app.js')
     ).toBe('에셋');
-    expect(caches.caches.has('weatherpane-app-shell-v0')).toBe(false);
-    expect(caches.caches.has('weatherpane-assets-v0')).toBe(false);
+    expect(caches.caches.has('weatherpane-app-shell-v1')).toBe(false);
+    expect(caches.caches.has('weatherpane-assets-v1')).toBe(false);
   });
 
   test('더 새 이전 버전을 먼저 복사하고 현재 캐시 항목을 덮어쓰지 않는다', async () => {
     const caches = new MemoryCacheStorage();
-    caches.add('weatherpane-app-shell-v2', {
-      'https://weatherpane.test/': 'v2 셸',
-      'https://weatherpane.test/about': 'v2 소개',
-    });
     caches.add('weatherpane-app-shell-v3', {
-      'https://weatherpane.test/': 'v3 셸',
-      'https://weatherpane.test/about': 'v3 소개',
+      'https://weatherpane.test/': '이전 셸',
+      'https://weatherpane.test/about': '이전 소개',
     });
-    caches.add('weatherpane-assets-v2', {
-      'https://weatherpane.test/assets/app.js': 'v2 에셋',
+    caches.add('weatherpane-app-shell-v4', {
+      'https://weatherpane.test/': '더 새 셸',
+      'https://weatherpane.test/about': '더 새 소개',
     });
     caches.add('weatherpane-assets-v3', {
-      'https://weatherpane.test/assets/app.js': 'v3 에셋',
+      'https://weatherpane.test/assets/app.js': '이전 에셋',
     });
-    caches.add('weatherpane-app-shell-v1', {
+    caches.add('weatherpane-assets-v4', {
+      'https://weatherpane.test/assets/app.js': '더 새 에셋',
+    });
+    caches.add('weatherpane-app-shell-v2', {
       'https://weatherpane.test/': '현재 셸',
     });
     const serviceWorker = loadServiceWorker(caches);
 
     await serviceWorker.activate();
 
-    const appShell = await caches.open('weatherpane-app-shell-v1');
-    const assets = await caches.open('weatherpane-assets-v1');
+    const appShell = await caches.open('weatherpane-app-shell-v2');
+    const assets = await caches.open('weatherpane-assets-v2');
     expect(await responseBody(appShell, 'https://weatherpane.test/')).toBe(
       '현재 셸'
     );
     expect(await responseBody(appShell, 'https://weatherpane.test/about')).toBe(
-      'v3 소개'
+      '더 새 소개'
     );
     expect(
       await responseBody(assets, 'https://weatherpane.test/assets/app.js')
-    ).toBe('v3 에셋');
+    ).toBe('더 새 에셋');
     expect(serviceWorker.claim).toHaveBeenCalledOnce();
   });
 
   test('캐시 복사가 실패하면 정리와 clients.claim 전에 활성화를 거절한다', async () => {
     const caches = new MemoryCacheStorage({
       put: (cacheName, request) =>
-        cacheName === 'weatherpane-assets-v1' &&
+        cacheName === 'weatherpane-assets-v2' &&
         request === 'https://weatherpane.test/assets/app.js',
     });
-    caches.add('weatherpane-app-shell-v0', {
+    caches.add('weatherpane-app-shell-v1', {
       'https://weatherpane.test/': '셸',
     });
-    caches.add('weatherpane-assets-v0', {
+    caches.add('weatherpane-assets-v1', {
       'https://weatherpane.test/assets/app.js': '에셋',
     });
     const serviceWorker = loadServiceWorker(caches);
@@ -237,8 +250,8 @@ describe('서비스 워커 캐시 버전 전환', () => {
     await expect(serviceWorker.activate()).rejects.toThrow('캐시 복사 실패');
 
     expect(caches.deleted).toEqual([]);
-    expect(caches.caches.has('weatherpane-app-shell-v0')).toBe(true);
-    expect(caches.caches.has('weatherpane-assets-v0')).toBe(true);
+    expect(caches.caches.has('weatherpane-app-shell-v1')).toBe(true);
+    expect(caches.caches.has('weatherpane-assets-v1')).toBe(true);
     expect(serviceWorker.claim).not.toHaveBeenCalled();
   });
 });
@@ -248,7 +261,7 @@ describe('서비스 워커 스케치 재검증', () => {
     const assetUrl = 'https://weatherpane.test/assets/logo-a1b2c3.webp';
     const request = { url: assetUrl, method: 'GET' };
     const caches = new MemoryCacheStorage();
-    caches.add('weatherpane-assets-v1', { [assetUrl]: '캐시된 에셋' });
+    caches.add('weatherpane-assets-v2', { [assetUrl]: '캐시된 에셋' });
     const networkFetch = vi
       .fn()
       .mockRejectedValue(new Error('네트워크를 호출하면 안 됩니다.'));
@@ -265,7 +278,7 @@ describe('서비스 워커 스케치 재검증', () => {
       'https://weatherpane.test/sketches/hub/seoul/clear-day.webp';
     const request = { url: sketchUrl, method: 'GET' };
     const caches = new MemoryCacheStorage();
-    caches.add('weatherpane-assets-v1', { [sketchUrl]: '오래된 스케치' });
+    caches.add('weatherpane-assets-v2', { [sketchUrl]: '오래된 스케치' });
     const networkFetch = vi.fn().mockResolvedValue(createResponse('새 스케치'));
     const serviceWorker = loadServiceWorker(caches, networkFetch);
 
@@ -274,7 +287,7 @@ describe('서비스 워커 스케치 재검증', () => {
     expect(response.body).toBe('새 스케치');
     expect(networkFetch).toHaveBeenCalledWith(request);
     expect(
-      await responseBody(await caches.open('weatherpane-assets-v1'), sketchUrl)
+      await responseBody(await caches.open('weatherpane-assets-v2'), sketchUrl)
     ).toBe('새 스케치');
   });
 });
@@ -284,7 +297,7 @@ describe('서비스 워커 캐시 실패 폴백', () => {
     const assetUrl = 'https://weatherpane.test/assets/app-a1b2c3.js';
     const request = { url: assetUrl, method: 'GET' };
     const caches = new MemoryCacheStorage({
-      open: (cacheName) => cacheName === 'weatherpane-assets-v1',
+      open: (cacheName) => cacheName === 'weatherpane-assets-v2',
     });
     const networkFetch = vi.fn().mockResolvedValue(createResponse('새 에셋'));
     const serviceWorker = loadServiceWorker(caches, networkFetch);
@@ -298,9 +311,9 @@ describe('서비스 워커 캐시 실패 폴백', () => {
     const assetUrl = 'https://weatherpane.test/assets/app-a1b2c3.js';
     const request = { url: assetUrl, method: 'GET' };
     const caches = new MemoryCacheStorage({
-      match: (cacheName) => cacheName === 'weatherpane-assets-v1',
+      match: (cacheName) => cacheName === 'weatherpane-assets-v2',
     });
-    caches.add('weatherpane-assets-v1');
+    caches.add('weatherpane-assets-v2');
     const networkFetch = vi.fn().mockResolvedValue(createResponse('새 에셋'));
     const serviceWorker = loadServiceWorker(caches, networkFetch);
 
@@ -313,7 +326,7 @@ describe('서비스 워커 캐시 실패 폴백', () => {
     const assetUrl = 'https://weatherpane.test/assets/app-a1b2c3.js';
     const request = { url: assetUrl, method: 'GET' };
     const caches = new MemoryCacheStorage({
-      open: (cacheName) => cacheName === 'weatherpane-assets-v1',
+      open: (cacheName) => cacheName === 'weatherpane-assets-v2',
     });
     const networkError = new Error('원래 네트워크 오류');
     const networkFetch = vi.fn().mockRejectedValue(networkError);
@@ -326,7 +339,7 @@ describe('서비스 워커 캐시 실패 폴백', () => {
     const sketchUrl = 'https://weatherpane.test/sketches/clear-day.webp';
     const request = { url: sketchUrl, method: 'GET' };
     const caches = new MemoryCacheStorage({
-      open: (cacheName) => cacheName === 'weatherpane-assets-v1',
+      open: (cacheName) => cacheName === 'weatherpane-assets-v2',
     });
     const networkFetch = vi.fn().mockResolvedValue(createResponse('새 스케치'));
     const serviceWorker = loadServiceWorker(caches, networkFetch);
@@ -340,7 +353,7 @@ describe('서비스 워커 캐시 실패 폴백', () => {
     const sketchUrl = 'https://weatherpane.test/sketches/clear-day.webp';
     const request = { url: sketchUrl, method: 'GET' };
     const caches = new MemoryCacheStorage({
-      put: (cacheName) => cacheName === 'weatherpane-assets-v1',
+      put: (cacheName) => cacheName === 'weatherpane-assets-v2',
     });
     const networkFetch = vi.fn().mockResolvedValue(createResponse('새 스케치'));
     const serviceWorker = loadServiceWorker(caches, networkFetch);
@@ -357,7 +370,7 @@ describe('서비스 워커 캐시 실패 폴백', () => {
       mode: 'navigate',
     };
     const caches = new MemoryCacheStorage({
-      open: (cacheName) => cacheName === 'weatherpane-app-shell-v1',
+      open: (cacheName) => cacheName === 'weatherpane-app-shell-v2',
     });
     const networkError = new Error('원래 네트워크 오류');
     const networkFetch = vi.fn().mockRejectedValue(networkError);
@@ -373,9 +386,9 @@ describe('서비스 워커 캐시 실패 폴백', () => {
       mode: 'navigate',
     };
     const caches = new MemoryCacheStorage({
-      match: (cacheName) => cacheName === 'weatherpane-app-shell-v1',
+      match: (cacheName) => cacheName === 'weatherpane-app-shell-v2',
     });
-    caches.add('weatherpane-app-shell-v1');
+    caches.add('weatherpane-app-shell-v2');
     const networkError = new Error('원래 네트워크 오류');
     const networkFetch = vi.fn().mockRejectedValue(networkError);
     const serviceWorker = loadServiceWorker(caches, networkFetch);
@@ -405,5 +418,152 @@ describe('서비스 워커 라우팅 제외 경계', () => {
     });
 
     expect(result.respondWithCalled).toBe(false);
+  });
+});
+
+describe('서비스 워커 오프라인 문서', () => {
+  test('설치 때 전용 오프라인 문서를 저장한다', async () => {
+    const caches = new MemoryCacheStorage();
+    const networkFetch = vi
+      .fn()
+      .mockResolvedValue(createResponse('오프라인 안내'));
+    const worker = loadServiceWorker(caches, networkFetch);
+
+    await worker.install();
+
+    expect(
+      await responseBody(
+        await caches.open('weatherpane-app-shell-v2'),
+        'https://weatherpane.test/offline.html'
+      )
+    ).toBe('오프라인 안내');
+    expect(networkFetch).toHaveBeenCalledWith(
+      'https://weatherpane.test/offline.html',
+      { cache: 'reload' }
+    );
+  });
+
+  test('오프라인 문서 다운로드가 실패하면 설치를 완료하지 않는다', async () => {
+    const caches = new MemoryCacheStorage();
+    const worker = loadServiceWorker(
+      caches,
+      vi.fn().mockResolvedValue({ ...createResponse('없음'), status: 404 })
+    );
+    await expect(worker.install()).rejects.toThrow();
+  });
+
+  test.each(['/favorites', '/settings', '/search?q=서울'])(
+    '%s 문서가 없으면 홈 HTML 대신 전용 오프라인 문서를 반환한다',
+    async (path) => {
+      const caches = new MemoryCacheStorage();
+      caches.add('weatherpane-app-shell-v2', {
+        'https://weatherpane.test/': '홈 SSR',
+        'https://weatherpane.test/offline.html': '오프라인 안내',
+      });
+      const worker = loadServiceWorker(
+        caches,
+        vi.fn().mockRejectedValue(new Error('오프라인'))
+      );
+      const response = await worker.fetch({
+        url: `https://weatherpane.test${path}`,
+        method: 'GET',
+        mode: 'navigate',
+      });
+      expect(response.body).toBe('오프라인 안내');
+    }
+  );
+
+  test('같은 URL의 문서가 있으면 전용 오프라인 문서보다 우선한다', async () => {
+    const caches = new MemoryCacheStorage();
+    caches.add('weatherpane-app-shell-v2', {
+      'https://weatherpane.test/favorites': '즐겨찾기 SSR',
+      'https://weatherpane.test/offline.html': '오프라인 안내',
+    });
+    const worker = loadServiceWorker(
+      caches,
+      vi.fn().mockRejectedValue(new Error('오프라인'))
+    );
+    const response = await worker.fetch({
+      url: 'https://weatherpane.test/favorites',
+      method: 'GET',
+      mode: 'navigate',
+    });
+    expect(response.body).toBe('즐겨찾기 SSR');
+  });
+
+  test('누락된 스케치에 HTML 폴백을 보내지 않는다', async () => {
+    const caches = new MemoryCacheStorage();
+    caches.add('weatherpane-app-shell-v2', {
+      'https://weatherpane.test/offline.html': '오프라인 안내',
+    });
+    const error = new Error('오프라인');
+    const worker = loadServiceWorker(caches, vi.fn().mockRejectedValue(error));
+    await expect(
+      worker.fetch({
+        url: 'https://weatherpane.test/missing.webp',
+        method: 'GET',
+      })
+    ).rejects.toBe(error);
+  });
+});
+
+describe('서비스 워커 에셋 캐시 상한', () => {
+  test.each(['/assets/new.js', '/sketches/new.webp'])(
+    '%s 저장 후 오래된 항목을 제거해 200개를 유지한다',
+    async (path) => {
+      const caches = new MemoryCacheStorage();
+      const assets = caches.add(
+        'weatherpane-assets-v2',
+        Object.fromEntries(
+          Array.from({ length: 200 }, (_, index) => [
+            `https://weatherpane.test/assets/${index}.js`,
+            `${index}`,
+          ])
+        )
+      );
+      const worker = loadServiceWorker(
+        caches,
+        vi.fn().mockResolvedValue(createResponse('새 에셋'))
+      );
+      await worker.fetch({
+        url: `https://weatherpane.test${path}`,
+        method: 'GET',
+      });
+      expect(await assets.keys()).toHaveLength(200);
+      expect(
+        await responseBody(assets, 'https://weatherpane.test/assets/0.js')
+      ).toBeUndefined();
+      expect(
+        await responseBody(assets, `https://weatherpane.test${path}`)
+      ).toBe('새 에셋');
+    }
+  );
+
+  test('이전 캐시 이관 후에도 상한을 적용하고 문서 캐시는 보존한다', async () => {
+    const caches = new MemoryCacheStorage();
+    caches.add(
+      'weatherpane-assets-v1',
+      Object.fromEntries(
+        Array.from({ length: 205 }, (_, index) => [
+          `https://weatherpane.test/assets/${index}.js`,
+          `${index}`,
+        ])
+      )
+    );
+    caches.add('weatherpane-app-shell-v1', {
+      'https://weatherpane.test/': '홈 SSR',
+    });
+    const worker = loadServiceWorker(caches);
+    await worker.activate();
+    expect(
+      await (await caches.open('weatherpane-assets-v2')).keys()
+    ).toHaveLength(200);
+    expect(
+      await responseBody(
+        await caches.open('weatherpane-app-shell-v2'),
+        'https://weatherpane.test/'
+      )
+    ).toBe('홈 SSR');
+    expect(caches.caches.has('weatherpane-assets-v1')).toBe(false);
   });
 });
