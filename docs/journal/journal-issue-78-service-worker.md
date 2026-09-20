@@ -124,10 +124,9 @@ Background Sync는 범위 밖으로 남겼다.
 
 ## 남은 우려 (전체 브랜치 리뷰에서 다룰 것)
 
-- **CI 공백:** `test:e2e:pwa`가 `.github/workflows/ci.yml`에 연결되어 있지 않다.
-  현재 CI는 `pnpm test:e2e`(메인 스모크)만 돈다. 따라서 SW 스모크는 지금 CI 어디에서도
-  실행되지 않는다. **결정 대기:** CI에 연결할지(프로덕션 빌드 시간이 추가됨) 아니면
-  후속 이슈로 뺄지. 이번 PR 범위에서는 CI 워크플로를 건드리지 않았다.
+- **CI 연결(#128):** `.github/workflows/ci.yml`의 독립 `PWA E2E Tests` 작업이
+  `pnpm test:e2e:pwa`를 실행한다. 테스트 실패 시에도 HTML 보고서를
+  `playwright-report-pwa` 아티팩트로 14일간 보관한다. 메인 스모크와 보고서를 분리한다.
 - **`settings.e2e.ts` flake(선재):** 병렬 부하에서 간헐 실패하는 기존 flake가
   관찰된다. 이번 SW 변경과 무관한 선재 문제로 보이며, 전체 브랜치 리뷰에서
   확인한다.
