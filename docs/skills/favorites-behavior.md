@@ -29,7 +29,7 @@
 - Removing a favorite does not affect the active location
 - Raw GPS location cannot be added to Favorites
 - "Snapshot" for card state means either the in-session `useCoreWeather()` result or, when that is absent, the persisted weather snapshot (`weatherpane.weather-snapshots.v1`) within the 24h `isWeatherSnapshotFresh` cutoff
-- The card writes a persisted weather snapshot on every successful fetch, so a favorite seen only on the Favorites page still has an offline fallback; AQI snapshots are out of scope for cards
+- Snapshot write, fallback read and the 24h cutoff live in `features/weather-queries/use-core-weather-with-snapshot-fallback.ts`, not in the card; the card renders the display state that hook returns. A successful fetch always writes, so a favorite seen only on the Favorites page still has an offline fallback; AQI snapshots are out of scope for cards
 - Card skeleton: shown when no snapshot exists and data is loading (FAV-03)
 - Card inline error: shown when no snapshot exists and initial fetch fails (FAV-04)
 - 다시 시도 button must be present on the inline error state (FAV-05)
@@ -66,7 +66,7 @@
    - confirm the card component renders inline error + retry button when `snapshot === null && isError`
    - confirm the card is navigable only when snapshot data is available
    - confirm a persisted snapshot within the 24h cutoff is checked before the skeleton and inline-error branches, keeps the card navigable, and shows no extra "오프라인" label
-   - confirm a persisted snapshot past the 24h cutoff falls through to the existing inline error
+   - confirm a persisted snapshot past the 24h cutoff falls through to the existing inline error, including when it expires while already on screen (the hook re-evaluates freshness on a timer)
 
    Done-check: all four states render distinctly; no state is silently swallowed.
 

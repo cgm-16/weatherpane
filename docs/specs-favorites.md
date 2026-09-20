@@ -99,7 +99,7 @@ API 계약은 (1) 즐겨찾기 컬렉션 CRUD 및 정렬 저장, (2) 즐겨찾�
 
 ### 카드 스냅샷(로컬 영속) 엔티티
 
-> **구현 상태: 아래 `FavoriteWeatherSnapshot` 구조 자체는 미구현.** 영속 날씨 스냅샷 폴백은 존재하지만, 즐겨찾기 전용 구조가 아니라 Home/Detail과 **공유되는** `PersistedWeatherSnapshot`(`frontend/entities/weather/model/persisted-weather-snapshot.ts`, 저장소 `weatherpane.weather-snapshots.v1`)을 그대로 재사용한다. 따라서 아래 목록 중 `sketchKey`, `lastError`, 레코드별 `schemaVersion`은 저장되지 않으며(버전은 저장 키의 봉투 `version`이 담당한다), `tempC`는 실제로 `temperatureC`다. 즐겨찾기 카드는 조회 성공 시 이 스냅샷을 쓰고(`frontend/pages/favorites/ui/favorite-card.tsx`), 세션 내 `useCoreWeather()` 결과가 없을 때 24h cutoff(`isWeatherSnapshotFresh`) 이내인 스냅샷으로 폴백한다. 화면 렌더링 자체는 여전히 `CoreWeather`(`frontend/entities/weather/model/core-weather.ts`) 또는 이 스냅샷을 카드 뷰 모델로 좁힌 값을 사용한다.
+> **구현 상태: 아래 `FavoriteWeatherSnapshot` 구조 자체는 미구현.** 영속 날씨 스냅샷 폴백은 존재하지만, 즐겨찾기 전용 구조가 아니라 Home/Detail과 **공유되는** `PersistedWeatherSnapshot`(`frontend/entities/weather/model/persisted-weather-snapshot.ts`, 저장소 `weatherpane.weather-snapshots.v1`)을 그대로 재사용한다. 따라서 아래 목록 중 `sketchKey`, `lastError`, 레코드별 `schemaVersion`은 저장되지 않으며(버전은 저장 키의 봉투 `version`이 담당한다), `tempC`는 실제로 `temperatureC`다. 즐겨찾기 카드는 조회 성공 시 이 스냅샷을 쓰고, 세션 내 `useCoreWeather()` 결과가 없을 때 24h cutoff(`isWeatherSnapshotFresh`) 이내인 스냅샷으로 폴백한다. 쓰기·읽기·cutoff 판단은 `frontend/features/weather-queries/use-core-weather-with-snapshot-fallback.ts`가 소유하고, 카드는 그 훅이 돌려주는 표시 상태만 렌더한다. 화면 렌더링 자체는 여전히 `CoreWeather`(`frontend/entities/weather/model/core-weather.ts`) 또는 이 스냅샷을 카드 뷰 모델로 좁힌 값을 사용한다.
 
 **FavoriteWeatherSnapshot (Persisted)**
 
@@ -365,7 +365,7 @@ flowchart TD
 **UI**
 
 - [x] 즐겨찾기 카드 컴포넌트: Stale/VeryStale 배지 표기(Fresh는 배지 없음, 카드에 별도 “Offline” 표기도 없다 — 오프라인 문구는 스냅샷 없음 인라인 오류 상태에서만 노출된다. 위 ‘Stale(오래됨) 판정 규칙(고정값)’ 절의 ‘오프라인’ 항목 참고) — 구현됨(`frontend/pages/favorites/ui/favorite-card.tsx`의 `CardSkeleton`/`CardError`/`CardSnapshot`, `StaleIndicator`)
-- [x] 스켈레톤 카드 상태 구현(스냅샷 없음+로딩) — 구현됨(`favorite-card.tsx`의 `CardSkeleton`; `FavoriteCard`가 `weatherQuery.data`도 없고 24h 이내 영속 스냅샷도 없으면서 `isLoading`일 때 렌더)
+- [x] 스켈레톤 카드 상태 구현(스냅샷 없음+로딩) — 구현됨(`favorite-card.tsx`의 `CardSkeleton`; 훅이 `loading` 상태를 돌려줄 때, 즉 세션 내 결과도 24h 이내 영속 스냅샷도 없으면서 `isLoading`일 때 렌더)
 - [x] 인라인 오류 상태 구현(스냅샷 없음+실패) + `다시 시도` + 네비게이션 차단 — 구현됨(`favorite-card.tsx`의 `CardError`; 24h 이내 영속 스냅샷이 없을 때만 이 상태로 내려간다. 네비게이션 가능한 `<button>`은 `CardSnapshot`에만 존재하므로 `CardError`/`CardSkeleton` 렌더 시 네비게이션이 없다)
 - [x] ‘편집/완료’ 토글 + 편집 모드 전용 컨트롤 표시 — 구현됨(`frontend/pages/favorites/ui/favorites-page.tsx`의 `handleEnterEdit`/`handleExitEdit` 토글 핸들러; 편집 모드 전용 컨트롤은 `favorite-card.tsx`의 `editProps` 분기)
 - [x] 닉네임 입력 20자 하드 캡 + blur/Enter/Done 커밋 — 구현됨(`favorite-card.tsx` 입력의 `maxLength={20}`과 `handleKeyDown`/`handleBlur`; ‘완료’ 시 자동 blur→커밋은 `favorites-page.tsx`의 `handleExitEdit`)
@@ -374,7 +374,7 @@ flowchart TD
 
 - [ ] IndexedDB 스키마 생성 및 마이그레이션(스냅샷 schemaVersion) — 미구현 — 차기 범위(실제 저장은 IndexedDB가 아니라 `localStorage` 기반 버전 관리 저장소이며, 마이그레이션은 버전 불일치 시 전체 리셋 방식이다. 상세는 ‘로컬 저장소 선택 및 구조’ 절 참고)
 - [x] favorites/order 저장 및 정규화(0..n-1) — 구현됨(`frontend/features/favorites/favorites-store.ts`의 `removeFavorite`/`reorderFavorites`)
-- [x] snapshot 저장/로드 — 구현됨(`frontend/pages/favorites/ui/favorite-card.tsx`가 조회 성공 시 공유 `PersistedWeatherSnapshot`을 저장하고, 세션 내 `useCoreWeather` 결과가 없을 때 24h cutoff 이내 스냅샷으로 폴백한다)
+- [x] snapshot 저장/로드 — 구현됨(`frontend/features/weather-queries/use-core-weather-with-snapshot-fallback.ts`가 조회 성공 시 공유 `PersistedWeatherSnapshot`을 저장하고, 세션 내 `useCoreWeather` 결과가 없을 때 24h cutoff 이내 스냅샷으로 폴백한다. cutoff는 1분마다 다시 평가되어 표시 중 만료된 스냅샷도 인라인 오류로 내려간다)
 - [ ] `lastError` 저장 — 미구현 — 차기 범위(스냅샷에 마지막 오류를 기록하지 않는다)
 
 **네트워크/동기화**

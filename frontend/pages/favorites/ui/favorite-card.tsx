@@ -1,19 +1,12 @@
-import { useState, useReducer, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { useCoreWeather } from '~/features/weather-queries/use-core-weather';
+import { useCoreWeatherWithSnapshotFallback } from '~/features/weather-queries/use-core-weather-with-snapshot-fallback';
 import { CORE_WEATHER_STALE_TIME } from '~/features/weather-queries/weather-query-options';
 import { useActiveLocation } from '~/features/app-bootstrap/active-location-context';
-import { isWeatherSnapshotFresh } from '~/features/app-bootstrap/snapshot-cutoff';
 import { useOnlineStatus } from '~/shared/hooks/use-online-status';
-import { createWeatherSnapshotRepository } from '~/shared/lib/storage/repositories/snapshot-repositories';
-import { coreWeatherToSnapshot } from '~/entities/weather/model/core-weather-to-snapshot';
 import { SketchBackground } from '~/entities/asset';
 import type { FavoriteLocation } from '~/entities/location/model/types';
-import type {
-  CoreWeather,
-  WeatherCondition,
-} from '~/entities/weather/model/core-weather';
-import type { PersistedWeatherSnapshot } from '~/entities/weather/model/persisted-weather-snapshot';
+import type { WeatherSummaryView } from '~/features/weather-queries/use-core-weather-with-snapshot-fallback';
 import {
   formatTemperature,
   type TemperatureUnit,
@@ -28,44 +21,6 @@ function getStaleness(fetchedAt: string): Staleness {
   if (ageMs > VERY_STALE_MS) return 'very-stale';
   if (ageMs > CORE_WEATHER_STALE_TIME) return 'stale';
   return 'fresh';
-}
-
-// 카드가 실제로 그리는 날씨 필드만 담는 뷰 모델.
-// 세션 내 쿼리 결과(CoreWeather)와 영속 스냅샷(PersistedWeatherSnapshot)을
-// 같은 표면으로 렌더링하기 위한 어댑터 대상이다.
-interface CardWeather {
-  fetchedAt: string;
-  temperatureC: number;
-  conditionText: string;
-  // 스케치 배경 선택에는 visualBucket/isDay가 필요하다.
-  // 영속 스냅샷은 이 값들을 저장하지 않으므로 없을 수 있으며, 그때는 배경을 생략한다.
-  condition: WeatherCondition | null;
-  todayMinC: number;
-  todayMaxC: number;
-}
-
-function toCardWeather(weather: CoreWeather): CardWeather {
-  return {
-    fetchedAt: weather.fetchedAt,
-    temperatureC: weather.current.temperatureC,
-    conditionText: weather.current.condition.text,
-    condition: weather.current.condition,
-    todayMinC: weather.today.minC,
-    todayMaxC: weather.today.maxC,
-  };
-}
-
-function snapshotToCardWeather(
-  snapshot: PersistedWeatherSnapshot
-): CardWeather {
-  return {
-    fetchedAt: snapshot.fetchedAt,
-    temperatureC: snapshot.temperatureC,
-    conditionText: snapshot.conditionText,
-    condition: null,
-    todayMinC: snapshot.todayMinC,
-    todayMaxC: snapshot.todayMaxC,
-  };
 }
 
 function CardSkeleton() {
@@ -130,19 +85,12 @@ function CardSnapshot({
   temperatureUnit,
 }: {
   favorite: FavoriteLocation;
-  weather: CardWeather;
+  weather: WeatherSummaryView;
   hasRefreshError: boolean;
   onCardClick: () => void;
   editProps?: CardEditProps;
   temperatureUnit: TemperatureUnit;
 }) {
-  // 시간이 지남에 따라 신선도 뱃지를 갱신하기 위해 1분마다 리렌더링한다
-  const [, tick] = useReducer((n: number) => n + 1, 0);
-  useEffect(() => {
-    const id = setInterval(tick, 60_000);
-    return () => clearInterval(id);
-  }, [tick]);
-
   const isEditMode = editProps !== undefined;
   const displayName = favorite.nickname ?? favorite.location.name;
   const staleness = getStaleness(weather.fetchedAt);
@@ -340,21 +288,11 @@ export function FavoriteCard({
 }: FavoriteCardProps) {
   const navigate = useNavigate();
   const { setActiveLocation } = useActiveLocation();
-  const weatherQuery = useCoreWeather(favorite.location);
+  const { state, refetch } = useCoreWeatherWithSnapshotFallback(
+    favorite.location
+  );
   const { isOnline } = useOnlineStatus();
   const isOffline = !isOnline;
-  const { locationId } = favorite.location;
-
-  // 조회 성공 시 스냅샷을 저장한다 — 다음 오프라인 진입에서 이 카드가 폴백할 대상이다.
-  // Home/Detail을 거치지 않고 즐겨찾기 화면에서만 본 위치도 폴백을 갖게 된다.
-  useEffect(() => {
-    if (weatherQuery.data) {
-      createWeatherSnapshotRepository().set(
-        locationId,
-        coreWeatherToSnapshot(weatherQuery.data)
-      );
-    }
-  }, [weatherQuery.data, locationId]);
 
   function handleCardClick() {
     setActiveLocation({
@@ -366,38 +304,18 @@ export function FavoriteCard({
     navigate(`/location/${favorite.location.locationId}`);
   }
 
-  // 세션 내 쿼리 결과가 없으면 24h 이내 영속 스냅샷으로 폴백한다.
-  // 스냅샷이 있으면 카드는 stale 표기와 함께 유지되고 네비게이션도 가능하다.
-  // 스냅샷이 없거나 cutoff를 넘겼을 때만 스켈레톤/인라인 오류로 내려간다(UX-03/04/05).
-  if (!weatherQuery.data) {
-    const snapshot = createWeatherSnapshotRepository().get(locationId);
+  if (state.kind === 'loading') return <CardSkeleton />;
 
-    if (snapshot && isWeatherSnapshotFresh(snapshot.fetchedAt)) {
-      return (
-        <CardSnapshot
-          key={editProps ? 'edit' : 'read'}
-          favorite={favorite}
-          weather={snapshotToCardWeather(snapshot)}
-          hasRefreshError={weatherQuery.isError}
-          onCardClick={handleCardClick}
-          editProps={editProps}
-          temperatureUnit={temperatureUnit}
-        />
-      );
-    }
-
-    if (weatherQuery.isLoading) return <CardSkeleton />;
-    return (
-      <CardError isOffline={isOffline} onRetry={() => weatherQuery.refetch()} />
-    );
+  if (state.kind === 'unavailable') {
+    return <CardError isOffline={isOffline} onRetry={refetch} />;
   }
 
   return (
     <CardSnapshot
       key={editProps ? 'edit' : 'read'}
       favorite={favorite}
-      weather={toCardWeather(weatherQuery.data)}
-      hasRefreshError={weatherQuery.isError}
+      weather={state.weather}
+      hasRefreshError={state.hasRefreshError}
       onCardClick={handleCardClick}
       editProps={editProps}
       temperatureUnit={temperatureUnit}
