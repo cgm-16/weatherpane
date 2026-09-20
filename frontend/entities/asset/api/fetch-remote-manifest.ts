@@ -8,12 +8,24 @@ const FETCH_TIMEOUT_MS = 5_000;
 export const fetchRemoteManifest: RemoteManifestFetcher = async () => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  let response: Response;
   try {
-    response = await fetch(REMOTE_MANIFEST_URL, {
+    const response = await fetch(REMOTE_MANIFEST_URL, {
       headers: { Accept: 'application/json' },
       signal: controller.signal,
     });
+    if (!response.ok) {
+      throw new Error(`remote manifest fetch failed: ${response.status}`);
+    }
+    const parsed: unknown = await response.json();
+    // 배열이 아닌 일반 객체 형태인지 최소 검증만 수행한다.
+    if (
+      parsed === null ||
+      typeof parsed !== 'object' ||
+      Array.isArray(parsed)
+    ) {
+      throw new Error('remote manifest fetch failed: invalid shape');
+    }
+    return parsed as Partial<Record<string, string>>;
   } catch (err) {
     if (controller.signal.aborted) {
       throw new Error(
@@ -25,13 +37,4 @@ export const fetchRemoteManifest: RemoteManifestFetcher = async () => {
   } finally {
     clearTimeout(timeoutId);
   }
-  if (!response.ok) {
-    throw new Error(`remote manifest fetch failed: ${response.status}`);
-  }
-  const parsed: unknown = await response.json();
-  // 배열이 아닌 일반 객체 형태인지 최소 검증만 수행한다.
-  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new Error('remote manifest fetch failed: invalid shape');
-  }
-  return parsed as Partial<Record<string, string>>;
 };

@@ -584,6 +584,8 @@ RFC 9457은 HTTP API 오류를 기계가 읽을 수 있는 표준 구조로 전�
 | Favorites    | PUT    | `/v1/favorites/reorder`                 | 정렬 저장               | **If-Match 필수**       | 미구현 — 상동                                                                                           |
 | Assets       | GET    | `/v1/assets/manifest`                   | 스케치 매니페스트(선택) | ETag/Cache-Control      | 구현됨(`app/routes/v1.assets.manifest.ts`) — 단, ETag/Cache-Control 조건부 요청은 없고 현재 `{}`만 반환 |
 
+원격 스케치 매니페스트의 백그라운드 요청은 헤더 수신과 JSON 본문 읽기를 합쳐 요청 시작부터 5초의 타임아웃을 적용한다. 본문 전송이 멈춰도 요청을 중단하며, 실패 시 현재 세션 매니페스트와 기존 pending 오버라이드를 유지한다. 성공한 오버라이드는 다음 앱 로드에만 적용한다.
+
 > **구현 상태: 이 표는 “권장(recommended)” 설계이며 대부분 미구현이다.** 실제로 구현된 것은 이 표가 그리는 자체 도메인 백엔드가 아니라, OpenWeather를 그대로 얇게 감싸는 per-request 프록시다: `/v1/weather/core`(One Call 프록시), `/v1/weather/aqi`(Air Pollution 프록시), `/v1/geocode`(지오코딩 프록시)(`app/routes.ts`). 이 프록시들은 클라이언트의 쿼리 레이어가 호출하며, 오류는 위 RFC 9457이 아니라 단순한 `{ code, message }` 형태로 반환한다(`app/routes/v1.weather.core.ts`). 즐겨찾기 CRUD 행(GET/POST/PATCH/DELETE/PUT)은 `docs/legacy/favorites-server-sync-design.md` 참고.
 
 PATCH는 리소스의 부분 수정을 위한 HTTP 메서드로 RFC 5789에 정의되어 있다. citeturn1search1
