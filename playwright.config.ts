@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const port = 4173;
+const providerPort = 4175;
 
 export default defineConfig({
   testDir: './tests',
@@ -23,15 +24,33 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      testIgnore: ['**/*.pwa.e2e.ts', '**/*.provider.e2e.ts'],
       use: { ...devices['Desktop Chrome'] },
     },
-  ],
-  webServer: {
-    command: `pnpm dev --host 127.0.0.1 --port ${port} --strictPort`,
-    url: `http://127.0.0.1:${port}`,
-    reuseExistingServer: !process.env.CI,
-    env: {
-      VITE_WEATHER_PROVIDER_MODE: 'mock',
+    {
+      name: 'weather-provider',
+      testMatch: ['**/*.provider.e2e.ts'],
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `http://127.0.0.1:${providerPort}`,
+      },
     },
-  },
+  ],
+  webServer: [
+    {
+      command: `pnpm dev --host 127.0.0.1 --port ${port} --strictPort`,
+      url: `http://127.0.0.1:${port}`,
+      reuseExistingServer: !process.env.CI,
+      env: {
+        VITE_WEATHER_PROVIDER_MODE: 'mock',
+      },
+    },
+    {
+      // HTTP provider의 응답은 테스트가 가로챈다. SSR과 클라이언트 모드를 일치시킨다.
+      command: `pnpm dev --host 127.0.0.1 --port ${providerPort} --strictPort`,
+      url: `http://127.0.0.1:${providerPort}`,
+      reuseExistingServer: false,
+      env: { VITE_WEATHER_PROVIDER_MODE: 'real', OPENWEATHER_API_KEY: '' },
+    },
+  ],
 });
