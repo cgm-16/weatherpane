@@ -233,6 +233,42 @@ describe('서비스 워커 캐시 버전 전환', () => {
     expect(serviceWorker.claim).toHaveBeenCalledOnce();
   });
 
+  test('상한을 넘는 이전 에셋 캐시는 최신 항목만 옮긴다', async () => {
+    // 쿼터를 흉내낸다: 현재 에셋 캐시가 상한에 도달한 뒤의 put은 실패한다. 이관이 원본
+    // 전체를 복제한 뒤에 트림하면 이 지점에서 활성화가 통째로 거절된다.
+    const caches: MemoryCacheStorage = new MemoryCacheStorage({
+      put: (cacheName) =>
+        cacheName === 'weatherpane-assets-v2' &&
+        (caches.caches.get('weatherpane-assets-v2')?.entries.size ?? 0) >= 200,
+    });
+    caches.add('weatherpane-app-shell-v1', {
+      'https://weatherpane.test/': '셸',
+    });
+    caches.add(
+      'weatherpane-assets-v1',
+      Object.fromEntries(
+        Array.from({ length: 250 }, (_, index) => [
+          `https://weatherpane.test/assets/app-${index}.js`,
+          `에셋 ${index}`,
+        ])
+      )
+    );
+    const serviceWorker = loadServiceWorker(caches);
+
+    await serviceWorker.activate();
+
+    const assets = await caches.open('weatherpane-assets-v2');
+    expect(assets.entries.size).toBe(200);
+    expect(
+      await responseBody(assets, 'https://weatherpane.test/assets/app-249.js')
+    ).toBe('에셋 249');
+    expect(
+      await responseBody(assets, 'https://weatherpane.test/assets/app-49.js')
+    ).toBeUndefined();
+    expect(caches.caches.has('weatherpane-assets-v1')).toBe(false);
+    expect(serviceWorker.claim).toHaveBeenCalledOnce();
+  });
+
   test('캐시 복사가 실패하면 정리와 clients.claim 전에 활성화를 거절한다', async () => {
     const caches = new MemoryCacheStorage({
       put: (cacheName, request) =>
