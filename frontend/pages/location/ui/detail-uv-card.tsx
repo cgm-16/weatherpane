@@ -25,7 +25,7 @@ export function DetailUvCard({ uvIndex }: DetailUvCardProps) {
 
   return (
     <>
-      <div className="flex flex-col gap-1 rounded-[--radius-md] bg-card p-4">
+      <div className="flex flex-col gap-1 rounded-(--radius-md) bg-card p-4">
         <span className="material-symbols-outlined text-[20px] text-muted-foreground">
           wb_sunny
         </span>
@@ -61,7 +61,7 @@ export function DetailUvCard({ uvIndex }: DetailUvCardProps) {
             className="absolute inset-0 bg-scrim/40"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 bottom-0 left-0 rounded-t-[--radius-lg] bg-card p-6">
+          <div className="absolute right-0 bottom-0 left-0 rounded-t-(--radius-lg) bg-card p-6">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="font-headline text-xl font-bold text-foreground">
                 자외선 지수 상세

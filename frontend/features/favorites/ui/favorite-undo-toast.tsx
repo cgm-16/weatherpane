@@ -12,7 +12,7 @@ export function FavoriteUndoToast({
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-[--radius-md] bg-card px-5 py-3 shadow-[--shadow-float]"
+      className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-(--radius-md) bg-card px-5 py-3 shadow-[--shadow-float]"
     >
       <span className="font-body text-sm text-foreground">
         {locationName}이(가) 즐겨찾기에서 제거되었습니다
@@ -20,7 +20,7 @@ export function FavoriteUndoToast({
       <button
         type="button"
         onClick={onUndo}
-        className="rounded-[--radius-sm] bg-primary px-3 py-1 font-body text-sm font-semibold text-primary-foreground"
+        className="rounded-(--radius-sm) bg-primary px-3 py-1 font-body text-sm font-semibold text-primary-foreground"
       >
         실행 취소
       </button>

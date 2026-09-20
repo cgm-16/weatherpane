@@ -15,7 +15,7 @@ export function LocationConnectionError({
       className="flex min-h-screen flex-col items-center justify-center bg-background px-6"
       role="main"
     >
-      <div className="w-full max-w-md rounded-[--radius-lg] bg-card p-8">
+      <div className="w-full max-w-md rounded-(--radius-lg) bg-card p-8">
         {!isOnline && (
           <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2">
             <span className="h-2 w-2 rounded-full bg-destructive" />
@@ -42,7 +42,7 @@ export function LocationConnectionError({
           <button
             type="button"
             onClick={onRetry}
-            className="font-headline flex w-full items-center justify-center gap-2 rounded-[--radius-sm] bg-primary px-6 py-4 font-bold text-primary-foreground"
+            className="font-headline flex w-full items-center justify-center gap-2 rounded-(--radius-sm) bg-primary px-6 py-4 font-bold text-primary-foreground"
           >
             <span className="material-symbols-outlined text-[20px]">
               refresh
@@ -51,7 +51,7 @@ export function LocationConnectionError({
           </button>
           <Link
             to="/search"
-            className="flex w-full items-center justify-center gap-2 rounded-[--radius-sm] bg-muted px-6 py-4 font-body text-foreground"
+            className="flex w-full items-center justify-center gap-2 rounded-(--radius-sm) bg-muted px-6 py-4 font-body text-foreground"
           >
             <span className="material-symbols-outlined text-[20px]">
               search
@@ -60,7 +60,7 @@ export function LocationConnectionError({
           </Link>
           <Link
             to="/"
-            className="flex w-full items-center justify-center gap-2 rounded-[--radius-sm] bg-muted px-6 py-4 font-body text-foreground"
+            className="flex w-full items-center justify-center gap-2 rounded-(--radius-sm) bg-muted px-6 py-4 font-body text-foreground"
           >
             <span className="material-symbols-outlined text-[20px]">
               my_location

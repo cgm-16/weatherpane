@@ -204,3 +204,62 @@ test.describe('디자인 토큰 — Dal-Bit Night (어두운 모드)', () => {
     expect(await getCssVar(page, '--color-scrim')).toBe('#131313');
   });
 });
+
+for (const theme of ['light', 'dark']) {
+  test(`${theme} 모드에서 카드·버튼·상단 패널 반경이 적용된다`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize(
+      theme === 'light'
+        ? { width: 1280, height: 720 }
+        : { width: 390, height: 844 }
+    );
+    await page.addInitScript((theme) => {
+      localStorage.setItem(
+        'weatherpane.theme.v1',
+        JSON.stringify({ version: 1, data: theme })
+      );
+    }, theme);
+    await page.goto('/location/unsupported::KR-Busan');
+    await expect(
+      page.getByRole('link', { name: '검색으로 돌아가기' })
+    ).toHaveCSS('border-radius', '8px');
+    await expect(page.getByRole('main').locator(':scope > div')).toHaveCSS(
+      'border-radius',
+      '32px'
+    );
+    await page.screenshot({
+      path: testInfo.outputPath('radius-error.png'),
+      fullPage: true,
+    });
+    await testInfo.attach('오류 화면 반경', {
+      path: testInfo.outputPath('radius-error.png'),
+      contentType: 'image/png',
+    });
+
+    await page.goto('/location/loc_5f5def784f91');
+    await expect(
+      page
+        .getByRole('list', { name: '시간별 날씨 예보' })
+        .getByRole('listitem')
+        .first()
+    ).toHaveCSS('border-radius', '24px');
+    await page.getByRole('button', { name: '대기질 상세 보기' }).click();
+    const panel = page
+      .getByRole('dialog', { name: '대기질 상세', exact: true })
+      .locator(':scope > div')
+      .last();
+    await expect(panel).toHaveCSS('border-top-left-radius', '32px');
+    await expect(panel).toHaveCSS('border-top-right-radius', '32px');
+    await expect(panel).toHaveCSS('border-bottom-left-radius', '0px');
+    await expect(panel).toHaveCSS('border-bottom-right-radius', '0px');
+    await page.screenshot({
+      path: testInfo.outputPath('radius-panel.png'),
+      fullPage: true,
+    });
+    await testInfo.attach('상단 패널 반경', {
+      path: testInfo.outputPath('radius-panel.png'),
+      contentType: 'image/png',
+    });
+  });
+}
