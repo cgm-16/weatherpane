@@ -65,6 +65,18 @@ tester.run('korean-jsx-text', koreanJsxText, {
     }))
     .concat([
       {
+        code: `<span className={isIcon ? 'material-symbols-outlined' : ''}>error</span>`,
+        errors: [{ messageId: 'englishCopy' }],
+      },
+      {
+        code: `<span className={[isIcon && 'material-symbols-outlined', 'text-xl'].join(' ')}>error</span>`,
+        errors: [{ messageId: 'englishCopy' }],
+      },
+      {
+        code: `<span className={['material-symbols-outlined', 'text-xl'].join('')}>error</span>`,
+        errors: [{ messageId: 'englishCopy' }],
+      },
+      {
         code: '<span>refresh</span>',
         errors: [{ messageId: 'englishCopy' }],
       },

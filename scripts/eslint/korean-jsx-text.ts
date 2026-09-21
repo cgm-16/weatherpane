@@ -34,6 +34,11 @@ const iconTokens = new Set([
   'location_off',
 ]);
 
+type Expression = Extract<
+  Rule.Node,
+  { type: 'ExpressionStatement' }
+>['expression'];
+
 // ESLint의 기본 ESTree 타입에는 JSX 확장이 없어 방문 노드의 형태만 명시합니다.
 type JSXTextNode = Rule.Node & {
   value: string;
@@ -42,11 +47,37 @@ type JSXTextNode = Rule.Node & {
       attributes: Array<{
         type: string;
         name?: { name: string };
-        value?: Rule.Node;
+        value?:
+          | Expression
+          | { type: 'JSXExpressionContainer'; expression: Expression };
       }>;
     };
   };
 };
+
+function hasIconClass(expression: Expression): boolean {
+  if (expression.type === 'Literal') {
+    return (
+      typeof expression.value === 'string' &&
+      expression.value.split(/\s+/).includes('material-symbols-outlined')
+    );
+  }
+  // 기존 배열 조합에서는 직접 넣은 문자열만 모든 분기에 포함됩니다.
+  return (
+    expression.type === 'CallExpression' &&
+    expression.callee.type === 'MemberExpression' &&
+    !expression.callee.computed &&
+    expression.callee.property.type === 'Identifier' &&
+    expression.callee.property.name === 'join' &&
+    expression.arguments.length === 1 &&
+    expression.arguments[0].type === 'Literal' &&
+    expression.arguments[0].value === ' ' &&
+    expression.callee.object.type === 'ArrayExpression' &&
+    expression.callee.object.elements.some(
+      (element) => element?.type === 'Literal' && hasIconClass(element)
+    )
+  );
+}
 
 const koreanJsxText: Rule.RuleModule = {
   meta: {
@@ -66,16 +97,11 @@ const koreanJsxText: Rule.RuleModule = {
             attribute.type === 'JSXAttribute' &&
             attribute.name?.name === 'className' &&
             attribute.value &&
-            context.sourceCode
-              .getTokens(attribute.value)
-              .some(
-                (token) =>
-                  (token.type === 'String' || token.type === 'JSXText') &&
-                  token.value
-                    .slice(1, -1)
-                    .split(/\s+/)
-                    .includes('material-symbols-outlined')
-              )
+            hasIconClass(
+              attribute.value.type === 'JSXExpressionContainer'
+                ? attribute.value.expression
+                : attribute.value
+            )
         );
         if (isIcon && iconTokens.has(text)) return;
         const tokens = text.match(/[A-Za-z][A-Za-z0-9_]*/g) ?? [];
