@@ -29,26 +29,26 @@ export function HomeConfigError({
           </span>
         </div>
 
-        <h2 className="font-headline text-on-surface mb-3 text-3xl font-extrabold tracking-tight">
+        <h2 className="font-headline mb-3 text-3xl font-extrabold tracking-tight text-on-surface">
           설정 업데이트가 필요합니다
         </h2>
-        <p className="text-on-surface-variant mb-8 px-4 font-body leading-relaxed">
+        <p className="mb-8 px-4 font-body leading-relaxed text-on-surface-variant">
           API 키 또는 위치 설정이 누락된 것 같습니다. 설정을 확인해 주세요.
         </p>
 
         {/* 오류 상세 */}
         <div className="mb-8 w-full space-y-3">
           <div className="flex items-center gap-4 rounded-lg bg-surface-container-highest/50 p-4 backdrop-blur-md">
-            <div className="bg-surface-container-lowest flex h-10 w-10 items-center justify-center rounded-full">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-container-lowest">
               <span className="material-symbols-outlined text-on-surface-variant">
                 key
               </span>
             </div>
             <div className="flex-1 text-left">
-              <p className="font-headline text-on-surface text-sm font-bold">
+              <p className="font-headline text-sm font-bold text-on-surface">
                 {error.field}
               </p>
-              <p className="text-on-surface-variant font-body text-xs">
+              <p className="font-body text-xs text-on-surface-variant">
                 {error.message}
               </p>
             </div>
@@ -60,8 +60,9 @@ export function HomeConfigError({
             <button
               type="button"
               onClick={onOpenSettings}
-              className="font-headline text-on-primary hover:bg-primary-container h-14 w-full rounded-sm bg-primary font-bold shadow-lg transition-all active:scale-95"
+              className="font-headline h-14 w-full rounded-sm bg-primary font-bold text-on-primary shadow-lg transition-all hover:bg-primary-container active:scale-95"
             >
+              {/* eslint-disable-next-line weatherpane/korean-jsx-text -- #152에서 기존 영문 문구를 정리합니다. */}
               Open Settings
             </button>
           )}
@@ -69,8 +70,9 @@ export function HomeConfigError({
             <button
               type="button"
               onClick={onRetry}
-              className="bg-secondary-container font-headline text-on-secondary-fixed h-14 w-full rounded-sm font-bold transition-all hover:bg-surface-container-highest active:scale-95"
+              className="font-headline h-14 w-full rounded-sm bg-secondary-container font-bold text-on-secondary-fixed transition-all hover:bg-surface-container-highest active:scale-95"
             >
+              {/* eslint-disable-next-line weatherpane/korean-jsx-text -- #152에서 기존 영문 문구를 정리합니다. */}
               Try Again
             </button>
           )}
