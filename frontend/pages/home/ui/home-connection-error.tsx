@@ -71,6 +71,7 @@ export function HomeConnectionError({
               <span className="material-symbols-outlined text-xl">
                 bookmarks
               </span>
+              {/* eslint-disable-next-line weatherpane/korean-jsx-text -- #152에서 기존 영문 문구를 정리합니다. */}
               Go to Saved Places
             </button>
           )}

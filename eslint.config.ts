@@ -1,5 +1,6 @@
 // For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
 import storybook from 'eslint-plugin-storybook';
+import koreanJsxText from './scripts/eslint/korean-jsx-text';
 
 import js from '@eslint/js';
 import globals from 'globals';
@@ -22,6 +23,12 @@ export default defineConfig([
   tseslint.configs.recommended,
   eslintReact.configs['recommended-typescript'],
   storybook.configs['flat/recommended'],
+  {
+    files: ['frontend/**/*.{jsx,tsx}', 'app/**/*.{jsx,tsx}'],
+    ignores: ['**/*.stories.{jsx,tsx}', '**/*.test.{jsx,tsx}'],
+    plugins: { weatherpane: { rules: { 'korean-jsx-text': koreanJsxText } } },
+    rules: { 'weatherpane/korean-jsx-text': 'error' },
+  },
   {
     // tests/fixtures.ts가 하이드레이션 가드를 위해 page fixture를 재정의하므로,
     // 모든 *.e2e.ts는 '@playwright/test'가 아닌 그 파일에서 test/expect를 가져와야
