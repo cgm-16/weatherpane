@@ -269,6 +269,50 @@ describe('서비스 워커 캐시 버전 전환', () => {
     expect(serviceWorker.claim).toHaveBeenCalledOnce();
   });
 
+  test('여러 이전 버전이 상한을 넘으면 현재 항목과 더 새 버전의 최신 항목을 보존한다', async () => {
+    const caches = new MemoryCacheStorage();
+    const sharedUrl = 'https://weatherpane.test/assets/shared.js';
+    const currentUrl = 'https://weatherpane.test/assets/current.js';
+    caches.add('weatherpane-assets-v2', { [currentUrl]: '현재' });
+    for (const version of [3, 4]) {
+      caches.add(`weatherpane-assets-v${version}`, {
+        ...Object.fromEntries(
+          Array.from({ length: 150 }, (_, index) => [
+            `https://weatherpane.test/assets/v${version}-${index}.js`,
+            `v${version} 에셋 ${index}`,
+          ])
+        ),
+        [sharedUrl]: `v${version} 공유`,
+        [currentUrl]: `v${version} 현재`,
+      });
+    }
+    const worker = loadServiceWorker(caches);
+
+    await worker.activate();
+
+    const assets = await caches.open('weatherpane-assets-v2');
+    expect(await assets.keys()).toHaveLength(200);
+    expect(await responseBody(assets, currentUrl)).toBe('현재');
+    expect(await responseBody(assets, sharedUrl)).toBe('v4 공유');
+    expect(
+      await responseBody(assets, 'https://weatherpane.test/assets/v4-0.js')
+    ).toBe('v4 에셋 0');
+    expect(
+      await responseBody(assets, 'https://weatherpane.test/assets/v4-149.js')
+    ).toBe('v4 에셋 149');
+    expect(
+      await responseBody(assets, 'https://weatherpane.test/assets/v3-101.js')
+    ).toBeUndefined();
+    expect(
+      await responseBody(assets, 'https://weatherpane.test/assets/v3-102.js')
+    ).toBe('v3 에셋 102');
+    expect(
+      await responseBody(assets, 'https://weatherpane.test/assets/v3-149.js')
+    ).toBe('v3 에셋 149');
+    expect(caches.caches.has('weatherpane-assets-v3')).toBe(false);
+    expect(caches.caches.has('weatherpane-assets-v4')).toBe(false);
+  });
+
   test('캐시 복사가 실패하면 정리와 clients.claim 전에 활성화를 거절한다', async () => {
     const caches = new MemoryCacheStorage({
       put: (cacheName, request) =>
