@@ -67,17 +67,23 @@ function previousCacheNames(names, currentCache) {
     .map(({ name }) => name);
 }
 
-// maxEntries가 있으면 원본에서 가장 최근 항목만 읽는다. 상한 없는 이전 버전 캐시를
-// 통째로 복제한 뒤 트림하면 그 사이 저장 쿼터를 넘겨 이관이 실패할 수 있는데, 어차피
-// 트림으로 지울 오래된 항목이므로 처음부터 옮기지 않는다.
+// maxEntries가 있으면 현재 항목을 보존하고 남은 자리만 원본의 최신 항목으로 채운다.
+// 높은 버전부터 이관하므로 낮은 버전이 더 새 에셋을 밀어내거나 이관 중 상한을 넘지 않는다.
 async function migrateCacheEntries(sourceName, targetName, maxEntries) {
   const source = await caches.open(sourceName);
   const target = await caches.open(targetName);
   const keys = await source.keys();
-  const requests = maxEntries ? keys.slice(-maxEntries) : keys;
+  let requests = [];
+  for (const request of keys) {
+    if (!(await target.match(request))) requests.push(request);
+  }
+  if (maxEntries) {
+    const remaining = maxEntries - (await target.keys()).length;
+    if (remaining <= 0) return;
+    requests = requests.slice(-remaining);
+  }
 
   for (const request of requests) {
-    if (await target.match(request)) continue;
     const response = await source.match(request);
     if (response) await target.put(request, response.clone());
   }
