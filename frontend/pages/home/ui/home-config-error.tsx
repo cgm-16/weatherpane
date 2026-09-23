@@ -62,8 +62,7 @@ export function HomeConfigError({
               onClick={onOpenSettings}
               className="font-headline h-14 w-full rounded-sm bg-primary font-bold text-on-primary shadow-lg transition-all hover:bg-primary-container active:scale-95"
             >
-              {/* eslint-disable-next-line weatherpane/korean-jsx-text -- #152에서 기존 영문 문구를 정리합니다. */}
-              Open Settings
+              설정 열기
             </button>
           )}
           {onRetry && (
@@ -72,8 +71,7 @@ export function HomeConfigError({
               onClick={onRetry}
               className="font-headline h-14 w-full rounded-sm bg-secondary-container font-bold text-on-secondary-fixed transition-all hover:bg-surface-container-highest active:scale-95"
             >
-              {/* eslint-disable-next-line weatherpane/korean-jsx-text -- #152에서 기존 영문 문구를 정리합니다. */}
-              Try Again
+              다시 시도
             </button>
           )}
         </div>
