@@ -60,7 +60,7 @@ export function DailyStrip({
         <li
           key={entry.date}
           role="listitem"
-          className="flex min-w-[60px] flex-shrink-0 flex-col items-center gap-1 rounded-[--radius-md] bg-card px-3 py-3"
+          className="flex min-w-[60px] flex-shrink-0 flex-col items-center gap-1 rounded-(--radius-md) bg-card px-3 py-3"
         >
           <span className="font-body text-xs text-muted-foreground">
             {formatDay(entry, timeZone)}

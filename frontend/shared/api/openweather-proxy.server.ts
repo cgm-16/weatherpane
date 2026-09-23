@@ -56,6 +56,13 @@ export async function proxyOpenWeatherRequest(
     const data: unknown = await response.json();
     return Response.json(data);
   } catch {
+    if (controller.signal.aborted) {
+      console.warn('[openweather-proxy] upstream timeout', {
+        host: requestUrl.host,
+        path: requestUrl.pathname,
+        timeoutMs: UPSTREAM_TIMEOUT_MS,
+      });
+    }
     // 타임아웃(abort)·네트워크 오류·JSON 파싱 실패를 모두 동일 경로로 매핑한다.
     return Response.json(
       { code: 'INVALID_PROVIDER_RESPONSE', message: errorMessage },

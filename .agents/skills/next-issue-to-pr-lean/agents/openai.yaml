@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Next Issue to PR — Lean'
+  short_description: 'Take one Weatherpane issue through a green PR with the lean workflow'
+  default_prompt: 'Use $next-issue-to-pr-lean to ship one Weatherpane issue through a green pull request with the lean workflow.'

@@ -143,14 +143,14 @@ export function HomeDashboard({
       {hasRefreshError && (
         <div
           role="alert"
-          className="mx-4 rounded-[--radius-sm] bg-destructive/10 px-4 py-2 text-sm text-destructive"
+          className="mx-4 rounded-(--radius-sm) bg-destructive/10 px-4 py-2 text-sm text-destructive"
         >
           새로고침에 실패했습니다. 이전 날씨 정보를 표시합니다.
         </div>
       )}
 
       {/* 메인 요약 카드 — 탭 시 상세 페이지로 이동 (raw-GPS는 비대화형) */}
-      <div className="relative mx-4 mt-3 overflow-hidden rounded-[--radius-md] bg-card">
+      <div className="relative mx-4 mt-3 overflow-hidden rounded-(--radius-md) bg-card">
         <SketchBackground
           location={location}
           condition={weather.current.condition}
@@ -195,7 +195,7 @@ export function HomeDashboard({
       {/* 통계 그리드 */}
       <div className="grid grid-cols-2 gap-3 px-4 pt-3 pb-6">
         {/* AQI 카드 */}
-        <div className="flex flex-col gap-1 rounded-[--radius-md] bg-card p-4">
+        <div className="flex flex-col gap-1 rounded-(--radius-md) bg-card p-4">
           <span className="material-symbols-outlined text-[20px] text-muted-foreground">
             air
           </span>
@@ -218,7 +218,7 @@ export function HomeDashboard({
         </div>
 
         {/* 습도 카드 */}
-        <div className="flex flex-col gap-1 rounded-[--radius-md] bg-card p-4">
+        <div className="flex flex-col gap-1 rounded-(--radius-md) bg-card p-4">
           <span className="material-symbols-outlined text-[20px] text-muted-foreground">
             humidity_percentage
           </span>

@@ -99,7 +99,7 @@ Required smoke coverage when these flows are touched:
 - The service-worker offline smoke lives in `tests/*.pwa.e2e.ts`.
 - It runs only via `pnpm test:e2e:pwa`, which uses `playwright.pwa.config.ts` to build and serve the production bundle — the service worker is emitted only in the production build, so the dev server has none.
 - It is excluded from the main `pnpm test:e2e` (dev-server) run via `testIgnore: ['**/*.pwa.e2e.ts']`.
-- It is not yet wired into CI; a follow-up issue tracks adding it (the production build adds run time).
+- CI runs it in the independent `PWA E2E Tests` job. Its `playwright-report/` is uploaded with `if: always()` as `playwright-report-pwa`, separate from the dev-server suite report.
 - It is the production PWA responsibility: verify that a service-worker-controlled online reload populates the app shell and that an offline reload then boots the cached shell.
 
 ## Stop and ask Ori

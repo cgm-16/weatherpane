@@ -129,6 +129,11 @@ background (#131313)                    ← 전체 페이지 기반
 
 ### 반경 스케일
 
+Tailwind v4에서 반경 CSS 변수를 직접 참조할 때는 `rounded-(--radius-md)`와
+`rounded-t-(--radius-lg)` 문법을 사용한다. `rounded-[--radius-md]`는 `var()` 없는
+무효 선언으로 컴파일되므로 사용하지 않는다. `tests/radius-utilities.test.ts`가
+실제 컴포넌트의 반경 유틸리티를 컴파일해 변수 참조를 검증한다.
+
 | 토큰            | 값              | 적용 대상             |
 | --------------- | --------------- | --------------------- |
 | `--radius-sm`   | `0.5rem (8px)`  | 버튼                  |

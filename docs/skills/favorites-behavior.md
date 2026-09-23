@@ -28,6 +28,8 @@
 - Cross-tab synchronization is out of scope; do not add `storage` event listeners or `BroadcastChannel` for Favorites
 - Removing a favorite does not affect the active location
 - Raw GPS location cannot be added to Favorites
+- "Snapshot" for card state means either the in-session `useCoreWeather()` result or, when that is absent, the persisted weather snapshot (`weatherpane.weather-snapshots.v1`) within the 24h `isWeatherSnapshotFresh` cutoff
+- Snapshot write, fallback read and the 24h cutoff live in `features/weather-queries/use-core-weather-with-snapshot-fallback.ts`, not in the card; the card renders the display state that hook returns. A successful fetch always writes, so a favorite seen only on the Favorites page still has an offline fallback; AQI snapshots are out of scope for cards
 - Card skeleton: shown when no snapshot exists and data is loading (FAV-03)
 - Card inline error: shown when no snapshot exists and initial fetch fails (FAV-04)
 - 다시 시도 button must be present on the inline error state (FAV-05)
@@ -58,13 +60,15 @@
 
    Done-check: none of the edit-mode controls are accessible outside edit mode.
 
-4. Intent: verify card state rendering matches the three-state contract.
+4. Intent: verify card state rendering matches the four-state contract.
    Action:
    - confirm the card component renders skeleton when `snapshot === null && isLoading`
    - confirm the card component renders inline error + retry button when `snapshot === null && isError`
    - confirm the card is navigable only when snapshot data is available
+   - confirm a persisted snapshot within the 24h cutoff is checked before the skeleton and inline-error branches, keeps the card navigable, and shows no extra "오프라인" label
+   - confirm a persisted snapshot past the 24h cutoff falls through to the existing inline error, including when it expires while already on screen (the hook re-evaluates freshness on a timer)
 
-   Done-check: all three states render distinctly; no state is silently swallowed.
+   Done-check: all four states render distinctly; no state is silently swallowed.
 
 5. Intent: confirm undo scope.
    Action:
@@ -86,7 +90,7 @@
 
 - `pnpm exec vitest run` for the favorites store and card state logic
 - Confirm the 6-cap, undo scope, and edit-mode gating each have a dedicated test
-- Confirm card state tests cover all three variants (skeleton, inline error, navigable)
+- Confirm card state tests cover all four variants (skeleton, inline error, navigable live data, and the persisted snapshot fallback within the 24h cutoff — including its expiry while already on screen)
 - `pnpm exec vitest run tests/use-favorites.test.ts tests/use-favorites-edit.test.ts` for same-tab shared favorites and latest undo behavior
 - `rg -n "addEventListener\\(['\"]storage|BroadcastChannel" frontend/features/favorites` must return exit 1 with no matches
 

@@ -48,7 +48,7 @@ test.describe('서비스 워커 오프라인 앱 셸', () => {
     );
 
     await page.evaluate(async (path) => {
-      const cache = await caches.open('weatherpane-assets-v1');
+      const cache = await caches.open('weatherpane-assets-v2');
       await cache.put(
         path,
         new Response('오래된 스케치', {
@@ -71,7 +71,7 @@ test.describe('서비스 워커 오프라인 앱 셸', () => {
       .poll(() =>
         page.evaluate(async (path) => {
           const cached = await (
-            await caches.open('weatherpane-assets-v1')
+            await caches.open('weatherpane-assets-v2')
           ).match(path);
           return cached
             ? {
@@ -99,3 +99,62 @@ test.describe('서비스 워커 오프라인 앱 셸', () => {
     }
   });
 });
+
+for (const [path, label] of [
+  ['/favorites', '즐겨찾기'],
+  ['/settings', '설정'],
+  ['/search', '검색'],
+]) {
+  test(`클라이언트 이동 후 ${path} 오프라인 새로고침은 전용 안내를 보여준다`, async ({
+    page,
+    context,
+  }, testInfo) => {
+    await page.goto('/');
+    await page.waitForFunction(() => !!navigator.serviceWorker?.controller);
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await page
+      .getByRole('link', { name: label, exact: true })
+      .filter({ visible: true })
+      .click();
+    await expect(page).toHaveURL(new RegExp(`${path}$`));
+    await page.waitForLoadState('networkidle');
+    expect(
+      await page.evaluate(
+        async (url) =>
+          Boolean(
+            await (await caches.open('weatherpane-app-shell-v2')).match(url)
+          ),
+        page.url()
+      )
+    ).toBe(false);
+
+    await context.setOffline(true);
+    try {
+      await page.reload();
+      await expect(
+        page.getByRole('heading', { name: '인터넷 연결을 확인해 주세요' })
+      ).toBeVisible();
+      await expect(page).toHaveURL(new RegExp(`${path}$`));
+      // 독립 HTML에는 다른 라우트의 SSR 상태나 하이드레이션 스크립트가 없다.
+      await expect(page.locator('script')).toHaveCount(0);
+      await testInfo.attach('오프라인-데스크톱', {
+        body: await page.screenshot(),
+        contentType: 'image/png',
+      });
+      await page.setViewportSize({ width: 390, height: 844 });
+      await testInfo.attach('오프라인-모바일', {
+        body: await page.screenshot(),
+        contentType: 'image/png',
+      });
+    } finally {
+      await context.setOffline(false);
+    }
+    await page.getByRole('link', { name: '다시 시도', exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`${path}$`));
+    await expect(
+      page.getByRole('heading', { name: '인터넷 연결을 확인해 주세요' })
+    ).toHaveCount(0);
+    await expect(page.getByRole('navigation').first()).toBeVisible();
+  });
+}
