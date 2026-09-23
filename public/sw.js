@@ -73,17 +73,18 @@ async function migrateCacheEntries(sourceName, targetName, maxEntries) {
   const source = await caches.open(sourceName);
   const target = await caches.open(targetName);
   const keys = await source.keys();
-  let requests = [];
-  for (const request of keys) {
+  const remaining = maxEntries
+    ? maxEntries - (await target.keys()).length
+    : keys.length;
+  const requests = [];
+  // 최신 항목부터 확인하고 빈 자리를 채우면 멈춰 불필요한 저장소 조회를 피한다.
+  for (const request of keys.reverse()) {
+    if (requests.length >= remaining) break;
     if (!(await target.match(request))) requests.push(request);
   }
-  if (maxEntries) {
-    const remaining = maxEntries - (await target.keys()).length;
-    if (remaining <= 0) return;
-    requests = requests.slice(-remaining);
-  }
 
-  for (const request of requests) {
+  // 원래 삽입 순서를 유지해야 런타임 트림이 오래된 항목부터 제거한다.
+  for (const request of requests.reverse()) {
     const response = await source.match(request);
     if (response) await target.put(request, response.clone());
   }
