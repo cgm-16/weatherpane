@@ -7,7 +7,7 @@ export function LocationNotFound() {
       className="flex min-h-screen flex-col items-center justify-center bg-background px-6"
       role="main"
     >
-      <div className="w-full max-w-md rounded-[--radius-lg] bg-card p-8">
+      <div className="w-full max-w-md rounded-(--radius-lg) bg-card p-8">
         <p className="font-headline mb-6 text-xs font-bold tracking-[0.3em] text-muted-foreground uppercase">
           404
         </p>
@@ -28,14 +28,14 @@ export function LocationNotFound() {
         <div className="w-full space-y-3">
           <Link
             to="/"
-            className="font-headline flex w-full items-center justify-center gap-2 rounded-[--radius-sm] bg-primary px-6 py-4 font-bold text-primary-foreground"
+            className="font-headline flex w-full items-center justify-center gap-2 rounded-(--radius-sm) bg-primary px-6 py-4 font-bold text-primary-foreground"
           >
             <span className="material-symbols-outlined text-[20px]">home</span>
             홈으로
           </Link>
           <Link
             to="/search"
-            className="flex w-full items-center justify-center gap-2 rounded-[--radius-sm] bg-muted px-6 py-4 font-body text-foreground"
+            className="flex w-full items-center justify-center gap-2 rounded-(--radius-sm) bg-muted px-6 py-4 font-body text-foreground"
           >
             <span className="material-symbols-outlined text-[20px]">
               search

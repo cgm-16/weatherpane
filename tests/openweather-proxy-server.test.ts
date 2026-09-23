@@ -57,6 +57,7 @@ describe('proxyOpenWeatherRequest', () => {
   });
 
   test('업스트림이 200과 함께 JSON이 아닌 본문을 반환하면 INVALID_PROVIDER_RESPONSE를 반환한다', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.stubEnv('OPENWEATHER_API_KEY', 'test-key');
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response('<html>not json</html>', { status: 200 })
@@ -70,6 +71,7 @@ describe('proxyOpenWeatherRequest', () => {
     expect(response.status).toBe(502);
     const body = await response.json();
     expect(body.code).toBe('INVALID_PROVIDER_RESPONSE');
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 
   test('업스트림이 오류 상태를 반환하면 상태 코드를 그대로 전달하고 INVALID_PROVIDER_RESPONSE를 반환한다', async () => {
@@ -90,6 +92,7 @@ describe('proxyOpenWeatherRequest', () => {
   });
 
   test('네트워크 오류 시 502와 INVALID_PROVIDER_RESPONSE를 반환한다', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.stubEnv('OPENWEATHER_API_KEY', 'test-key');
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(
       new TypeError('fetch failed')
@@ -104,6 +107,7 @@ describe('proxyOpenWeatherRequest', () => {
     const body = await response.json();
     expect(body.code).toBe('INVALID_PROVIDER_RESPONSE');
     expect(JSON.stringify(body)).not.toContain('test-key');
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 
   test('호출자가 전달한 URL 객체는 변형되지 않는다 (키가 호출자 쪽에 남지 않는다)', async () => {
@@ -123,32 +127,89 @@ describe('proxyOpenWeatherRequest', () => {
     expect(callerUrl.searchParams.has('appid')).toBe(false);
   });
 
-  test('업스트림 응답이 타임아웃되면 502 INVALID_PROVIDER_RESPONSE를 반환한다', async () => {
-    vi.useFakeTimers();
-    vi.stubEnv('OPENWEATHER_API_KEY', 'test-key');
-    // signal.abort 시 reject하는 fetch 목 — 실제 대기 없이 타임아웃을 시뮬레이션한다.
-    vi.spyOn(globalThis, 'fetch').mockImplementationOnce(
-      (_url, init) =>
-        new Promise<Response>((_resolve, reject) => {
-          (init as RequestInit)?.signal?.addEventListener('abort', () => {
-            reject(
-              new DOMException('The operation was aborted.', 'AbortError')
-            );
+  test.each(['fetch', 'body'])(
+    '%s 타임아웃은 안전한 경고를 한 번 남기고 502를 반환한다',
+    async (phase) => {
+      vi.useFakeTimers();
+      vi.stubEnv('OPENWEATHER_API_KEY', 'test-key');
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      // fetch 또는 본문 읽기를 abort로 중단해 실제 대기 없이 검증한다.
+      vi.spyOn(globalThis, 'fetch').mockImplementationOnce((_url, init) => {
+        if (phase === 'body') {
+          return Promise.resolve(
+            new Response(
+              new ReadableStream({
+                start(controller) {
+                  init?.signal?.addEventListener('abort', () => {
+                    controller.error(
+                      new DOMException('test-key', 'AbortError')
+                    );
+                  });
+                },
+              })
+            )
+          );
+        }
+        return new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => {
+            reject(new DOMException('test-key', 'AbortError'));
           });
-        })
-    );
+        });
+      });
 
-    const promise = proxyOpenWeatherRequest(
-      new URL('https://api.openweathermap.org/data/3.0/onecall'),
-      '날씨 API 네트워크 오류가 발생했습니다'
-    );
-    await vi.advanceTimersByTimeAsync(5_000);
-    const response = await promise;
+      const promise = proxyOpenWeatherRequest(
+        new URL(
+          'https://api.openweathermap.org/data/3.0/onecall?appid=test-key&q=private-place'
+        ),
+        '날씨 API 네트워크 오류가 발생했습니다'
+      );
+      await vi.advanceTimersByTimeAsync(5_000);
+      const response = await promise;
 
-    expect(response.status).toBe(502);
-    const body = await response.json();
-    expect(body.code).toBe('INVALID_PROVIDER_RESPONSE');
-  });
+      expect(response.status).toBe(502);
+      const body = await response.json();
+      expect(body.code).toBe('INVALID_PROVIDER_RESPONSE');
+      expect(warnSpy).toHaveBeenCalledExactlyOnceWith(
+        '[openweather-proxy] upstream timeout',
+        {
+          host: 'api.openweathermap.org',
+          path: '/data/3.0/onecall',
+          timeoutMs: 5_000,
+        }
+      );
+      expect(JSON.stringify(warnSpy.mock.calls)).not.toContain('test-key');
+      expect(JSON.stringify(warnSpy.mock.calls)).not.toContain('private-place');
+    }
+  );
+
+  test.each([200, 401, 429, 500])(
+    '업스트림 %i 응답에는 타임아웃 경고가 없다',
+    async (status) => {
+      vi.useFakeTimers();
+      vi.stubEnv('OPENWEATHER_API_KEY', 'test-key');
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        Response.json({}, { status })
+      );
+
+      const response = await proxyOpenWeatherRequest(
+        new URL('https://api.openweathermap.org/data/3.0/onecall'),
+        '날씨 API 네트워크 오류가 발생했습니다'
+      );
+      await vi.advanceTimersByTimeAsync(5_000);
+
+      expect(response.status).toBe(status);
+      expect(warnSpy.mock.calls).toEqual(
+        status === 429
+          ? [
+              [
+                '[openweather-proxy] upstream returned 429 — quota/rate limit reached',
+              ],
+            ]
+          : []
+      );
+    }
+  );
 
   test('업스트림이 429를 반환하면 경고 로그를 남기고 상태를 그대로 전달한다', async () => {
     vi.stubEnv('OPENWEATHER_API_KEY', 'test-key');

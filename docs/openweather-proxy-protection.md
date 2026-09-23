@@ -2,7 +2,7 @@
 
 이 문서는 `/v1/weather/core`, `/v1/weather/aqi`, `/v1/geocode` 프록시에 적용된
 쿼터/남용 보호의 단일 진실 소스다. 코드로 들어간 보호(타임아웃·CDN 캐시·좌표
-반올림·429 로깅)와, 코드 밖 Vercel 컨트롤 플레인에 존재하는 요청 제한(WAF `rate_limit`
+반올림·429/타임아웃 로깅)와, 코드 밖 Vercel 컨트롤 플레인에 존재하는 요청 제한(WAF `rate_limit`
 규칙)을 함께 기술한다. WAF 규칙은 이 저장소가 아니라 Vercel에 배치되므로, 이 문서가
 그 규칙의 형태·롤아웃 절차·롤백을 기록하는 유일한 지점이다.
 
@@ -112,7 +112,7 @@ Vercel CDN만 수행한다(`s-maxage`). 결과적으로 인접 사용자·재요
 
 `/v1/geocode`는 좌표가 아니라 이름 `q`를 받으므로 반올림 대상이 아니다.
 
-### 업스트림 쿼터 로깅
+### 업스트림 쿼터·타임아웃 로깅
 
 `proxyOpenWeatherRequest`는 OpenWeather가 429를 반환하면 `console.warn`으로
 
@@ -122,6 +122,13 @@ Vercel CDN만 수행한다(`s-maxage`). 결과적으로 인접 사용자·재요
 
 를 남긴다. 이는 우리 쪽 쿼터/요청 제한 소진 신호이며 Vercel Logs에서 관측한다
 (아래 관측 절 참고).
+
+서버의 5초 타임아웃이 fetch 또는 응답 본문 읽기를 중단하면, 502 응답 직전에
+`console.warn('[openweather-proxy] upstream timeout', { host, path, timeoutMs })`를
+요청당 한 번 남긴다. `host`와 `path`는 업스트림 URL의 호스트와 경로이고,
+`timeoutMs`는 `5000`이다. 쿼리 문자열(API 키·좌표·검색어 포함), 전체 URL,
+예외 객체는 기록하지 않는다. 정상 응답·업스트림 4xx/5xx·일반 네트워크 오류·JSON
+파싱 실패에는 타임아웃 경고를 남기지 않는다. 클라이언트 홉에는 로그를 추가하지 않는다.
 
 ## WAF 규칙 런북 (요청 제한)
 
@@ -219,7 +226,9 @@ vercel firewall publish --yes
   조회한다(**Observability Plus 필요**).
 - **Vercel Logs:** 업스트림 429가 발생하면 `[openweather-proxy] upstream returned
 429 …` 경고가 로그에 남는다. 이는 우리 쪽 OpenWeather 쿼터/요청 제한 소진
-  신호다.
+  신호다. 같은 `[openweather-proxy]` 접두사로 타임아웃 경고도 함께 필터링하고,
+  `upstream timeout` 메시지와 `host`, `path`, `timeoutMs` 필드로 업스트림
+  지연/장애를 429 쿼터 소진과 구분한다.
 
 ## 롤백
 

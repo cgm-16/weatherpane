@@ -71,7 +71,7 @@ export function HomeConnectionError({
               <span className="material-symbols-outlined text-xl">
                 bookmarks
               </span>
-              Go to Saved Places
+              즐겨찾기로 이동
             </button>
           )}
         </div>

@@ -28,7 +28,7 @@ vi.mock('../frontend/features/settings', () => ({
 }));
 
 import '@testing-library/jest-dom/vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useNavigate } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -45,6 +45,7 @@ import {
 } from '../frontend/entities/asset';
 import type { FavoriteLocation } from '../frontend/entities/location/model/types';
 import type { CoreWeather } from '../frontend/entities/weather/model/core-weather';
+import { createWeatherSnapshotRepository } from '../frontend/shared/lib/storage/repositories/snapshot-repositories';
 
 describe('FavoritesEmptyState', () => {
   function renderEmptyState() {
@@ -159,6 +160,13 @@ function makeWeatherQuery(overrides: Record<string, unknown> = {}): any {
 }
 
 const mockSetActiveLocation = vi.fn();
+
+// 카드는 조회 성공 시 날씨 스냅샷을 영속화한다. 남은 스냅샷이 다음 테스트의 폴백으로
+// 새면 스켈레톤/인라인 오류 테스트가 조용히 무의미해지므로, 파일 전체에서 매 테스트 전에
+// 이 저장소만 비운다(favorites/settings/theme 키는 건드리지 않는다).
+beforeEach(() => {
+  createWeatherSnapshotRepository().clear();
+});
 
 describe('FavoriteCard', () => {
   beforeEach(() => {
@@ -401,6 +409,179 @@ describe('FavoriteCard', () => {
     );
     renderCard(seoulFav);
     expect(screen.queryByRole('button', { name: /날씨 보기/ })).toBeNull();
+  });
+
+  describe('영속 날씨 스냅샷 fallback', () => {
+    const HOUR_MS = 60 * 60_000;
+
+    function seedSnapshot(ageMs: number) {
+      const fetchedAt = new Date(Date.now() - ageMs).toISOString();
+      createWeatherSnapshotRepository().set('loc-seoul', {
+        locationId: 'loc-seoul',
+        fetchedAt,
+        observedAt: fetchedAt,
+        temperatureC: 11,
+        conditionCode: '500',
+        conditionText: '비',
+        todayMinC: 7,
+        todayMaxC: 15,
+        source: { provider: 'kma' },
+      });
+    }
+
+    function goOffline() {
+      Object.defineProperty(navigator, 'onLine', {
+        value: false,
+        configurable: true,
+      });
+    }
+
+    // TanStack Query v5의 기본 networkMode는 'online'이라, 오프라인에서는 쿼리가
+    // 실패하지 않고 '일시 중지(paused)'된다 — isError는 false로 남고 data도 없다.
+    // 실제 오프라인 첫 로드가 만드는 상태는 isError: true가 아니라 이 모양이다.
+    function offlinePausedQuery() {
+      return makeWeatherQuery({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+      });
+    }
+
+    test('오프라인 + 24h 이내 스냅샷 → stale 카드를 표시한다', () => {
+      goOffline();
+      seedSnapshot(2 * HOUR_MS);
+      setupActiveLocation();
+      vi.mocked(useCoreWeather).mockReturnValue(offlinePausedQuery());
+      renderCard(seoulFav);
+
+      expect(screen.getByText('서울')).toBeInTheDocument();
+      expect(screen.getByText('11°')).toBeInTheDocument();
+      expect(screen.getByText('15°')).toBeInTheDocument();
+      expect(screen.getByText('7°')).toBeInTheDocument();
+      expect(screen.getByText('비')).toBeInTheDocument();
+      // 24h 이내 스냅샷은 60분 초과이므로 기존 '매우 오래된 정보' 등급이 적용된다.
+      expect(screen.getByText('매우 오래된 정보')).toBeInTheDocument();
+      // 스냅샷이 있으면 별도의 '오프라인' 라벨을 노출하지 않는다.
+      expect(screen.queryByText(/오프라인/i)).not.toBeInTheDocument();
+    });
+
+    test('스냅샷 카드는 상세로 네비게이션할 수 있다', async () => {
+      goOffline();
+      seedSnapshot(2 * HOUR_MS);
+      setupActiveLocation();
+      vi.mocked(useCoreWeather).mockReturnValue(offlinePausedQuery());
+      renderCard(seoulFav);
+
+      await userEvent.click(
+        screen.getByRole('button', { name: '서울 날씨 보기' })
+      );
+      expect(mockNavigateFn).toHaveBeenCalledWith('/location/loc-seoul');
+    });
+
+    test('24h를 초과한 스냅샷 → 기존 CardError를 유지한다', () => {
+      goOffline();
+      seedSnapshot(25 * HOUR_MS);
+      setupActiveLocation();
+      vi.mocked(useCoreWeather).mockReturnValue(offlinePausedQuery());
+      renderCard(seoulFav);
+
+      expect(screen.getByText(/오프라인/i)).toBeInTheDocument();
+      expect(screen.queryByText('11°')).not.toBeInTheDocument();
+    });
+
+    test('스냅샷이 없으면 기존 CardError를 유지한다', () => {
+      goOffline();
+      setupActiveLocation();
+      vi.mocked(useCoreWeather).mockReturnValue(offlinePausedQuery());
+      renderCard(seoulFav);
+
+      expect(screen.getByText(/오프라인/i)).toBeInTheDocument();
+    });
+
+    test('로딩 중이고 스냅샷이 있으면 스켈레톤 대신 스냅샷을 표시한다', () => {
+      seedSnapshot(2 * HOUR_MS);
+      setupActiveLocation();
+      vi.mocked(useCoreWeather).mockReturnValue(
+        makeWeatherQuery({ isLoading: true })
+      );
+      renderCard(seoulFav);
+
+      expect(screen.queryByTestId('card-skeleton')).not.toBeInTheDocument();
+      expect(screen.getByText('11°')).toBeInTheDocument();
+    });
+
+    test('온라인 갱신 실패 + 24h 이내 스냅샷 → 스냅샷 카드를 유지한다', () => {
+      seedSnapshot(2 * HOUR_MS);
+      setupActiveLocation();
+      vi.mocked(useCoreWeather).mockReturnValue(
+        makeWeatherQuery({ isError: true })
+      );
+      renderCard(seoulFav);
+
+      expect(screen.getByText('11°')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /다시 시도/i })
+      ).not.toBeInTheDocument();
+    });
+
+    test('표시 중이던 스냅샷이 24h를 넘기면 CardError로 전환된다', () => {
+      vi.useFakeTimers();
+      try {
+        goOffline();
+        // 마운트 시점에는 cutoff 이내(23h59m)지만 곧 넘긴다.
+        seedSnapshot(24 * HOUR_MS - 60_000);
+        setupActiveLocation();
+        vi.mocked(useCoreWeather).mockReturnValue(offlinePausedQuery());
+        renderCard(seoulFav);
+
+        expect(screen.getByText('11°')).toBeInTheDocument();
+
+        // 쿼리 상태가 변하지 않아도 cutoff는 다시 평가되어야 한다.
+        act(() => {
+          vi.advanceTimersByTime(2 * 60_000);
+        });
+
+        expect(screen.queryByText('11°')).not.toBeInTheDocument();
+        expect(screen.getByText(/오프라인/i)).toBeInTheDocument();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    test('쿼리 성공 시 다음 오프라인을 대비해 스냅샷을 저장한다', () => {
+      setupActiveLocation();
+      vi.mocked(useCoreWeather).mockReturnValue(
+        makeWeatherQuery({ data: freshWeatherData })
+      );
+      renderCard(seoulFav);
+
+      const stored = createWeatherSnapshotRepository().get('loc-seoul');
+      expect(stored).not.toBeNull();
+      expect(stored?.temperatureC).toBe(24);
+      expect(stored?.todayMaxC).toBe(28);
+      expect(stored?.conditionText).toBe('맑음');
+    });
+
+    test('조회 성공으로 저장한 스냅샷이 다음 마운트의 폴백으로 실제로 읽힌다', () => {
+      setupActiveLocation();
+      vi.mocked(useCoreWeather).mockReturnValue(
+        makeWeatherQuery({ data: freshWeatherData })
+      );
+      const first = renderCard(seoulFav);
+      expect(screen.getByText('24°')).toBeInTheDocument();
+      first.unmount();
+
+      // 손으로 만든 리터럴이 아니라 방금 저장된 값으로 폴백해야 한다.
+      // coreWeatherToSnapshot의 출력이 isPersistedWeatherSnapshot 검증을 통과하지
+      // 못하면 저장소가 키를 리셋하므로, 이 왕복만이 그 회귀를 잡는다.
+      vi.mocked(useCoreWeather).mockReturnValue(offlinePausedQuery());
+      renderCard(seoulFav);
+
+      expect(screen.getByText('24°')).toBeInTheDocument();
+      expect(screen.getByText('28°')).toBeInTheDocument();
+      expect(screen.getByText('18°')).toBeInTheDocument();
+      expect(screen.getByText('맑음')).toBeInTheDocument();
+    });
   });
 
   describe('staleness thresholds', () => {

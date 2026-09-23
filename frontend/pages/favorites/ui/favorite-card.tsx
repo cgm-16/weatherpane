@@ -1,12 +1,12 @@
-import { useState, useReducer, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { useCoreWeather } from '~/features/weather-queries/use-core-weather';
+import { useCoreWeatherWithSnapshotFallback } from '~/features/weather-queries/use-core-weather-with-snapshot-fallback';
 import { CORE_WEATHER_STALE_TIME } from '~/features/weather-queries/weather-query-options';
 import { useActiveLocation } from '~/features/app-bootstrap/active-location-context';
 import { useOnlineStatus } from '~/shared/hooks/use-online-status';
 import { SketchBackground } from '~/entities/asset';
 import type { FavoriteLocation } from '~/entities/location/model/types';
-import type { CoreWeather } from '~/entities/weather/model/core-weather';
+import type { WeatherSummaryView } from '~/features/weather-queries/use-core-weather-with-snapshot-fallback';
 import {
   formatTemperature,
   type TemperatureUnit,
@@ -27,7 +27,7 @@ function CardSkeleton() {
   return (
     <div
       data-testid="card-skeleton"
-      className="h-44 animate-pulse rounded-[--radius-md] bg-card p-6"
+      className="h-44 animate-pulse rounded-(--radius-md) bg-card p-6"
     >
       <div className="mb-4 h-6 w-1/2 rounded-full bg-muted" />
       <div className="mb-2 h-12 w-1/3 rounded-full bg-muted" />
@@ -47,7 +47,7 @@ function CardError({
   onRetry: () => void;
 }) {
   return (
-    <div className="flex h-44 flex-col items-center justify-center gap-3 rounded-[--radius-md] bg-card p-6 text-center">
+    <div className="flex h-44 flex-col items-center justify-center gap-3 rounded-(--radius-md) bg-card p-6 text-center">
       <span className="material-symbols-outlined text-3xl text-muted-foreground opacity-50">
         {isOffline ? 'wifi_off' : 'cloud_off'}
       </span>
@@ -85,19 +85,12 @@ function CardSnapshot({
   temperatureUnit,
 }: {
   favorite: FavoriteLocation;
-  weather: CoreWeather;
+  weather: WeatherSummaryView;
   hasRefreshError: boolean;
   onCardClick: () => void;
   editProps?: CardEditProps;
   temperatureUnit: TemperatureUnit;
 }) {
-  // 시간이 지남에 따라 신선도 뱃지를 갱신하기 위해 1분마다 리렌더링한다
-  const [, tick] = useReducer((n: number) => n + 1, 0);
-  useEffect(() => {
-    const id = setInterval(tick, 60_000);
-    return () => clearInterval(id);
-  }, [tick]);
-
   const isEditMode = editProps !== undefined;
   const displayName = favorite.nickname ?? favorite.location.name;
   const staleness = getStaleness(weather.fetchedAt);
@@ -210,24 +203,20 @@ function CardSnapshot({
   const bottomSection = (
     <div className="flex flex-col gap-2">
       <span className="font-headline text-5xl leading-none font-extrabold text-card-foreground">
-        {formatTemperature(weather.current.temperatureC, temperatureUnit)}
+        {formatTemperature(weather.temperatureC, temperatureUnit)}
       </span>
       <div className="flex items-center gap-2">
         <span className="font-body text-xs font-medium text-muted-foreground">
-          {weather.current.condition.text}
+          {weather.conditionText}
         </span>
         <div className="ml-auto flex gap-1.5">
           <span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 font-body text-[10px] font-bold text-foreground">
             <span className="text-muted-foreground">H</span>
-            <span>
-              {formatTemperature(weather.today.maxC, temperatureUnit)}
-            </span>
+            <span>{formatTemperature(weather.todayMaxC, temperatureUnit)}</span>
           </span>
           <span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 font-body text-[10px] font-bold text-foreground">
             <span className="text-muted-foreground">L</span>
-            <span>
-              {formatTemperature(weather.today.minC, temperatureUnit)}
-            </span>
+            <span>{formatTemperature(weather.todayMinC, temperatureUnit)}</span>
           </span>
         </div>
       </div>
@@ -235,12 +224,14 @@ function CardSnapshot({
   );
 
   const cardClasses =
-    'group relative flex h-44 w-full flex-col justify-between overflow-hidden rounded-[--radius-md] bg-card p-6 text-left';
+    'group relative flex h-44 w-full flex-col justify-between overflow-hidden rounded-(--radius-md) bg-card p-6 text-left';
 
-  const sketch = (
+  // 영속 스냅샷 폴백에는 condition이 없어 스케치 키를 결정할 수 없다.
+  // 배경은 장식이므로 이때는 생략한다(레이아웃은 그대로 유지된다).
+  const sketch = weather.condition && (
     <SketchBackground
       location={favorite.location}
-      condition={weather.current.condition}
+      condition={weather.condition}
       sizeHint="compact"
       className="absolute inset-0 h-full w-full object-cover opacity-30"
     />
@@ -297,7 +288,9 @@ export function FavoriteCard({
 }: FavoriteCardProps) {
   const navigate = useNavigate();
   const { setActiveLocation } = useActiveLocation();
-  const weatherQuery = useCoreWeather(favorite.location);
+  const { state, refetch } = useCoreWeatherWithSnapshotFallback(
+    favorite.location
+  );
   const { isOnline } = useOnlineStatus();
   const isOffline = !isOnline;
 
@@ -311,19 +304,18 @@ export function FavoriteCard({
     navigate(`/location/${favorite.location.locationId}`);
   }
 
-  if (!weatherQuery.data) {
-    if (weatherQuery.isLoading) return <CardSkeleton />;
-    return (
-      <CardError isOffline={isOffline} onRetry={() => weatherQuery.refetch()} />
-    );
+  if (state.kind === 'loading') return <CardSkeleton />;
+
+  if (state.kind === 'unavailable') {
+    return <CardError isOffline={isOffline} onRetry={refetch} />;
   }
 
   return (
     <CardSnapshot
       key={editProps ? 'edit' : 'read'}
       favorite={favorite}
-      weather={weatherQuery.data}
-      hasRefreshError={weatherQuery.isError}
+      weather={state.weather}
+      hasRefreshError={state.hasRefreshError}
       onCardClick={handleCardClick}
       editProps={editProps}
       temperatureUnit={temperatureUnit}

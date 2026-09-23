@@ -99,7 +99,7 @@ API 계약은 (1) 즐겨찾기 컬렉션 CRUD 및 정렬 저장, (2) 즐겨찾�
 
 ### 카드 스냅샷(로컬 영속) 엔티티
 
-> **구현 상태: 미구현 — 차기 범위.** 아래 `FavoriteWeatherSnapshot`(영속 스냅샷 구조: `schemaVersion`, `lastError`, `conditionCode`, 저장 필드로서의 `sketchKey` 등)은 실제로 만들어진 적이 없다. 즐겨찾기 카드는 이런 형태의 로컬 영속 날씨 스냅샷 저장소를 전혀 갖지 않는다. 실제로는 `useCoreWeather()`(TanStack Query, `frontend/features/weather-queries/use-core-weather.ts`)가 반환하는 인메모리 쿼리 결과인 `CoreWeather` 타입(`frontend/entities/weather/model/core-weather.ts`)을 그대로 렌더링에 사용하며, 필드 구성도 다르다(예: `tempC` → `current.temperatureC`, `todayMinC`/`todayMaxC` → `today.minC`/`today.maxC`). 세션을 넘어 영속되는 즐겨찾기 전용 날씨 캐시는 없다(자세한 내용은 아래 ‘캐시·오프라인·스테일 규칙과 카드 렌더링 상태’ 절의 ‘용어 참고’ 참고).
+> **구현 상태: 아래 `FavoriteWeatherSnapshot` 구조 자체는 미구현.** 영속 날씨 스냅샷 폴백은 존재하지만, 즐겨찾기 전용 구조가 아니라 Home/Detail과 **공유되는** `PersistedWeatherSnapshot`(`frontend/entities/weather/model/persisted-weather-snapshot.ts`, 저장소 `weatherpane.weather-snapshots.v1`)을 그대로 재사용한다. 따라서 아래 목록 중 `sketchKey`, `lastError`, 레코드별 `schemaVersion`은 저장되지 않으며(버전은 저장 키의 봉투 `version`이 담당한다), `tempC`는 실제로 `temperatureC`다. 즐겨찾기 카드는 조회 성공 시 이 스냅샷을 쓰고, 세션 내 `useCoreWeather()` 결과가 없을 때 24h cutoff(`isWeatherSnapshotFresh`) 이내인 스냅샷으로 폴백한다. 쓰기·읽기·cutoff 판단은 `frontend/features/weather-queries/use-core-weather-with-snapshot-fallback.ts`가 소유하고, 카드는 그 훅이 돌려주는 표시 상태만 렌더한다. 화면 렌더링 자체는 여전히 `CoreWeather`(`frontend/entities/weather/model/core-weather.ts`) 또는 이 스냅샷을 카드 뷰 모델로 좁힌 값을 사용한다.
 
 **FavoriteWeatherSnapshot (Persisted)**
 
@@ -145,7 +145,7 @@ API 계약은 (1) 즐겨찾기 컬렉션 CRUD 및 정렬 저장, (2) 즐겨찾�
 
 ### 예시 JSON: 로컬 영속 스냅샷
 
-> **구현 상태: 미구현 — 차기 범위.** 위 ‘카드 스냅샷(로컬 영속) 엔티티’ 절과 동일하게, 아래 JSON이 나타내는 구조는 실제로 저장된 적이 없다(참고용 원 설계 예시). 실제 즐겨찾기 카드가 사용하는 데이터 형태는 `CoreWeather`(`frontend/entities/weather/model/core-weather.ts`)다.
+> **구현 상태: 이 JSON 구조 그대로는 미구현.** 위 ‘카드 스냅샷(로컬 영속) 엔티티’ 절과 동일하게, 아래 JSON은 참고용 원 설계 예시다. 실제로 저장되는 형태는 공유 스냅샷 `PersistedWeatherSnapshot`(`frontend/entities/weather/model/persisted-weather-snapshot.ts`)이며, 세션 내 조회 결과는 `CoreWeather`(`frontend/entities/weather/model/core-weather.ts`)다.
 
 ```json
 {
@@ -242,7 +242,7 @@ API 계약은 (1) 즐겨찾기 컬렉션 CRUD 및 정렬 저장, (2) 즐겨찾�
 | 있음   | 온라인   | 갱신 실패          | 스냅샷 유지 + stale/매우오래됨 배지                              | (선택) 카드 내부 작은 재시도 링크 가능하나 MVP는 페이지/주기 갱신으로도 충분 | 가능        |
 | 있음   | 오프라인 | 갱신 불가          | 스냅샷 유지 + stale/매우오래됨 배지(별도 “오프라인” 라벨 없음)   | 없음                                                                         | 가능        |
 
-> **용어 참고:** 이 절(캐시·오프라인·스테일 규칙과 카드 렌더링 상태 전체)에서 말하는 “스냅샷”은 즐겨찾기 전용으로 영속화된 별도 캐시가 아니라, `useCoreWeather()`(TanStack Query, `frontend/features/weather-queries/use-core-weather.ts`)의 인메모리 쿼리 캐시 결과(`weatherQuery.data`)를 가리킨다. TanStack Query 캐시는 세션 간 영속되지 않으므로(`AGENTS.md`), 앱을 완전히 재시작한 직후 오프라인 상태라면 “스냅샷 있음” 행이 아니라 “스냅샷 없음 + 오프라인” 행(인라인 오류)이 적용된다. Home/Detail 화면의 24h/12h 스냅샷 폴백(`isWeatherSnapshotFresh`/`isAqiSnapshotFresh`)과는 별개의, 세션 내에서만 유효한 메커니즘이다.
+> **용어 참고:** 이 절(캐시·오프라인·스테일 규칙과 카드 렌더링 상태 전체)에서 말하는 “스냅샷 있음”은 두 가지 출처를 모두 포함한다: (a) `useCoreWeather()`(TanStack Query, `frontend/features/weather-queries/use-core-weather.ts`)의 인메모리 쿼리 결과(`weatherQuery.data`), (b) 그것이 없을 때 폴백하는 영속 날씨 스냅샷(`weatherpane.weather-snapshots.v1`, 24h cutoff `isWeatherSnapshotFresh`). TanStack Query 캐시는 세션 간 영속되지 않지만(`AGENTS.md`), 앱을 완전히 재시작한 직후 오프라인이어도 해당 위치의 영속 스냅샷이 24h 이내면 “스냅샷 있음” 행이 적용된다. “스냅샷 없음 + 오프라인” 행(인라인 오류)은 영속 스냅샷이 아예 없거나 24h cutoff를 넘긴 경우에만 적용된다. 이 폴백은 Home/Detail의 24h 날씨 스냅샷 폴백과 같은 저장소·같은 cutoff를 공유한다(AQI 스냅샷은 즐겨찾기 카드 범위 밖이다). 단, 위 표의 “스냅샷 유지”는 폴백 경로에서 완전한 시각적 동일성을 뜻하지는 않는다: 영속 스냅샷은 `visualBucket`/`isDay`를 저장하지 않아 스케치 키를 결정할 수 없으므로, 폴백 카드는 장식용 스케치 배경 없이 렌더된다(기온·조건 문구·최고/최저·배지·네비게이션은 동일). 쿼리가 성공하면 배경이 다시 나타난다.
 
 ### 초기 로드/재시도 타임라인(mermaid)
 
@@ -365,8 +365,8 @@ flowchart TD
 **UI**
 
 - [x] 즐겨찾기 카드 컴포넌트: Stale/VeryStale 배지 표기(Fresh는 배지 없음, 카드에 별도 “Offline” 표기도 없다 — 오프라인 문구는 스냅샷 없음 인라인 오류 상태에서만 노출된다. 위 ‘Stale(오래됨) 판정 규칙(고정값)’ 절의 ‘오프라인’ 항목 참고) — 구현됨(`frontend/pages/favorites/ui/favorite-card.tsx`의 `CardSkeleton`/`CardError`/`CardSnapshot`, `StaleIndicator`)
-- [x] 스켈레톤 카드 상태 구현(스냅샷 없음+로딩) — 구현됨(`favorite-card.tsx`의 `CardSkeleton`; `FavoriteCard`가 `weatherQuery.data`가 없고 `isLoading`이면 렌더)
-- [x] 인라인 오류 상태 구현(스냅샷 없음+실패) + `다시 시도` + 네비게이션 차단 — 구현됨(`favorite-card.tsx`의 `CardError`; 네비게이션 가능한 `<button>`은 `CardSnapshot`에만 존재하므로 `CardError`/`CardSkeleton` 렌더 시 네비게이션이 없다)
+- [x] 스켈레톤 카드 상태 구현(스냅샷 없음+로딩) — 구현됨(`favorite-card.tsx`의 `CardSkeleton`; 훅이 `loading` 상태를 돌려줄 때, 즉 세션 내 결과도 24h 이내 영속 스냅샷도 없으면서 `isLoading`일 때 렌더)
+- [x] 인라인 오류 상태 구현(스냅샷 없음+실패) + `다시 시도` + 네비게이션 차단 — 구현됨(`favorite-card.tsx`의 `CardError`; 24h 이내 영속 스냅샷이 없을 때만 이 상태로 내려간다. 네비게이션 가능한 `<button>`은 `CardSnapshot`에만 존재하므로 `CardError`/`CardSkeleton` 렌더 시 네비게이션이 없다)
 - [x] ‘편집/완료’ 토글 + 편집 모드 전용 컨트롤 표시 — 구현됨(`frontend/pages/favorites/ui/favorites-page.tsx`의 `handleEnterEdit`/`handleExitEdit` 토글 핸들러; 편집 모드 전용 컨트롤은 `favorite-card.tsx`의 `editProps` 분기)
 - [x] 닉네임 입력 20자 하드 캡 + blur/Enter/Done 커밋 — 구현됨(`favorite-card.tsx` 입력의 `maxLength={20}`과 `handleKeyDown`/`handleBlur`; ‘완료’ 시 자동 blur→커밋은 `favorites-page.tsx`의 `handleExitEdit`)
 
@@ -374,7 +374,8 @@ flowchart TD
 
 - [ ] IndexedDB 스키마 생성 및 마이그레이션(스냅샷 schemaVersion) — 미구현 — 차기 범위(실제 저장은 IndexedDB가 아니라 `localStorage` 기반 버전 관리 저장소이며, 마이그레이션은 버전 불일치 시 전체 리셋 방식이다. 상세는 ‘로컬 저장소 선택 및 구조’ 절 참고)
 - [x] favorites/order 저장 및 정규화(0..n-1) — 구현됨(`frontend/features/favorites/favorites-store.ts`의 `removeFavorite`/`reorderFavorites`)
-- [ ] snapshot 저장/로드, lastError 저장 — 미구현 — 차기 범위(즐겨찾기 카드는 별도 영속 스냅샷이 아니라 TanStack Query 인메모리 캐시 `useCoreWeather`를 사용한다)
+- [x] snapshot 저장/로드 — 구현됨(`frontend/features/weather-queries/use-core-weather-with-snapshot-fallback.ts`가 조회 성공 시 공유 `PersistedWeatherSnapshot`을 저장하고, 세션 내 `useCoreWeather` 결과가 없을 때 24h cutoff 이내 스냅샷으로 폴백한다. cutoff는 1분마다 다시 평가되어 표시 중 만료된 스냅샷도 인라인 오류로 내려간다)
+- [ ] `lastError` 저장 — 미구현 — 차기 범위(스냅샷에 마지막 오류를 기록하지 않는다)
 
 **네트워크/동기화**
 
@@ -391,6 +392,8 @@ flowchart TD
 - [ ] 드래그 속성(aria-grabbed 등) 미사용 확인 citeturn4search5turn4search9
 
 ### 테스트 계획(핵심 케이스)
+
+`tests/favorites-snapshot.provider.e2e.ts`는 별도 `weather-provider` Playwright 프로젝트에서 HTTP provider를 사용하되 `/v1/weather/**` 응답을 모두 모킹한다. 온라인 조회가 저장한 실제 스냅샷을 사용하고 문서 재로드로 인메모리 쿼리 캐시를 비운 뒤, 요청 실패 및 오프라인 전환에서 24h 직전의 stale 카드·상세 이동과 24h 직후의 비탐색 오류 카드를 검증한다. `pnpm test:e2e`에 포함되며, 단독 실행은 `pnpm exec playwright test --project=weather-provider`다. 기본 프로젝트의 in-process mock은 네트워크 단절로 실패하지 않으므로 이 검증을 대신할 수 없다. 브라우저 오프라인 상태에서는 쿼리가 일시 중지되므로 요청 실패 검증을 먼저 완료한다. 오프라인 문서 새로고침의 앱 셸 검증은 별도 PWA 스위트의 책임이다.
 
 > **참고:** 아래 표의 “429 + Retry-After”, “412 충돌 리베이스” 행과 “오프라인에서 변경 후 복귀” 행의 syncQueue 소진 부분은 서버 동기화 설계(미구현 — 차기 범위, `docs/legacy/favorites-server-sync-design.md` 참고)를 전제로 한 테스트 케이스다. 나머지 행은 현재 구현 대상이다.
 
